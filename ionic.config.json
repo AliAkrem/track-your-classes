@@ -1,0 +1,8 @@
+{
+  "name": "TrackYourClasses",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "react-vite",
+  "id": "9e79997c"
+}
