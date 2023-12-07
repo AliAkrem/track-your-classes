@@ -25,19 +25,19 @@ interface AppPage {
 const appPages: AppPage[] = [
   {
     title: 'Classes',
-    url: '/folder/classes',
+    url: '/classes',
     iosIcon: mailOutline,
     mdIcon: mailSharp
   },
   {
     title: 'students',
-    url: '/folder/Outbox',
+    url: '/Outbox',
     iosIcon: paperPlaneOutline,
     mdIcon: paperPlaneSharp
   },
   {
     title: 'calender',
-    url: '/folder/calender',
+    url: '/calender',
     iosIcon: heartOutline,
     mdIcon: heartSharp
   },
