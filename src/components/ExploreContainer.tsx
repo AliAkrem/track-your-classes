@@ -1,19 +1,12 @@
 import './ExploreContainer.css';
-import List from './list';
 
-interface ContainerProps {
-  name: string;
-}
+interface ContainerProps { }
 
-const ExploreContainer: React.FC<ContainerProps> = ({ name }) => {
+const ExploreContainer: React.FC<ContainerProps> = () => {
   return (
-    <div >
-      {/* <strong>{name}</strong>
-      <p>Explore <a target="_blank" rel="noopener noreferrer" href="https://ionicframework.com/docs/components">UI Components</a></p> */}
-
-      <List />
-
-
+    <div className="container">
+      <strong>Ready to create an app?</strong>
+      <p>Start with Ionic <a target="_blank" rel="noopener noreferrer" href="https://ionicframework.com/docs/components">UI Components</a></p>
     </div>
   );
 };
