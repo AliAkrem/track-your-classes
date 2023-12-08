@@ -1,0 +1,82 @@
+const FUNCTION_NAME = async () => {
+    try {
+      // query db
+      performSQLAction(async (db: SQLiteDBConnection | undefined) => {
+        const respSelect = await db?.query(`<SQL Query>`);
+      });
+    } catch (error) {
+      alert((error as Error).message);
+      setItems([]);
+    }
+  };
+
+ create function Insert class take module_id : int and specialty_id : int 
+
+ example INSERT_CLASS (2, 2 ) 
+
+create another function delete class by class_id 
+
+    example DELETE_CLASS (3) 
+    
+ database structure : 
+    module(_module_id , module_name)
+
+    specialty(_specialty_id, specialty_name, specialty_name_abv, specialty_level, collage_year)
+
+    class(_class_id, #specialty_id, #module_id)
+
+
+
+
+
+
+
+const FUNCTION_NAME = async () => {
+    try {
+      // query db
+      performSQLAction(async (db: SQLiteDBConnection | undefined) => {
+        const respSelect = await db?.query(`<SQL Query>`);
+      });
+    } catch (error) {
+      alert((error as Error).message);
+    }
+  };
+
+    create function insert class_group (jointure) take class_id : int , and group_id : int 
+
+    example CREATE_CLASS_GROUP(2, 4) 
+
+    create function delete class_group take take class_id : int , and group_id : int 
+
+    example DELETE_CLASS_GROUP(2,4) // will delete the class_group from the database
+
+    class_group(#group_id, #class_id, year_scholar)
+
+
+
+
+const FUNCTION_NAME = async () => {
+    try {
+      // query db
+      performSQLAction(async (db: SQLiteDBConnection | undefined) => {
+        const respSelect = await db?.query(`<SQL Query>`);
+      });
+    } catch (error) {
+      alert((error as Error).message);
+    }
+  };
+
+
+    
+
+    create function insert group_student (jointure) take student_id : int , group_id : int 
+
+    example CREATE_STUDENT_GROUP(2, 4) // will register student with id 2 to group with id 4
+
+    create function delete group_student take take student_id : int , and group_id : int 
+
+    example DELETE_STUDENT_GROUp(2,4) // will delete the student from the group from the database
+
+    database structure : group_student(#group_id, #student_id)
+
+

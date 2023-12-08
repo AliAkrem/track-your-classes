@@ -11,7 +11,7 @@ const useSQLiteDB = () => {
   const db = useRef<SQLiteDBConnection>();
   const sqlite = useRef<SQLiteConnection>();
 
-  
+
 
   const [initialized, setInitialized] = useState<boolean>(false);
 
@@ -37,8 +37,8 @@ const useSQLiteDB = () => {
       }
     };
 
-    initializeDB().then(() => {
-      initializeTables();
+    initializeDB().then(async () => {
+      await initializeTables();
       setInitialized(true);
     });
   }, []);
@@ -58,7 +58,7 @@ const useSQLiteDB = () => {
       try {
         (await db.current?.isDBOpen())?.result && (await db.current?.close());
         cleanup && (await cleanup());
-      } catch {}
+      } catch { }
     }
   };
 
@@ -70,21 +70,22 @@ const useSQLiteDB = () => {
   const initializeTables = async () => {
     performSQLAction(async (db: SQLiteDBConnection | undefined) => {
       const queryCreateTable = `
-
-      CREATE TABLE IF NOT EXISTS test (
-      id INTEGER PRIMARY KEY NOT NULL,
-      name TEXT NOT NULL
-      );
-      
-      CREATE TABLE IF NOT EXISTS test2 (
-        id INTEGER PRIMARY KEY NOT NULL,
-        name TEXT NOT NULL
-        );
-
-      
+      CREATE TABLE IF NOT EXISTS module( module_id INTEGER PRIMARY KEY NOT NULL,
+         module_name  varchar(30) NOT NULL UNIQUE,
+        module_name_abv  varchar(10) NOT NULL UNIQUE  ) ; 
     `;
+      const createSpecialtyTable = `CREATE TABLE IF NOT EXISTS specialty(
+        specialty_id INTEGER PRIMARY KEY NOT NULL,
+        specialty_name VARCHAR(30) NOT NULL UNIQUE,
+        specialty_name_abv VARCHAR(10) NOT NULL UNIQUE,
+        specialty_level VARCHAR(1) CHECK (specialty_level IN ('L', 'M')),
+        collage_year INTEGER
+    );`
+
       const respCT = await db?.execute(queryCreateTable);
+      const respCTT = await db?.execute(createSpecialtyTable);
       console.log(`res: ${JSON.stringify(respCT)}`);
+      console.log(`res: ${JSON.stringify(respCTT)}`);
     });
   };
 
