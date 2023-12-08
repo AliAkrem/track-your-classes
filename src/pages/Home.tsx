@@ -41,7 +41,7 @@ const Home: React.FC = () => {
   const { showConfirmationAlert, ConfirmationAlert } = useConfirmationAlert();
 
   useEffect(() => {
-    loadData();
+    // loadData();
   }, [initialized]);
 
 
@@ -50,18 +50,18 @@ const Home: React.FC = () => {
    * do a select of the database
    */
 
-  const loadData = async () => {
-    try {
-      // query db
-      performSQLAction(async (db: SQLiteDBConnection | undefined) => {
-        const respSelect = await db?.query(`SELECT * FROM test`);
-        setItems(respSelect?.values);
-      });
-    } catch (error) {
-      alert((error as Error).message);
-      setItems([]);
-    }
-  };
+  // const loadData = async () => {
+  //   try {
+  //     // query db
+  //     performSQLAction(async (db: SQLiteDBConnection | undefined) => {
+  //       const respSelect = await db?.query(`SELECT * FROM test`);
+  //       setItems(respSelect?.values);
+  //     });
+  //   } catch (error) {
+  //     alert((error as Error).message);
+  //     setItems([]);
+  //   }
+  // };
 
 
 
