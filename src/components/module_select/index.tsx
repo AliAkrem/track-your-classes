@@ -1,5 +1,5 @@
 import React, { useRef, useState } from 'react';
-import { IonContent, IonItem, IonLabel, IonList, IonModal } from '@ionic/react';
+import { IonContent, IonItem, IonLabel, IonList, IonModal, IonPage } from '@ionic/react';
 import AppTypeahead from './searchModal';
 import { SQLModule } from '../../pages/classes';
 ;
@@ -15,20 +15,24 @@ type ModuleSelectProps = {
   modules : Module[], 
   setModules: React.Dispatch<React.SetStateAction<SQLModule[] | undefined>>
   
+
+  setSelectedModule: React.Dispatch<React.SetStateAction<string[]>>
+
+  selectedModule: string[]
 }
 
 
 
 
 
-export default function ModuleSelect({modules, setModules} : ModuleSelectProps) {
+export default function ModuleSelect({modules, setModules, selectedModule, setSelectedModule} : ModuleSelectProps) {
 
 
 
   const [selectedText, setSelectedText] = useState<string>('not selected yet');
 
 
-  const [selectedModule, setSelectedModule] = useState<string[]>([]);
+ 
 
   
 
@@ -59,7 +63,7 @@ export default function ModuleSelect({modules, setModules} : ModuleSelectProps) 
   return (
     <>
       {/* <IonContent color="light"> */}
-      <IonList >
+      <IonList inset>
         <IonItem button={true} detail={false} id="select-module">
           <IonLabel>module</IonLabel>
           <div slot="end" id="selected-module">

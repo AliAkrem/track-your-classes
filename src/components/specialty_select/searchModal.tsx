@@ -34,7 +34,6 @@ interface TypeaheadProps {
     title?: string;
     onSelectionCancel?: () => void;
     onSelectionChange?: (items: string[]) => void;
-
     setSpecialties: React.Dispatch<React.SetStateAction<SpecialtiesSQL[] | undefined>>
 
 }
@@ -43,7 +42,7 @@ function AppTypeahead(props: TypeaheadProps) {
     const [filteredItems, setFilteredItems] = useState<SpecialtiesSQL[]>([...props.specialties]);
     const [workingSelectedValues, setWorkingSelectedValues] = useState<string[]>([...props.selectedItems]);
 
-    const { initialized, performSQLAction } = useSQLiteDB()
+    const {  performSQLAction } = useSQLiteDB()
     const { ConfirmationAlert, showConfirmationAlert } = useConfirmationAlert()
 
 
@@ -60,6 +59,7 @@ function AppTypeahead(props: TypeaheadProps) {
 
     const confirmChanges = () => {
         const { onSelectionChange } = props;
+
         if (onSelectionChange !== undefined) {
             onSelectionChange(workingSelectedValues);
         }
@@ -107,13 +107,16 @@ function AppTypeahead(props: TypeaheadProps) {
 
         if (checked) {
             setWorkingSelectedValues([...workingSelectedValues, String(value)]);
+
+           
+
         } else {
             setWorkingSelectedValues(workingSelectedValues.filter((item) => item !== String(value)));
         }
     };
 
 
-
+    
 
 
 
@@ -171,14 +174,14 @@ function AppTypeahead(props: TypeaheadProps) {
                 </IonToolbar>
             </IonHeader>
 
-            <IonContent color="light" class="ion-padding">
+            <IonContent color="light" >
 
                 <IonList id="modal-list" inset={true}>
                     {filteredItems.length > 0 ? filteredItems.map((item) => (
                         <IonItemSliding key={item.specialty_id} >
                             <IonItem >
                                 <IonCheckbox value={item.specialty_id} checked={isChecked(String(item.specialty_id))} onIonChange={checkboxChange}>
-                                    {item.specialty_name} / {item.specialty_name_abv} / {item.specialty_level} / {item.collage_year}
+                                {item.specialty_name_abv} / {item.specialty_level} {item.collage_year}
                                 </IonCheckbox>
 
                                 <UpdateSpecialtyModal setSpecialties={props.setSpecialties}   label='specialty' specialty={item} />

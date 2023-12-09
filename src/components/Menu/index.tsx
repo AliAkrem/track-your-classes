@@ -11,7 +11,7 @@ import {
 } from '@ionic/react';
 
 import { useLocation } from 'react-router-dom';
-import { archiveOutline, archiveSharp, bookmarkOutline, heartOutline, heartSharp, mailOutline, mailSharp, paperPlaneOutline, paperPlaneSharp, trashOutline, trashSharp, warningOutline, warningSharp } from 'ionicons/icons';
+import { archiveOutline, archiveSharp, bookmarkOutline, heartOutline, heartSharp, mailOutline, mailSharp, paperPlaneOutline, paperPlaneSharp, schoolOutline, trashOutline, trashSharp, warningOutline, warningSharp } from 'ionicons/icons';
 import './Menu.css';
 import { useEffect, useState } from 'react';
 
@@ -26,21 +26,21 @@ const appPages: AppPage[] = [
   {
     title: 'Classes',
     url: '/classes',
-    iosIcon: mailOutline,
-    mdIcon: mailSharp
+    iosIcon: schoolOutline,
+    mdIcon: schoolOutline
   },
-  {
-    title: 'students',
-    url: '/Outbox',
-    iosIcon: paperPlaneOutline,
-    mdIcon: paperPlaneSharp
-  },
-  {
-    title: 'calender',
-    url: '/calender',
-    iosIcon: heartOutline,
-    mdIcon: heartSharp
-  },
+  // {
+  //   title: 'students',
+  //   url: '/Outbox',
+  //   iosIcon: paperPlaneOutline,
+  //   mdIcon: paperPlaneSharp
+  // },
+  // {
+  //   title: 'calender',
+  //   url: '/calender',
+  //   iosIcon: heartOutline,
+  //   mdIcon: heartSharp
+  // },
 
 ];
 
@@ -65,7 +65,7 @@ const Menu: React.FC = () => {
 
 
   return (
-    <IonMenu contentId="main" type="overlay">
+    <IonMenu    contentId="main" type="reveal">
       <IonContent>
         <IonList id="inbox-list">
           <IonListHeader>{page}</IonListHeader>

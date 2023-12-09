@@ -87,8 +87,8 @@ export default function CreateSpecialtyModal({ label, setSpecialties }: CreateSp
     return (
         <>
 
-            <IonLabel id="open-create-specialty-modal"   >
-                <IonButton size='small' fill='outline' >
+            <IonLabel    >
+                <IonButton id="open-create-specialty-modal"  size='small' fill='outline' >
                     {label}{"   "}<IonIcon icon={addCircleOutline}></IonIcon>
                 </IonButton>
             </IonLabel>
