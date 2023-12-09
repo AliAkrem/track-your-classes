@@ -1,8 +1,7 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { IonContent, IonItem, IonLabel, IonList, IonModal } from '@ionic/react';
+import React, { useRef, useState } from 'react';
+import {  IonItem, IonLabel, IonList, IonModal } from '@ionic/react';
 import AppTypeahead from './searchModal';
-import useSQLiteDB from '../../composables/useSQLiteDB';
-import { SQLiteDBConnection } from '@capacitor-community/sqlite';
+
 import { SpecialtiesSQL } from '../../pages/classes';
 ;
 
@@ -11,19 +10,19 @@ import { SpecialtiesSQL } from '../../pages/classes';
 type Props = { 
   specialties : SpecialtiesSQL[] , 
   setSpecialties: React.Dispatch<React.SetStateAction<SpecialtiesSQL[] | undefined>>
+
+  selectedSpecialties: string[]
+  setSelectedSpecialties: React.Dispatch<React.SetStateAction<string[]>>
 }
 
 
-export default function SpecialtiesSelect( { specialties,  setSpecialties }  : Props) {
+export default function SpecialtiesSelect( { specialties,  setSpecialties, selectedSpecialties, setSelectedSpecialties }  : Props) {
 
   const [selectedSpecialtiesText, setSelectedSpecialtiesText] = useState<string>('0 specialty');
-  const [selectedSpecialties, setSelectedSpecialties] = useState<string[]>([]);
-  const [listSpecialties, setListSpecialties] = useState(specialties)
+  
 
 
-
-
-
+ 
 
 
 
@@ -34,8 +33,8 @@ export default function SpecialtiesSelect( { specialties,  setSpecialties }  : P
 
   const formatData = (data: string[]) => {
     if (data.length === 1) {
-      const specialty = listSpecialties.find((specialty) => String(specialty.specialty_id) === data[0])!;
-      return specialty.specialty_name_abv;
+      const specialty = specialties.find((specialty) => String(specialty.specialty_id) === data[0])!;
+      return specialty?.specialty_name_abv;
     }
 
     return `${data.length} specialty`;
@@ -50,7 +49,7 @@ export default function SpecialtiesSelect( { specialties,  setSpecialties }  : P
   return (
     <>
       {/* <IonContent color="light"> */}
-      <IonList >
+      <IonList inset >
         <IonItem button={true} detail={false} id="select-specialties">
           <IonLabel>specialty</IonLabel>
           <div slot="end" id="selected-specialties">

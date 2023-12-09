@@ -18,7 +18,7 @@ import {
     IonIcon,
 } from '@ionic/react';
 import type { CheckboxCustomEvent } from '@ionic/react';
-import CreateSpecialtyModal from '../createSpecialtyModal';
+// import CreateSpecialtyModal from '../createSpecialtyModal';
 import CreateModuleModal from '../createModuleModal';
 import { SQLModule } from '../../pages/classes';
 import { SQLiteDBConnection } from '@capacitor-community/sqlite';
@@ -208,7 +208,7 @@ function AppTypeahead(props: TypeaheadProps) {
                 </IonToolbar>
             </IonHeader>
 
-            <IonContent color="light" class="ion-padding">
+            <IonContent   color="light" >
                 <IonList id="modal-list" inset={true}>
                     {items}
                 </IonList>
