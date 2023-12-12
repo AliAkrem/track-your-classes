@@ -69,7 +69,7 @@ const classes: SQLClass[] = [{
   module: {
     module_id: 1,
     module_name: "change",
-    module_name_abv: "change"
+    module_name_abv: "new change"
   },
   specialty: {
     specialty_name: 'network and distributed systems',
