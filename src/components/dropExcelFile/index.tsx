@@ -1,45 +1,32 @@
-import React, { useRef } from "react";
+import React, { useRef, useState } from "react";
 import './dropExcelFile.css'
-import { IonButton, IonText } from "@ionic/react";
+import { IonButton, IonIcon, IonText } from "@ionic/react";
+import { readXLSXFile } from "../../utils/xlsxStudentReader";
+
+import * as XLSX from 'xlsx';
+import { documentOutline } from "ionicons/icons";
+import { Students } from "../../pages/classes";
+// Assuming you have the utility function in a separate file
 
 
-
-function handleFile(files: FileList | null) {
-
-    if (files) {
-        Array.from(files).forEach((file) => {
-            const fileName = file.name.toLowerCase();
-            const isExcelFile = /\.(xlsx|xls)$/.test(fileName);
-
-            if (isExcelFile) {
-                // Handle the Excel file here
-                alert(`Excel file detected: ${fileName}`);
-            } else {
-                alert(`Invalid file type: ${fileName}. Please select an Excel file.`);
-            }
-        });
-    }
+type Props = {
+    setStudent_list: React.Dispatch<React.SetStateAction<Students[] | undefined>>
 }
 
-// drag drop file component
-export default function DragDropFile() {
-    // drag state
+function DragDropFile({ setStudent_list }: Props) {
     const [dragActive, setDragActive] = React.useState(false);
-    // ref
     const inputRef = useRef<HTMLInputElement>(null);
-
-    // handle drag events
+    const [fileAttached, setFileAttached] = useState(false)
     const handleDrag = function (e: any) {
         e.preventDefault();
         e.stopPropagation();
-        if (e.type === "dragenter" || e.type === "dragover") {
+        if (e.type === 'dragenter' || e.type === 'dragover') {
             setDragActive(true);
-        } else if (e.type === "dragleave") {
+        } else if (e.type === 'dragleave') {
             setDragActive(false);
         }
     };
 
-    // triggers when file is dropped
     const handleDrop = function (e: any) {
         e.preventDefault();
         e.stopPropagation();
@@ -49,7 +36,6 @@ export default function DragDropFile() {
         }
     };
 
-    // triggers when file is selected with click
     const handleChange = function (e: any) {
         e.preventDefault();
         if (e.target.files && e.target.files[0]) {
@@ -57,24 +43,102 @@ export default function DragDropFile() {
         }
     };
 
-    // triggers the input when the button is clicked
     const onButtonClick = () => {
         inputRef.current?.click();
     };
 
+    function handleFile(files: FileList | null) {
+
+
+        if (files) {
+            Array.from(files).forEach((file) => {
+                const fileName = file.name.toLowerCase();
+                const isExcelFile = /\.(xlsx|xls)$/.test(fileName);
+
+                if (isExcelFile) {
+                    // Create a new FileReader object
+                    const reader = new FileReader();
+
+                    // Event handler for when the file reading is done
+                    reader.onload = (evt: any) => {
+                        // Parse the data
+                        const bstr = evt.target.result;
+                        const workbook = XLSX.read(bstr, { type: 'binary' });
+
+                        // Get the first worksheet (you can modify this to loop through all worksheets if needed)
+                        const worksheetName = workbook.SheetNames[0];
+                        const worksheet = workbook.Sheets[worksheetName];
+
+                        // Convert the worksheet to JSON
+                        const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+
+                        // Now jsonData contains the data from the worksheet
+                        console.log(jsonData);
+
+
+                        let array_students : any = [];
+                    
+                        let payload = {}
+
+                        jsonData.map((student: any) => {
+
+                            payload = {
+                                ...payload,
+                                first_name: student[0],
+                                last_name: student[1],
+                                student_code: student[2]
+                            }
+                            array_students = [... array_students , payload]
+                           
+                        })
+
+                        console.log(array_students)
+
+                        setStudent_list(array_students)
+
+                        setFileAttached(true)
+                    };
+
+                    // Read the file as binary
+                    reader.readAsBinaryString(file);
+                } else {
+                    alert(`Invalid file type: ${fileName}. Please select an Excel file.`);
+                }
+            });
+        }
+    }
+
+
     return (
         <form id="form-file-upload" onDragEnter={handleDrag} onSubmit={(e) => e.preventDefault()}>
-            <input ref={inputRef} type="file"  accept=".xlsx, .xls" id="input-file-upload" multiple={true} onChange={handleChange} />
+            <input ref={inputRef} type="file" accept=".xlsx, .xls" id="input-file-upload" onChange={handleChange} />
             <label id="label-file-upload" htmlFor="input-file-upload" className={dragActive ? "drag-active" : ""}>
-                <div style={{ display : "flex" ,gap : "10px", alignItems : "center" }} >
-                    <IonText color={'primary'} >
-                        Drag and drop your file here or
-                    </IonText>
-                    <IonButton  size="small" fill="outline"  onClick={onButtonClick}>Upload a file</IonButton>
+                <div style={{ display: "flex", flexDirection: "column", gap: "10px", alignItems: "center", padding: '15px' }}>
+
+                    {!fileAttached ?
+                        <>
+                            <IonText color={'primary'} >
+                                Drag and drop your file here or
+                                <IonIcon icon={documentOutline}></IonIcon>
+                            </IonText>
+
+                            <IonButton size="small" fill="outline" onClick={onButtonClick}>Upload a file</IonButton>
+                        </>
+                        : <>
+                            <IonText color={'primary'} style={{ display: "flex", flexDirection: "column", gap: "10px", alignItems: "center", padding: '15px' }}  >
+                                file attached
+                                <IonIcon icon={documentOutline}></IonIcon>
+                            </IonText>
+
+                        </>}
+
+
                 </div>
             </label>
+            {/* <IonButton size="small" fill="outline" onClick={onButtonClick}>Upload a file</IonButton> */}
             {dragActive && <div id="drag-file-element" onDragEnter={handleDrag} onDragLeave={handleDrag} onDragOver={handleDrag} onDrop={handleDrop}></div>}
         </form>
     );
-};
+}
 
+export default DragDropFile;

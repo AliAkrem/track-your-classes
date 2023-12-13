@@ -106,7 +106,7 @@ function AppTypeahead(props: TypeaheadProps) {
         const { checked, value } = ev.detail;
 
         if (checked) {
-            setWorkingSelectedValues([...workingSelectedValues, String(value)]);
+            setWorkingSelectedValues([String(value)]);
 
            
 
