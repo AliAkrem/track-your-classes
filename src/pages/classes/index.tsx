@@ -24,6 +24,10 @@ import {
   IonSelectOption,
   IonActionSheet,
   IonInput,
+  IonProgressBar,
+  IonRefresher,
+  IonRefresherContent,
+  IonText,
 } from "@ionic/react";
 import React, { useEffect, useRef, useState } from "react";
 import "./classes.css";
@@ -61,6 +65,15 @@ export type SQLClass = {
   module: SQLModule
 
 }
+
+
+export type Students = {
+  student_code: string
+  first_name: string;
+  last_name: string;
+
+}
+
 
 
 const classes: SQLClass[] = [{
@@ -110,10 +123,17 @@ export const Classes: React.FC = () => {
   const [inputName, setInputName] = useState("");
   const [modules, setModules] = useState<Array<SQLModule>>();
   const [specialties, setSpecialties] = useState<Array<SpecialtiesSQL>>()
+  const [classes_list, setListClasses] = useState<Array<SQLClass>>()
+
+
+  // console.log(classes_list)
 
 
   const [selectedModule, setSelectedModule] = useState<string[]>([]);
   const [selectedSpecialties, setSelectedSpecialties] = useState<string[]>([]);
+
+
+
 
 
 
@@ -128,9 +148,10 @@ export const Classes: React.FC = () => {
 
   useEffect(() => {
     loadData()
+    SELECT_CLASSES()
   }, [initialized]);
 
-  /**
+  /**loadData
    * do a select of the database
    */
 
@@ -141,24 +162,25 @@ export const Classes: React.FC = () => {
         const respSelect = await db?.query(`SELECT * FROM module`);
         setModules(respSelect?.values);
 
-        const respSelectSpecialties = await db?.query(`SELECT * FROM specialty `);
-
+        const respSelectSpecialties = await db?.query(`SELECT * FROM specialty`);
+        // loadData
         setSpecialties(respSelectSpecialties?.values);
+
+
+
+
+
 
       });
     } catch (error) {
-
-
       alert((error as Error).message);
       setModules([])
       setSpecialties([])
-
     }
   };
 
 
   
-
 
   /**
    * do a select of the database
@@ -252,10 +274,155 @@ export const Classes: React.FC = () => {
 
 
 
+
+
   const create_class_modal = useRef<HTMLIonModalElement | null>(null)
   const create_class_modal_create_group = useRef<HTMLIonModalElement | null>(null)
 
   const [modalCreateGroupOpened, setModalCreateGroupOpened] = useState(false)
+
+
+  const CREATE_CLASS_GROUP = async (classId: number, groupId: number, year: number) => {
+    try {
+      // Assuming db is already initialized
+      performSQLAction(async (db: SQLiteDBConnection | undefined) => {
+        // Assuming there is a 'class_group' table with columns: class_id, group_id, year
+        const respInsert = await db?.query(`INSERT INTO class_group ( group_id, year) VALUES (?, ?, ?)`, [classId, groupId, year]);
+      });
+    } catch (error) {
+      alert((error as Error).message);
+    }
+  };
+
+
+
+  const INSERT_NEW_CLASS = async (specialty_id: number, module_id: number) => {
+
+    try {
+      performSQLAction(async (db: SQLiteDBConnection | undefined) => {
+        await db?.query(`INSERT INTO class( module_id, specialty_id ) VALUES (?, ?)`, [specialty_id, module_id]);
+
+
+        // setModules(respSelect?.values);
+
+
+        const respSelectClasses = await db?.query(`
+        SELECT
+          class.class_id,
+          specialty.specialty_id,
+          specialty.specialty_name,
+          specialty.specialty_name_abv,
+          specialty.specialty_level,
+          specialty.collage_year,
+          module.module_id,
+          module.module_name,
+          module.module_name_abv
+        FROM class
+        JOIN specialty ON class.specialty_id = specialty.specialty_id
+        JOIN module ON class.module_id = module.module_id;
+      `);
+
+
+        // Process the result as needed
+        const classes_formatted = respSelectClasses?.values?.map((row: any) => ({
+          class_id: row.class_id,
+          specialty: {
+            specialty_id: row.specialty_id,
+            specialty_name: row.specialty_name,
+            specialty_name_abv: row.specialty_name_abv,
+            specialty_level: row.specialty_level,
+            collage_year: row.collage_year,
+          },
+          module: {
+            module_id: row.module_id,
+            module_name: row.module_name,
+            module_name_abv: row.module_name_abv,
+          },
+        }));
+
+
+
+        setListClasses(classes_formatted)
+
+
+
+      });
+
+
+
+    } catch (error) {
+      alert((error as Error).message);
+
+
+
+
+    }
+  };
+
+
+  const DELETE_CLASS = async (classId: number) => {
+
+    try {
+      performSQLAction(async (db: SQLiteDBConnection | undefined) => {
+        await db?.query(`DELETE FROM class WHERE class_id = ? `, [classId]);
+
+
+
+
+        const respSelect = await db?.query(`
+        SELECT
+          class.class_id,
+          specialty.specialty_id,
+          specialty.specialty_name,
+          specialty.specialty_name_abv,
+          specialty.specialty_level,
+          specialty.collage_year,
+          module.module_id,
+          module.module_name,
+          module.module_name_abv
+        FROM class
+        JOIN specialty ON class.specialty_id = specialty.specialty_id
+        JOIN module ON class.module_id = module.module_id;
+      `);
+
+
+        // Process the result as needed
+        const classes_formatted = respSelect?.values?.map((row: any) => ({
+          class_id: row.class_id,
+          specialty: {
+            specialty_id: row.specialty_id,
+            specialty_name: row.specialty_name,
+            specialty_name_abv: row.specialty_name_abv,
+            specialty_level: row.specialty_level,
+            collage_year: row.collage_year,
+          },
+          module: {
+            module_id: row.module_id,
+            module_name: row.module_name,
+            module_name_abv: row.module_name_abv,
+          },
+        }));
+
+
+
+        setListClasses(classes_formatted)
+
+
+      });
+
+
+    } catch (error) {
+      alert((error as Error).message);
+
+
+
+
+    }
+  };
+
+
+  // useRef
+
 
 
 
@@ -267,15 +434,9 @@ export const Classes: React.FC = () => {
 
     if (selectedModule.length > 0 && selectedSpecialties.length > 0) {
 
-      selectedSpecialties.map((s) => {
 
-        selectedModule.map((m) => {
+      INSERT_NEW_CLASS(Number(selectedModule[0]), Number(selectedSpecialties[0]))
 
-          // INSERT_NEW_CLASS(m, s)
-
-        })
-
-      })
 
     }
 
@@ -285,15 +446,23 @@ export const Classes: React.FC = () => {
   }
 
 
+
+
+
   const ActionResult = (result: OverlayEventDetail, classPayload: { class_id: number, module_id: number, specialty_id: number }) => {
 
 
+
+    console.log(classPayload.class_id)
 
 
     if (result.data?.action === "delete") {
 
       showConfirmationAlert("Are You Sure You Want To Delete this class? the information related to this class will deleted also! ", () => {
-        console.log('delete class logic here', { classPayload })
+
+        DELETE_CLASS(classPayload?.class_id)
+
+
       })
 
     };
@@ -312,7 +481,64 @@ export const Classes: React.FC = () => {
   }
 
 
-  const ListClasses = classes.map((classe) => {
+  const SELECT_CLASSES = async () => {
+    try {
+      // query db
+      performSQLAction(async (db: SQLiteDBConnection | undefined) => {
+        const respSelect = await db?.query(`
+          SELECT
+            class.class_id,
+            specialty.specialty_id,
+            specialty.specialty_name,
+            specialty.specialty_name_abv,
+            specialty.specialty_level,
+            specialty.collage_year,
+            module.module_id,
+            module.module_name,
+            module.module_name_abv
+          FROM class
+          JOIN specialty ON class.specialty_id = specialty.specialty_id
+          JOIN module ON class.module_id = module.module_id;
+        `);
+
+
+        // Process the result as needed
+        const classes_formatted = respSelect?.values?.map((row: any) => ({
+          class_id: row.class_id,
+          specialty: {
+            specialty_id: row.specialty_id,
+            specialty_name: row.specialty_name,
+            specialty_name_abv: row.specialty_name_abv,
+            specialty_level: row.specialty_level,
+            collage_year: row.collage_year,
+          },
+          module: {
+            module_id: row.module_id,
+            module_name: row.module_name,
+            module_name_abv: row.module_name_abv,
+          },
+        }));
+
+
+
+        setListClasses(classes_formatted)
+
+
+        // Use the 'classes' array as needed.
+      });
+    } catch (error) {
+      alert((error as Error).message);
+    }
+  };
+
+
+  // console.log(classes_list)
+
+
+
+
+
+  const ListClasses = classes_list?.map((classe) => {
     return (
 
       <div key={nanoid()}  >
@@ -336,7 +562,7 @@ export const Classes: React.FC = () => {
           buttons={[
             {
               text: 'Delete',
-              role: 'destructive',
+              role: 'delete',
               data: {
                 action: 'delete',
               },
@@ -357,11 +583,27 @@ export const Classes: React.FC = () => {
   })
 
 
+  const type_of_group = useRef<HTMLIonSelectElement | null>(null);
+  const group_number = useRef<HTMLIonInputElement>(null);
 
+
+  const [student_list, setStudent_list] = useState<Students[]>()
+
+
+  const onCreateGroup = () => {
+
+    console.log(type_of_group.current?.value, group_number.current?.value, student_list)
+
+  }
 
   return (
+
+
     <IonPage>
+
+
       <IonHeader>
+
         <IonToolbar>
 
           <IonButtons slot="start">
@@ -383,7 +625,7 @@ export const Classes: React.FC = () => {
         </IonFab>
         <IonAccordionGroup>
 
-          {ListClasses}
+          {classes_list ? ListClasses : <IonProgressBar type="indeterminate"  ></IonProgressBar>}
         </IonAccordionGroup>
 
 
@@ -400,10 +642,61 @@ export const Classes: React.FC = () => {
             </IonToolbar>
           </IonHeader>
           <IonContent fullscreen  >
-            <IonItem  className="Ion-padding"   >
-            {/* <center  > */}
-              <DragDropFile />
-            {/* </center> */}
+            <IonItem className="Ion-padding"   >
+              <DragDropFile setStudent_list={setStudent_list} />
+            </IonItem    >
+
+
+
+
+            <IonItem className="Ion-padding" >
+              <IonSelect
+
+                ref={type_of_group}
+
+                // ref={specialty_level}
+                aria-label="type of group"
+                interface="popover"
+                placeholder="type of group"
+              >
+                <IonSelectOption value="TD">TD</IonSelectOption>
+                <IonSelectOption value="TP">TP</IonSelectOption>
+              </IonSelect>
+            </IonItem>
+            <IonItem className="Ion-padding"   >
+
+              <IonInput
+                label="group number"
+                labelPlacement="start"
+                ref={group_number}
+                type="text"
+                maxlength={1}
+                onIonChange={(e) => {
+                  const inputValue = e.detail.value;
+
+                  const numericInput = String(inputValue).replace(/[^0-5]/g, '');
+
+                  if (group_number.current)
+                    group_number.current.value = numericInput;
+                }}
+              />
+
+            </IonItem>
+
+              {student_list ?  student_list?.map((student =>
+
+            <IonItem >
+                <IonText key={nanoid()} >{student.first_name} / {student.last_name} / {student.student_code} </IonText>
+            </IonItem>
+              ))  : null 
+             }
+
+            <IonItem >
+              <IonButton onClick={() => {
+                onCreateGroup()
+              }} slot="start" fill="outline" size="default" >
+                submit
+              </IonButton>
             </IonItem>
           </IonContent>
         </IonModal>
@@ -426,7 +719,7 @@ export const Classes: React.FC = () => {
 
               <IonList inset>
                 <IonItem >
-                  <IonButton disabled={selectedModule.length == 0 || selectedSpecialties.length == 0} onClick={() => onSubmit()} slot="end" fill="outline" size="default" >
+                  <IonButton disabled={selectedModule.length == 0 || selectedSpecialties.length == 0} onClick={() => { onSubmit(); create_class_modal?.current?.dismiss() }} slot="end" fill="outline" size="default" >
                     submit
                   </IonButton>
                 </IonItem>
