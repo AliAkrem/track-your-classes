@@ -181,7 +181,6 @@ export const Classes: React.FC = () => {
   };
 
 
-  
 
   /**
    * do a select of the database
@@ -297,6 +296,7 @@ export const Classes: React.FC = () => {
 
 
 
+
   const INSERT_NEW_CLASS = async (specialty_id: number, module_id: number) => {
 
     try {
@@ -304,9 +304,136 @@ export const Classes: React.FC = () => {
         await db?.query(`INSERT INTO class( module_id, specialty_id ) VALUES (?, ?)`, [specialty_id, module_id]);
 
 
-      
-        
-        
+        // setModules(respSelect?.values);
+
+
+        const respSelectClasses = await db?.query(`
+        SELECT
+          class.class_id,
+          specialty.specialty_id,
+          specialty.specialty_name,
+          specialty.specialty_name_abv,
+          specialty.specialty_level,
+          specialty.collage_year,
+          module.module_id,
+          module.module_name,
+          module.module_name_abv
+        FROM class
+        JOIN specialty ON class.specialty_id = specialty.specialty_id
+        JOIN module ON class.module_id = module.module_id;
+      `);
+
+
+        // Process the result as needed
+        const classes_formatted = respSelectClasses?.values?.map((row: any) => ({
+          class_id: row.class_id,
+          specialty: {
+            specialty_id: row.specialty_id,
+            specialty_name: row.specialty_name,
+            specialty_name_abv: row.specialty_name_abv,
+            specialty_level: row.specialty_level,
+            collage_year: row.collage_year,
+          },
+          module: {
+            module_id: row.module_id,
+            module_name: row.module_name,
+            module_name_abv: row.module_name_abv,
+          },
+        }));
+
+
+
+        setListClasses(classes_formatted)
+
+
+
+      });
+
+
+
+    } catch (error) {
+      alert((error as Error).message);
+
+
+
+
+    }
+  };
+
+
+  const DELETE_CLASS = async (classId: number) => {
+
+    try {
+      performSQLAction(async (db: SQLiteDBConnection | undefined) => {
+        await db?.query(`DELETE FROM class WHERE class_id = ? `, [classId]);
+
+
+
+
+        const respSelect = await db?.query(`
+        SELECT
+          class.class_id,
+          specialty.specialty_id,
+          specialty.specialty_name,
+          specialty.specialty_name_abv,
+          specialty.specialty_level,
+          specialty.collage_year,
+          module.module_id,
+          module.module_name,
+          module.module_name_abv
+        FROM class
+        JOIN specialty ON class.specialty_id = specialty.specialty_id
+        JOIN module ON class.module_id = module.module_id;
+      `);
+
+
+        // Process the result as needed
+        const classes_formatted = respSelect?.values?.map((row: any) => ({
+          class_id: row.class_id,
+          specialty: {
+            specialty_id: row.specialty_id,
+            specialty_name: row.specialty_name,
+            specialty_name_abv: row.specialty_name_abv,
+            specialty_level: row.specialty_level,
+            collage_year: row.collage_year,
+          },
+          module: {
+            module_id: row.module_id,
+            module_name: row.module_name,
+            module_name_abv: row.module_name_abv,
+          },
+        }));
+
+
+
+        setListClasses(classes_formatted)
+
+
+      });
+
+
+    } catch (error) {
+      alert((error as Error).message);
+
+
+
+
+    }
+  };
+
+
+  // useRef
+
+
+
+
+  const INSERT_NEW_CLASS = async (specialty_id: number, module_id: number) => {
+
+    try {
+      performSQLAction(async (db: SQLiteDBConnection | undefined) => {
+        await db?.query(`INSERT INTO class( module_id, specialty_id ) VALUES (?, ?)`, [specialty_id, module_id]);
+
+
 
 
         const respSelectClasses = await db?.query(`
@@ -422,11 +549,14 @@ export const Classes: React.FC = () => {
 
 
 
+      INSERT_NEW_CLASS(Number(selectedModule[0]), Number(selectedSpecialties[0]))
+
+
+
     }
   };
 
 
-  // useRef
 
 
 
@@ -438,12 +568,6 @@ export const Classes: React.FC = () => {
       INSERT_NEW_CLASS(Number(selectedModule[0]), Number(selectedSpecialties[0]))
     }
   }
-
-
-
-
-
-
 
 
 
@@ -713,6 +837,14 @@ export const Classes: React.FC = () => {
 
 
 
+  const [student_list, setStudent_list] = useState<Students[]>()
+
+
+  const onCreateGroup = () => {
+
+    console.log(type_of_group.current?.value, group_number.current?.value, student_list)
+
+  }
 
   return (
 

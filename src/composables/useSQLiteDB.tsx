@@ -115,6 +115,29 @@ const useSQLiteDB = () => {
         );  
         `;
 
+      const createClassTable = ` 
+      CREATE TABLE IF NOT EXISTS class(
+          class_id INTEGER PRIMARY KEY NOT NULL,
+          module_id INTEGER,
+          specialty_id INTEGER,
+          FOREIGN KEY (module_id) REFERENCES module(module_id) ON DELETE  NO ACTION,
+          FOREIGN KEY (specialty_id) REFERENCES specialty(specialty_id) ON DELETE  NO ACTION,
+          UNIQUE (module_id, specialty_id)
+        );
+      `
+
+
+      const createStudentTable = ` 
+      CREATE TABLE IF NOT EXISTS  student
+      (
+          student_id INTEGER PRIMARY KEY NOT NULL,
+          student_code varchar(30) NOT NULL UNIQUE ,
+          first_name varchar(30) NOT NULL ,
+          last_name varchar(30) NOT NULL 
+        );
+      `
+
+
       // const createClassGroupTable = `
       // CREATE TABLE IF NOT EXISTS class_group(group_id  INTEGER PRIMARY KEY NOT NULL , #class_id, year_scholar)
       // `
@@ -126,6 +149,7 @@ const useSQLiteDB = () => {
       await db?.execute(createStudentTable);
       await db?.execute(createGroupTable);
       await db?.execute(createStudentGroupTable);
+
 
       console.log(`res: ${JSON.stringify(respCTM)}`);
     });
