@@ -149,6 +149,7 @@ export const Classes: React.FC = () => {
   useEffect(() => {
     loadData()
     SELECT_CLASSES()
+    SELECT_STUDENTS_GROUP()
   }, [initialized]);
 
   /**loadData
@@ -303,7 +304,9 @@ export const Classes: React.FC = () => {
         await db?.query(`INSERT INTO class( module_id, specialty_id ) VALUES (?, ?)`, [specialty_id, module_id]);
 
 
-        // setModules(respSelect?.values);
+      
+        
+        
 
 
         const respSelectClasses = await db?.query(`
@@ -322,6 +325,8 @@ export const Classes: React.FC = () => {
         JOIN module ON class.module_id = module.module_id;
       `);
 
+
+      
 
         // Process the result as needed
         const classes_formatted = respSelectClasses?.values?.map((row: any) => ({
@@ -428,22 +433,17 @@ export const Classes: React.FC = () => {
 
 
   const onSubmit = () => {
-
     console.log({ selectedModule, selectedSpecialties })
-
-
     if (selectedModule.length > 0 && selectedSpecialties.length > 0) {
-
-
       INSERT_NEW_CLASS(Number(selectedModule[0]), Number(selectedSpecialties[0]))
-
-
     }
-
-
-
-
   }
+
+
+
+
+
+
 
 
 
@@ -590,11 +590,129 @@ export const Classes: React.FC = () => {
   const [student_list, setStudent_list] = useState<Students[]>()
 
 
-  const onCreateGroup = () => {
+
+
+  const CREATE_STUDENT = async (first_name: string , last_name: string , code : string) => {
+    let student_id = -1 
+
+    try {
+
+      
+      performSQLAction(async (db: SQLiteDBConnection | undefined) => {
+
+        await db?.query(`INSERT INTO student( first_name, last_name, student_code) VALUES (?, ?, ?)`, [first_name, last_name, code]);
+
+        const class_id = await db?.query(`SELECT last_insert_rowid()`);
+        console.log(` ${JSON.stringify(class_id?.values)}`)
+
+        const res: any = await db?.query(`SELECT last_insert_rowid() AS id `);
+        
+        student_id = res?.values[0]?.id 
+
+
+      });
+    } catch (error) {
+      alert((error as Error).message);
+    }
+
+    return student_id
+  };
+
+
+  const CREATE_GROUP = async (group_number : number , group_type: string ) => {
+    let group_id = -1 
+
+    try {
+      // Assuming db is already initialized
+
+      
+      performSQLAction(async (db: SQLiteDBConnection | undefined) => {
+        // Assuming there is a 'class_group' table with columns: class_id, group_id, year
+        await db?.query(`INSERT INTO group( group_number, group_type) VALUES (?, ?)`, [group_number, group_type]);
+
+        const res: any = await db?.query(`SELECT last_insert_rowid() AS id `);
+        
+        group_id = res?.values[0]?.id 
+
+
+      });
+
+      
+
+    } catch (error) {
+      alert((error as Error).message);
+    }
+
+    return group_id
+
+  };
+
+
+  const CREATE_STUDENT_GROUP = async (student_id : number , group_id: number ) => {
+    try {
+      // Assuming db is already initialized
+      performSQLAction(async (db: SQLiteDBConnection | undefined) => {
+        // Assuming there is a 'class_group' table with columns: class_id, group_id, year
+        await db?.query(`INSERT INTO group_student( group_id, student_id) VALUES (?, ?)`, [group_id, student_id]);
+
+      });
+    } catch (error) {
+      alert((error as Error).message);
+    }
+  };
+
+
+
+
+
+  const onCreateGroup = async () => { 
 
     console.log(type_of_group.current?.value, group_number.current?.value, student_list)
 
+    if(type_of_group.current?.value !== "" && group_number.current?.value !== "" &&  student_list   ){} 
+      // first we should create the group 
+
+      
+     const group_id = await  CREATE_GROUP(Number(group_number.current?.value), String(type_of_group.current?.value))
+
+
+     student_list?.map(async(student)=>{
+
+      let student_id = await CREATE_STUDENT(student.first_name, student.last_name, student.student_code)
+
+
+      await CREATE_STUDENT_GROUP(student_id,group_id)
+
+
+     })
+
+
   }
+
+
+  const SELECT_STUDENTS_GROUP = async () => {
+    try {
+      performSQLAction(async (db: SQLiteDBConnection | undefined) => {
+        // Join the student, group, and group_student tables to get the student's group
+        const result = await db?.query(`
+          SELECT s.student_id, s.first_name, s.last_name, g.group_number
+          FROM student s, group g 
+          JOIN group_student gs ON s.student_id = gs.student_id
+          JOIN group g ON gs.group_id = g.group_id
+        `);
+   
+        // Log the result
+        console.log(result?.values);
+      });
+    } catch (error) {
+      alert((error as Error).message);
+    }
+   };
+   
+   
+
+
+
 
   return (
 
