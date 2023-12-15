@@ -1,5 +1,5 @@
 import { Redirect, Route } from "react-router-dom";
-import { IonApp, IonRouterOutlet, IonSplitPane, setupIonicReact } from "@ionic/react";
+import { IonApp, IonRefresher, IonRefresherContent, IonRouterOutlet, IonSplitPane, setupIonicReact } from "@ionic/react";
 import { IonReactRouter } from "@ionic/react-router";
 import Home from "./pages/Home";
 
@@ -22,9 +22,9 @@ import "@ionic/react/css/display.css";
 /* Theme variables */
 import "./theme/variables.css";
 
-import { useEffect } from "react";
 import Menu from "./components/Menu";
 import { Classes } from "./pages/classes";
+import { Group } from "./pages/groups";
 
 
 setupIonicReact();
@@ -35,18 +35,23 @@ const App: React.FC = () => {
 
   return (
     <IonApp>
+
+
       <IonReactRouter>
         <IonSplitPane contentId="main">
           <Menu />
           <IonRouterOutlet id="main" >
+
+
             <Route exact path="/">
               <Redirect to="/classes" />
             </Route>
-            {/* <Route exact path="/Outbox">
-              <Home />
-            </Route> */}
+
             <Route exact path="/classes">
               <Classes />
+            </Route>
+            <Route exact path="/classes/:group">
+              <Group />
             </Route>
 
           </IonRouterOutlet>

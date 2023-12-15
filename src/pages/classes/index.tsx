@@ -36,35 +36,11 @@ import useSQLiteDB from "../../composables/useSQLiteDB";
 import useConfirmationAlert from "../../composables/useConfirmationAlert";
 import ModuleSelect from "../../components/module_select";
 import SpecialtySelect from "../../components/specialty_select";
-import { add, addCircleOutline, chevronDownSharp, ellipsisVertical, trash, } from "ionicons/icons";
+import { add, addCircleOutline, arrowRedo, chevronDownSharp, ellipsisVertical, trash, } from "ionicons/icons";
 import { OverlayEventDetail } from "@ionic/react/dist/types/components/react-component-lib/interfaces";
 import { nanoid } from "nanoid";
 import DragDropFile from "../../components/dropExcelFile";
 
-
-export interface SpecialtiesSQL {
-  specialty_id: number,
-  specialty_name: string,
-  specialty_name_abv: string,
-  specialty_level: string,
-  collage_year: number
-}
-
-
-export type SQLModule = {
-  module_id: number;
-  module_name: string;
-  module_name_abv: string;
-};
-
-
-
-export type SQLClass = {
-  class_id: number
-  specialty: SpecialtiesSQL
-  module: SQLModule
-
-}
 
 
 export type Students = {
@@ -74,44 +50,36 @@ export type Students = {
 
 }
 
+export type GroupSQL = {
+  group_id: number
+  group_number: number,
+  group_type: "TP" | 'TD'
+}
 
+export interface SpecialtiesSQL {
+  specialty_id: number,
+  specialty_name: string,
+  specialty_name_abv: string,
+  specialty_level: string,
+  collage_year: number
+}
 
-const classes: SQLClass[] = [{
+export type SQLModule = {
+  module_id: number;
+  module_name: string;
+  module_name_abv: string;
+};
 
-  class_id: 1,
-  module: {
-    module_id: 1,
-    module_name: "change",
-    module_name_abv: "new change"
-  },
-  specialty: {
-    specialty_name: 'network and distributed systems',
-    specialty_name_abv: "RSD",
-    specialty_level: "M",
-    collage_year: 1,
-    specialty_id: 1
-  }
+export type SQLClass = {
+  class_id: number
+  specialty: SpecialtiesSQL
+  module: SQLModule
+  groups?: GroupSQL[]
 
-},
-{
-  class_id: 2,
-  module: {
-    module_id: 2,
-    module_name: "distributed systems",
-    module_name_abv: "DS"
-  },
-  specialty: {
-    specialty_name: 'network and distributed systems',
-    specialty_name_abv: "RSD",
-    specialty_level: "M",
-    collage_year: 1,
-    specialty_id: 1
-  }
 }
 
 
 
-]
 
 
 
@@ -119,8 +87,12 @@ const classes: SQLClass[] = [{
 
 
 export const Classes: React.FC = () => {
+
+
   const [editItem, setEditItem] = useState<any>();
   const [inputName, setInputName] = useState("");
+
+
   const [modules, setModules] = useState<Array<SQLModule>>();
   const [specialties, setSpecialties] = useState<Array<SpecialtiesSQL>>()
   const [classes_list, setListClasses] = useState<Array<SQLClass>>()
@@ -147,9 +119,21 @@ export const Classes: React.FC = () => {
 
 
   useEffect(() => {
-    loadData()
-    SELECT_CLASSES()
-    SELECT_STUDENTS_GROUP()
+
+    const loadAll = async () => {
+      // await useLoadData({setModules, setSpecialties})
+      await loadData()
+      await SELECT_CLASSES()
+      await SELECT_STUDENTS_GROUP()
+      await TEST()
+      // await CREATE_GROUP(1, 'TP')
+    }
+
+
+    loadAll()
+
+
+
   }, [initialized]);
 
   /**loadData
@@ -162,124 +146,23 @@ export const Classes: React.FC = () => {
       performSQLAction(async (db: SQLiteDBConnection | undefined) => {
         const respSelect = await db?.query(`SELECT * FROM module`);
         setModules(respSelect?.values);
-
         const respSelectSpecialties = await db?.query(`SELECT * FROM specialty`);
-        // loadData
         setSpecialties(respSelectSpecialties?.values);
-
-
-
-
-
-
       });
     } catch (error) {
       alert((error as Error).message);
       setModules([])
-      setSpecialties([])
+      setSpecialties([])// await CREATE_GROUP(1, 'TP')
     }
   };
-
-
-
-  /**
-   * do a select of the database
-   */
-
-
-
-
-
-
-
-  // const updateItem = async () => {
-  //   try {
-  //     // add test record to db
-  //     performSQLAction(
-  //       async (db: SQLiteDBConnection | undefined) => {
-  //         await db?.query(`UPDATE test2 SET name=? WHERE id=?`, [
-  //           inputName,
-  //           editItem?.id,
-  //         ]);
-
-  //         // update ui
-  //         const respSelect = await db?.query(`SELECT * FROM test2;`);
-  //         setModules(respSelect?.values);
-  //       },
-  //       async () => {
-  //         setInputName("");
-  //         setEditItem(undefined);
-  //       }
-  //     );
-  //   } catch (error) {
-  //     alert((error as Error).message);
-  //   }
-  // };
-  // const addItem = async () => {
-  //   try {
-  //     // add test record to db
-  //     performSQLAction(
-  //       async (db: SQLiteDBConnection | undefined) => {
-  //         await db?.query(`INSERT INTO test2 (id,name) values (?,?);`, [
-  //           Date.now(),
-  //           inputName,
-  //         ]);
-
-  //         // update ui
-  //         const respSelect = await db?.query(`SELECT * FROM test2;`);
-  //         setModules(respSelect?.values);
-  //       },
-  //       async () => {
-  //         setInputName("");
-  //       }
-  //     );
-  //   } catch (error) {
-  //     alert((error as Error).message);
-  //   }
-  // };
-  // const confirmDelete = (itemId: number) => {
-  //   showConfirmationAlert("Are You Sure You Want To Delete This Item?", () => {
-  //     deleteItem(itemId);
-  //   });
-  // };
-  // const deleteItem = async (itemId: number) => {
-  //   try {
-  //     // add test record to db
-  //     performSQLAction(
-  //       async (db: SQLiteDBConnection | undefined) => {
-  //         await db?.query(`DELETE FROM test2 WHERE id=?;`, [itemId]);
-
-  //         // update ui
-  //         const respSelect = await db?.query(`SELECT * FROM test2;`);
-  //         setModules(respSelect?.values);
-  //       },
-  //       async () => {
-  //         setInputName("");
-  //       }
-  //     );
-  //   } catch (error) {
-  //     alert((error as Error).message);
-  //   }
-  // };
-  // const doEditItem = (item: SQLModule | undefined) => {
-  //   if (item) {
-  //     setEditItem(item);
-  //     setInputName(item.module_name);
-  //   } else {
-  //     setEditItem(undefined);
-  //     setInputName("");
-  //   }
-  // };
-
-
-
-
 
 
   const create_class_modal = useRef<HTMLIonModalElement | null>(null)
   const create_class_modal_create_group = useRef<HTMLIonModalElement | null>(null)
 
   const [modalCreateGroupOpened, setModalCreateGroupOpened] = useState(false)
+
+  const [selectedClassIDToAddGroup, setSelectedClassIDToAddGroup] = useState(-1)
 
 
   const CREATE_CLASS_GROUP = async (classId: number, groupId: number, year: number) => {
@@ -293,9 +176,6 @@ export const Classes: React.FC = () => {
       alert((error as Error).message);
     }
   };
-
-
-
 
   const INSERT_NEW_CLASS = async (specialty_id: number, module_id: number) => {
 
@@ -418,149 +298,12 @@ export const Classes: React.FC = () => {
 
 
 
-    }
-  };
-
-
-  // useRef
-
-
-
-
-  const INSERT_NEW_CLASS = async (specialty_id: number, module_id: number) => {
-
-    try {
-      performSQLAction(async (db: SQLiteDBConnection | undefined) => {
-        await db?.query(`INSERT INTO class( module_id, specialty_id ) VALUES (?, ?)`, [specialty_id, module_id]);
-
-
-
-
-        const respSelectClasses = await db?.query(`
-        SELECT
-          class.class_id,
-          specialty.specialty_id,
-          specialty.specialty_name,
-          specialty.specialty_name_abv,
-          specialty.specialty_level,
-          specialty.collage_year,
-          module.module_id,
-          module.module_name,
-          module.module_name_abv
-        FROM class
-        JOIN specialty ON class.specialty_id = specialty.specialty_id
-        JOIN module ON class.module_id = module.module_id;
-      `);
-
-
-      
-
-        // Process the result as needed
-        const classes_formatted = respSelectClasses?.values?.map((row: any) => ({
-          class_id: row.class_id,
-          specialty: {
-            specialty_id: row.specialty_id,
-            specialty_name: row.specialty_name,
-            specialty_name_abv: row.specialty_name_abv,
-            specialty_level: row.specialty_level,
-            collage_year: row.collage_year,
-          },
-          module: {
-            module_id: row.module_id,
-            module_name: row.module_name,
-            module_name_abv: row.module_name_abv,
-          },
-        }));
-
-
-
-        setListClasses(classes_formatted)
-
-
-
-      });
-
-
-
-    } catch (error) {
-      alert((error as Error).message);
-
-
-
-
-    }
-  };
-
-
-  const DELETE_CLASS = async (classId: number) => {
-
-    try {
-      performSQLAction(async (db: SQLiteDBConnection | undefined) => {
-        await db?.query(`DELETE FROM class WHERE class_id = ? `, [classId]);
-
-
-
-
-        const respSelect = await db?.query(`
-        SELECT
-          class.class_id,
-          specialty.specialty_id,
-          specialty.specialty_name,
-          specialty.specialty_name_abv,
-          specialty.specialty_level,
-          specialty.collage_year,
-          module.module_id,
-          module.module_name,
-          module.module_name_abv
-        FROM class
-        JOIN specialty ON class.specialty_id = specialty.specialty_id
-        JOIN module ON class.module_id = module.module_id;
-      `);
-
-
-        // Process the result as needed
-        const classes_formatted = respSelect?.values?.map((row: any) => ({
-          class_id: row.class_id,
-          specialty: {
-            specialty_id: row.specialty_id,
-            specialty_name: row.specialty_name,
-            specialty_name_abv: row.specialty_name_abv,
-            specialty_level: row.specialty_level,
-            collage_year: row.collage_year,
-          },
-          module: {
-            module_id: row.module_id,
-            module_name: row.module_name,
-            module_name_abv: row.module_name_abv,
-          },
-        }));
-
-
-
-        setListClasses(classes_formatted)
-
-
-      });
-
-
-    } catch (error) {
-      alert((error as Error).message);
-
-
-
-
       INSERT_NEW_CLASS(Number(selectedModule[0]), Number(selectedSpecialties[0]))
 
 
 
     }
   };
-
-
-
-
-
-
 
   const onSubmit = () => {
     console.log({ selectedModule, selectedSpecialties })
@@ -568,10 +311,6 @@ export const Classes: React.FC = () => {
       INSERT_NEW_CLASS(Number(selectedModule[0]), Number(selectedSpecialties[0]))
     }
   }
-
-
-
-
 
   const ActionResult = (result: OverlayEventDetail, classPayload: { class_id: number, module_id: number, specialty_id: number }) => {
 
@@ -595,6 +334,9 @@ export const Classes: React.FC = () => {
     if (result.data?.action === "create-group") {
 
       setModalCreateGroupOpened(true)
+
+      setSelectedClassIDToAddGroup(classPayload.class_id)
+
       console.log('create new group in this class ', classPayload)
     }
 
@@ -604,10 +346,8 @@ export const Classes: React.FC = () => {
 
   }
 
-
   const SELECT_CLASSES = async () => {
     try {
-      // query db
       performSQLAction(async (db: SQLiteDBConnection | undefined) => {
         const respSelect = await db?.query(`
           SELECT
@@ -619,46 +359,63 @@ export const Classes: React.FC = () => {
             specialty.collage_year,
             module.module_id,
             module.module_name,
-            module.module_name_abv
+            module.module_name_abv,
+            Groupp.group_id,
+            Groupp.group_number,
+            Groupp.group_type
           FROM class
           JOIN specialty ON class.specialty_id = specialty.specialty_id
-          JOIN module ON class.module_id = module.module_id;
+          JOIN module ON class.module_id = module.module_id
+          LEFT JOIN Groupp ON class.class_id = Groupp.class_id;
         `);
 
+        const classesWithGroups = respSelect?.values?.reduce((result: any, row: any) => {
+          const classInfo = result[row.class_id] || {
+            class_id: row.class_id,
+            specialty: {
+              specialty_id: row.specialty_id,
+              specialty_name: row.specialty_name,
+              specialty_name_abv: row.specialty_name_abv,
+              specialty_level: row.specialty_level,
+              collage_year: row.collage_year,
+            },
+            module: {
+              module_id: row.module_id,
+              module_name: row.module_name,
+              module_name_abv: row.module_name_abv,
+            },
+            groups: [],
+          };
 
-        // Process the result as needed
-        const classes_formatted = respSelect?.values?.map((row: any) => ({
-          class_id: row.class_id,
-          specialty: {
-            specialty_id: row.specialty_id,
-            specialty_name: row.specialty_name,
-            specialty_name_abv: row.specialty_name_abv,
-            specialty_level: row.specialty_level,
-            collage_year: row.collage_year,
-          },
-          module: {
-            module_id: row.module_id,
-            module_name: row.module_name,
-            module_name_abv: row.module_name_abv,
-          },
-        }));
+          if (row.group_id) {
+            const groupInfo = {
+              group_id: row.group_id,
+              group_number: row.group_number,
+              group_type: row.group_type,
+            };
+
+            classInfo.groups.push(groupInfo);
+          }
+
+          result[row.class_id] = classInfo;
+          return result;
+        }, {});
+
+
+        if (classesWithGroups) {
+          const classes_formatted: any = Object.values(classesWithGroups);
+          console.log(classes_formatted)
+          setListClasses(classes_formatted);
+        }
 
 
 
-        setListClasses(classes_formatted)
-
-
-        // Use the 'classes' array as needed.
       });
+
     } catch (error) {
       alert((error as Error).message);
     }
   };
-
-
-  // console.log(classes_list)
-
-
 
 
 
@@ -670,14 +427,23 @@ export const Classes: React.FC = () => {
           <IonItem slot="header" color="light">
             <IonLabel> {classe.module.module_name_abv + " / " + classe.specialty.specialty_name_abv} </IonLabel>
             <IonButton fill="clear" id={"open-action-sheet" + classe.module.module_id + "" + classe.specialty.specialty_id} >
-              <IonIcon onClick={() => { console.log('clicked') }} size="small" icon={ellipsisVertical}></IonIcon>
+              <IonIcon  size="small" icon={ellipsisVertical}></IonIcon>
             </IonButton>
 
           </IonItem>
 
-          <IonItem slot="content">
-            group 1
-          </IonItem>
+          {classe.groups?.map(group => {
+            return (<IonItem slot="content">
+              <IonLabel>
+                group {group.group_number} /{group.group_type}
+              </IonLabel>
+              <IonButton fill="clear" routerLink={`/classes/${ group.group_id }`} size="large" >
+              <IonIcon  size="small"  icon={arrowRedo}></IonIcon>
+            </IonButton>
+            </IonItem>)
+          })
+          }
+
 
         </IonAccordion>
         <IonActionSheet
@@ -707,6 +473,10 @@ export const Classes: React.FC = () => {
   })
 
 
+
+
+
+
   const type_of_group = useRef<HTMLIonSelectElement | null>(null);
   const group_number = useRef<HTMLIonInputElement>(null);
 
@@ -716,22 +486,33 @@ export const Classes: React.FC = () => {
 
 
 
-  const CREATE_STUDENT = async (first_name: string , last_name: string , code : string) => {
-    let student_id = -1 
+  const CREATE_STUDENT = async (first_name: string, last_name: string, code: string) => {
+
+
 
     try {
 
-      
+
       performSQLAction(async (db: SQLiteDBConnection | undefined) => {
 
-        await db?.query(`INSERT INTO student( first_name, last_name, student_code) VALUES (?, ?, ?)`, [first_name, last_name, code]);
+        await db?.query(`INSERT OR IGNORE INTO student( first_name, last_name, student_code) VALUES (?, ?, ?)`, [first_name, last_name, code]);
 
-        const class_id = await db?.query(`SELECT last_insert_rowid()`);
-        console.log(` ${JSON.stringify(class_id?.values)}`)
+        const resStudent_id: any = await db?.query(`SELECT student_id as id FROM student WHERE  student_code = ? `, [code]);
 
-        const res: any = await db?.query(`SELECT last_insert_rowid() AS id `);
-        
-        student_id = res?.values[0]?.id 
+        const resGroup_id: any = await db?.query(`SELECT group_id as id FROM Groupp WHERE group_id IN (SELECT max(group_id) FROM Groupp);`);
+
+
+        const student_id = resStudent_id?.values[0]?.id
+
+        const group_id = resGroup_id?.values[0]?.id
+
+        console.log(student_id)
+        console.log(group_id)
+
+        await db?.query(`INSERT OR IGNORE INTO group_student( group_id, student_id) VALUES (?, ?)`, [group_id, student_id]);
+
+
+
 
 
       });
@@ -739,76 +520,80 @@ export const Classes: React.FC = () => {
       alert((error as Error).message);
     }
 
-    return student_id
   };
 
 
-  const CREATE_GROUP = async (group_number : number , group_type: string ) => {
-    let group_id = -1 
+  const CREATE_GROUP = async (group_number: number, group_type: string, student_list: Students[]) => {
 
     try {
-      // Assuming db is already initialized
-
-      
-      performSQLAction(async (db: SQLiteDBConnection | undefined) => {
-        // Assuming there is a 'class_group' table with columns: class_id, group_id, year
-        await db?.query(`INSERT INTO group( group_number, group_type) VALUES (?, ?)`, [group_number, group_type]);
-
-        const res: any = await db?.query(`SELECT last_insert_rowid() AS id `);
-        
-        group_id = res?.values[0]?.id 
 
 
-      });
-
-      
-
-    } catch (error) {
-      alert((error as Error).message);
-    }
-
-    return group_id
-
-  };
-
-
-  const CREATE_STUDENT_GROUP = async (student_id : number , group_id: number ) => {
-    try {
-      // Assuming db is already initialized
+      // scholar_year_id
+      // class_id
+      // group_type
+      // group_number
       performSQLAction(async (db: SQLiteDBConnection | undefined) => {
         // Assuming there is a 'class_group' table with columns: class_id, group_id, year
-        await db?.query(`INSERT INTO group_student( group_id, student_id) VALUES (?, ?)`, [group_id, student_id]);
+        await db?.query(`INSERT INTO Groupp( group_type, group_number, scholar_year_id, class_id) VALUES ( ?, ?, ?, ?)`, [group_type, group_number, 1, selectedClassIDToAddGroup]);
+
+        const resGroup_id: any = await db?.query(`SELECT group_id as id FROM Groupp WHERE group_id IN (SELECT max(group_id) FROM Groupp) AND class_id = ?   ;`, [selectedClassIDToAddGroup]);
+
+        const group_id = resGroup_id?.values[0]?.id
+
+        console.log({ group_id })
+
+        await Promise.all(student_list.map(async (student) => {
+
+
+          await db?.query(`INSERT OR IGNORE INTO student( first_name, last_name, student_code) VALUES (?, ?, ?)`, [student.first_name, student.last_name, student.student_code]);
+
+          const resStudent_id: any = await db?.query(`SELECT student_id as id FROM student WHERE  student_code = ? `, [student.student_code]);
+
+
+          const student_id = resStudent_id?.values[0]?.id
+
+          console.log({ student_id })
+
+          await db?.query(`INSERT OR IGNORE INTO group_student( group_id, student_id) VALUES (?, ?)`, [group_id, student_id]);
+
+        }))
+
+
+        // await db?.query(`INSERT INTO class_group (class_id,  group_id,  scholar_year_id, group_number, group_type) VALUES (?, ?, ?, ? , ? )`, [selectedClassIDToAddGroup, group_id, 1,]);
+
 
       });
+
+
+
     } catch (error) {
       alert((error as Error).message);
     }
+
+
   };
 
 
 
 
-
-  const onCreateGroup = async () => { 
+  const onCreateGroup = async () => {
 
     console.log(type_of_group.current?.value, group_number.current?.value, student_list)
 
-    if(type_of_group.current?.value !== "" && group_number.current?.value !== "" &&  student_list   ){} 
+    if (type_of_group.current?.value !== "" && group_number.current?.value !== "" && student_list) {
       // first we should create the group 
 
-      
-     const group_id = await  CREATE_GROUP(Number(group_number.current?.value), String(type_of_group.current?.value))
+      let group_number_formed = Number(group_number.current?.value)
+      let type_of_group_formed = String(type_of_group.current?.value)
 
 
-     student_list?.map(async(student)=>{
-
-      let student_id = await CREATE_STUDENT(student.first_name, student.last_name, student.student_code)
+      await CREATE_GROUP(group_number_formed, type_of_group_formed, student_list)
 
 
-      await CREATE_STUDENT_GROUP(student_id,group_id)
+    }
 
 
-     })
+
 
 
   }
@@ -817,34 +602,114 @@ export const Classes: React.FC = () => {
   const SELECT_STUDENTS_GROUP = async () => {
     try {
       performSQLAction(async (db: SQLiteDBConnection | undefined) => {
+
         // Join the student, group, and group_student tables to get the student's group
+
+
         const result = await db?.query(`
-          SELECT s.student_id, s.first_name, s.last_name, g.group_number
-          FROM student s, group g 
-          JOIN group_student gs ON s.student_id = gs.student_id
-          JOIN group g ON gs.group_id = g.group_id
-        `);
-   
+                SELECT 
+                    student.student_id,
+                    student.student_code,
+                    student.first_name,
+                    student.last_name ,
+                    group_student.group_id
+                    FROM 
+                    student 
+                    INNER JOIN 
+                      group_student ON student.student_id = group_student.student_id
+                    INNER JOIN 
+                      Groupp ON group_student.group_id = Groupp.group_id
+            `);
+
+
+
+
         // Log the result
         console.log(result?.values);
       });
     } catch (error) {
       alert((error as Error).message);
     }
-   };
-   
-   
+  };
+
+
+  const TEST = async () => {
+    try {
+      performSQLAction(async (db: SQLiteDBConnection | undefined) => {
+        const respSelect = await db?.query(`
+          SELECT
+            class.class_id,
+            specialty.specialty_id,
+            specialty.specialty_name,
+            specialty.specialty_name_abv,
+            specialty.specialty_level,
+            specialty.collage_year,
+            module.module_id,
+            module.module_name,
+            module.module_name_abv,
+            Groupp.group_id,
+            Groupp.group_number,
+            Groupp.group_type
+          FROM class
+          JOIN specialty ON class.specialty_id = specialty.specialty_id
+          JOIN module ON class.module_id = module.module_id
+          LEFT JOIN Groupp ON class.class_id = Groupp.class_id;
+        `);
+
+        const classesWithGroups = respSelect?.values?.reduce((result: any, row: any) => {
+          const classInfo = result[row.class_id] || {
+            class_id: row.class_id,
+            specialty: {
+              specialty_id: row.specialty_id,
+              specialty_name: row.specialty_name,
+              specialty_name_abv: row.specialty_name_abv,
+              specialty_level: row.specialty_level,
+              collage_year: row.collage_year,
+            },
+            module: {
+              module_id: row.module_id,
+              module_name: row.module_name,
+              module_name_abv: row.module_name_abv,
+            },
+            groups: [],
+          };
+
+          if (row.group_id) {
+            const groupInfo = {
+              group_id: row.group_id,
+              group_number: row.group_number,
+              group_type: row.group_type,
+            };
+
+            classInfo.groups.push(groupInfo);
+          }
+
+          result[row.class_id] = classInfo;
+          return result;
+        }, {});
+
+
+        if (classesWithGroups) {
+          const classes_formatted = Object.values(classesWithGroups);
+          console.log(classes_formatted)
+          setListClasses(classes_formatted);
+        }
 
 
 
-  const [student_list, setStudent_list] = useState<Students[]>()
+      });
+
+    } catch (error) {
+      alert((error as Error).message);
+    }
+
+  };
 
 
-  const onCreateGroup = () => {
 
-    console.log(type_of_group.current?.value, group_number.current?.value, student_list)
 
-  }
+
+
 
   return (
 
@@ -864,9 +729,10 @@ export const Classes: React.FC = () => {
 
       </IonHeader>
 
-
-
       <IonContent fullscreen >
+
+
+     
 
         <IonFab id="open-create-class" slot="fixed" vertical="bottom" horizontal="end">
           <IonFabButton>
@@ -874,20 +740,15 @@ export const Classes: React.FC = () => {
           </IonFabButton>
         </IonFab>
         <IonAccordionGroup>
-
           {classes_list ? ListClasses : <IonProgressBar type="indeterminate"  ></IonProgressBar>}
         </IonAccordionGroup>
-
-
-
-
 
         <IonModal ref={create_class_modal_create_group} isOpen={modalCreateGroupOpened}   >
           <IonHeader>
             <IonToolbar>
               <IonTitle >create new group</IonTitle>
               <IonButtons slot="end">
-                <IonButton onClick={() => { create_class_modal_create_group?.current?.dismiss(); setModalCreateGroupOpened(false) }}>Close</IonButton>
+                <IonButton onClick={() => { create_class_modal_create_group?.current?.dismiss(); setSelectedClassIDToAddGroup(-1); setModalCreateGroupOpened(false) }}>Close</IonButton>
               </IonButtons>
             </IonToolbar>
           </IonHeader>
@@ -895,9 +756,6 @@ export const Classes: React.FC = () => {
             <IonItem className="Ion-padding"   >
               <DragDropFile setStudent_list={setStudent_list} />
             </IonItem    >
-
-
-
 
             <IonItem className="Ion-padding" >
               <IonSelect
@@ -933,17 +791,20 @@ export const Classes: React.FC = () => {
 
             </IonItem>
 
-              {student_list ?  student_list?.map((student =>
+            {student_list ? student_list?.map((student =>
 
-            <IonItem >
+              <IonItem >
                 <IonText key={nanoid()} >{student.first_name} / {student.last_name} / {student.student_code} </IonText>
-            </IonItem>
-              ))  : null 
-             }
+              </IonItem>
+            )) : null
+            }
 
             <IonItem >
               <IonButton onClick={() => {
-                onCreateGroup()
+                onCreateGroup();
+                setModalCreateGroupOpened(false)
+                setSelectedClassIDToAddGroup(-1);
+                setStudent_list([])
               }} slot="start" fill="outline" size="default" >
                 submit
               </IonButton>
