@@ -125,7 +125,7 @@ export const Classes: React.FC = () => {
       await loadData()
       await SELECT_CLASSES()
       await SELECT_STUDENTS_GROUP()
-      await TEST()
+      // await TEST()
       // await CREATE_GROUP(1, 'TP')
     }
 
@@ -633,77 +633,77 @@ export const Classes: React.FC = () => {
   };
 
 
-  const TEST = async () => {
-    try {
-      performSQLAction(async (db: SQLiteDBConnection | undefined) => {
-        const respSelect = await db?.query(`
-          SELECT
-            class.class_id,
-            specialty.specialty_id,
-            specialty.specialty_name,
-            specialty.specialty_name_abv,
-            specialty.specialty_level,
-            specialty.collage_year,
-            module.module_id,
-            module.module_name,
-            module.module_name_abv,
-            Groupp.group_id,
-            Groupp.group_number,
-            Groupp.group_type
-          FROM class
-          JOIN specialty ON class.specialty_id = specialty.specialty_id
-          JOIN module ON class.module_id = module.module_id
-          LEFT JOIN Groupp ON class.class_id = Groupp.class_id;
-        `);
+  // const TEST = async () => {
+  //   try {
+  //     performSQLAction(async (db: SQLiteDBConnection | undefined) => {
+  //       const respSelect = await db?.query(`
+  //         SELECT
+  //           class.class_id,
+  //           specialty.specialty_id,
+  //           specialty.specialty_name,
+  //           specialty.specialty_name_abv,
+  //           specialty.specialty_level,
+  //           specialty.collage_year,
+  //           module.module_id,
+  //           module.module_name,
+  //           module.module_name_abv,
+  //           Groupp.group_id,
+  //           Groupp.group_number,
+  //           Groupp.group_type
+  //         FROM class
+  //         JOIN specialty ON class.specialty_id = specialty.specialty_id
+  //         JOIN module ON class.module_id = module.module_id
+  //         LEFT JOIN Groupp ON class.class_id = Groupp.class_id;
+  //       `);
 
-        const classesWithGroups = respSelect?.values?.reduce((result: any, row: any) => {
-          const classInfo = result[row.class_id] || {
-            class_id: row.class_id,
-            specialty: {
-              specialty_id: row.specialty_id,
-              specialty_name: row.specialty_name,
-              specialty_name_abv: row.specialty_name_abv,
-              specialty_level: row.specialty_level,
-              collage_year: row.collage_year,
-            },
-            module: {
-              module_id: row.module_id,
-              module_name: row.module_name,
-              module_name_abv: row.module_name_abv,
-            },
-            groups: [],
-          };
+  //       const classesWithGroups = respSelect?.values?.reduce((result: any, row: any) => {
+  //         const classInfo = result[row.class_id] || {
+  //           class_id: row.class_id,
+  //           specialty: {
+  //             specialty_id: row.specialty_id,
+  //             specialty_name: row.specialty_name,
+  //             specialty_name_abv: row.specialty_name_abv,
+  //             specialty_level: row.specialty_level,
+  //             collage_year: row.collage_year,
+  //           },
+  //           module: {
+  //             module_id: row.module_id,
+  //             module_name: row.module_name,
+  //             module_name_abv: row.module_name_abv,
+  //           },
+  //           groups: [],
+  //         };
 
-          if (row.group_id) {
-            const groupInfo = {
-              group_id: row.group_id,
-              group_number: row.group_number,
-              group_type: row.group_type,
-            };
+  //         if (row.group_id) {
+  //           const groupInfo = {
+  //             group_id: row.group_id,
+  //             group_number: row.group_number,
+  //             group_type: row.group_type,
+  //           };
 
-            classInfo.groups.push(groupInfo);
-          }
+  //           classInfo.groups.push(groupInfo);
+  //         }
 
-          result[row.class_id] = classInfo;
-          return result;
-        }, {});
-
-
-        if (classesWithGroups) {
-          const classes_formatted = Object.values(classesWithGroups);
-          console.log(classes_formatted)
-          setListClasses(classes_formatted);
-        }
+  //         result[row.class_id] = classInfo;
+  //         return result;
+  //       }, {});
 
 
+  //       if (classesWithGroups) {
+  //         const classes_formatted = Object.values(classesWithGroups);
+  //         console.log(classes_formatted)
+  //         setListClasses(classes_formatted);
+  //       }
 
-      });
 
-    } catch (error) {
-      alert((error as Error).message);
-    }
 
-  };
+  //     });
+
+  //   } catch (error) {
+  //     alert((error as Error).message);
+  //   }
+
+  // };
 
 
 
