@@ -19,14 +19,14 @@ const useSQLiteDB = () => {
 
       sqlite.current = new SQLiteConnection(CapacitorSQLite);
       const ret = await sqlite.current.checkConnectionsConsistency();
-      const isConn = (await sqlite.current.isConnection("db_vite", false))
+      const isConn = (await sqlite.current.isConnection("db_vite_1", false))
         .result;
 
       if (ret.result && isConn) {
-        db.current = await sqlite.current.retrieveConnection("db_vite", false);
+        db.current = await sqlite.current.retrieveConnection("db_vite_1", false);
       } else {
         db.current = await sqlite.current.createConnection(
-          "db_vite",
+          "db_vite_1",
           false,
           "no-encryption",
           1,
@@ -35,9 +35,12 @@ const useSQLiteDB = () => {
       }
     };
 
+     
     initializeDB().then(async () => {
-      await initializeTables();
-      setInitialized(true);
+      await initializeTables().then(()=>{
+        setInitialized(true);
+      });
+      
     });
   }, []);
 
@@ -48,8 +51,9 @@ const useSQLiteDB = () => {
     cleanup?: () => Promise<void>
   ) => {
     try {
-      await db.current?.open();
-      await action(db.current);
+      await db.current?.open().then(async()=>{
+        await action(db.current);
+      });
     } catch (error) {
       alert((error as Error).message);
     } finally {
@@ -163,7 +167,7 @@ const useSQLiteDB = () => {
 
 
 
-    performSQLAction(async (db: SQLiteDBConnection | undefined) => {
+    await performSQLAction(async (db: SQLiteDBConnection | undefined) => {
    
       await db?.query(queryCreateTable); // MODULE 
       
@@ -183,8 +187,7 @@ const useSQLiteDB = () => {
       await db?.query(createGroupTable); // GROUP 
 
       await db?.query(createStudentGroupTable); // ASSIGN STUDENT TO CLASSES
-    
-
+  
 
       // console.log(`res: ${JSON.stringify(respCTM)}`);
     });

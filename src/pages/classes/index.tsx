@@ -116,20 +116,22 @@ export const Classes: React.FC = () => {
   const { showConfirmationAlert, ConfirmationAlert } = useConfirmationAlert();
 
 
-
+  const [reload, setReload] = useState(0)
 
   useEffect(() => {
 
       // await useLoadData({setModules, setSpecialties})
-       loadData()
-       SELECT_CLASSES()
-       SELECT_STUDENTS_GROUP()
-        TEST()
+        // if(initialized)
+          loadData()
+
+      //  SELECT_CLASSES()
+      //  SELECT_STUDENTS_GROUP()
+        // TEST()
       // await CREATE_GROUP(1, 'TP')
 
 
 
-  }, [initialized]);
+  }, [initialized, reload]);
 
   /**loadData
    * do a select of the database
@@ -138,16 +140,79 @@ export const Classes: React.FC = () => {
   const loadData = async () => {
     try {
       // query db
-      performSQLAction(async (db: SQLiteDBConnection | undefined) => {
+      await  performSQLAction(async (db: SQLiteDBConnection | undefined) => {
         const respSelect = await db?.query(`SELECT * FROM module`);
         setModules(respSelect?.values);
         const respSelectSpecialties = await db?.query(`SELECT * FROM specialty`);
         setSpecialties(respSelectSpecialties?.values);
+
+                
+        const respSelectClasses = await db?.query(`
+          SELECT
+            class.class_id,
+            specialty.specialty_id,
+            specialty.specialty_name,
+            specialty.specialty_name_abv,
+            specialty.specialty_level,
+            specialty.collage_year,
+            module.module_id,
+            module.module_name,
+            module.module_name_abv,
+            Groupp.group_id,
+            Groupp.group_number,
+            Groupp.group_type
+          FROM class
+          JOIN specialty ON class.specialty_id = specialty.specialty_id
+          JOIN module ON class.module_id = module.module_id
+          LEFT JOIN Groupp ON class.class_id = Groupp.class_id;
+        `);
+
+        const classesWithGroups = respSelectClasses?.values?.reduce((result: any, row: any) => {
+          const classInfo = result[row.class_id] || {
+            class_id: row.class_id,
+            specialty: {
+              specialty_id: row.specialty_id,
+              specialty_name: row.specialty_name,
+              specialty_name_abv: row.specialty_name_abv,
+              specialty_level: row.specialty_level,
+              collage_year: row.collage_year,
+            },
+            module: {
+              module_id: row.module_id,
+              module_name: row.module_name,
+              module_name_abv: row.module_name_abv,
+            },
+            groups: [],
+          };
+
+          if (row.group_id) {
+            const groupInfo = {
+              group_id: row.group_id,
+              group_number: row.group_number,
+              group_type: row.group_type,
+            };
+
+            classInfo.groups.push(groupInfo);
+          }
+
+          result[row.class_id] = classInfo;
+          return result;
+        }, {});
+
+        if (classesWithGroups) {
+          const classes_formatted: any = Object.values(classesWithGroups);
+          setListClasses(classes_formatted);
+        }
+
+
+
       });
     } catch (error) {
-      alert((error as Error).message);
+      // alert((error as Error).message);
       setModules([])
       setSpecialties([])// await CREATE_GROUP(1, 'TP')
+      setListClasses([])
+
     }
   };
 
@@ -175,7 +240,7 @@ export const Classes: React.FC = () => {
   const INSERT_NEW_CLASS = async (specialty_id: number, module_id: number) => {
 
     try {
-      performSQLAction(async (db: SQLiteDBConnection | undefined) => {
+      await performSQLAction(async (db: SQLiteDBConnection | undefined) => {
         await db?.query(`INSERT INTO class( module_id, specialty_id ) VALUES (?, ?)`, [specialty_id, module_id]);
 
 
@@ -239,7 +304,7 @@ export const Classes: React.FC = () => {
   const DELETE_CLASS = async (classId: number) => {
 
     try {
-      performSQLAction(async (db: SQLiteDBConnection | undefined) => {
+      await (async (db: SQLiteDBConnection | undefined) => {
         await db?.query(`DELETE FROM class WHERE class_id = ? `, [classId]);
 
 
@@ -341,6 +406,8 @@ export const Classes: React.FC = () => {
   const SELECT_CLASSES = async () => {
     try {
       performSQLAction(async (db: SQLiteDBConnection | undefined) => {
+
+
         const respSelect = await db?.query(`
           SELECT
             class.class_id,
@@ -486,7 +553,7 @@ export const Classes: React.FC = () => {
 
 
 
-      performSQLAction(async (db: SQLiteDBConnection | undefined) => {
+      await performSQLAction(async (db: SQLiteDBConnection | undefined) => {
         // Assuming there is a 'class_group' table with columns: class_id, group_id, year
         await db?.query(`INSERT INTO Groupp( group_type, group_number, scholar_year_id, class_id) VALUES ( ?, ?, ?, ?)`, [group_type, group_number, 1, selectedClassIDToAddGroup]);
 
@@ -514,7 +581,6 @@ export const Classes: React.FC = () => {
 
         }))
 
-        location.reload()
         // await db?.query(`INSERT INTO class_group (class_id,  group_id,  scholar_year_id, group_number, group_type) VALUES (?, ?, ?, ? , ? )`, [selectedClassIDToAddGroup, group_id, 1,]);
 
 
@@ -546,6 +612,7 @@ export const Classes: React.FC = () => {
 
       await CREATE_GROUP(group_number_formed, type_of_group_formed, student_list)
 
+      setReload(()=>reload+1)
 
     }
 
@@ -557,61 +624,61 @@ export const Classes: React.FC = () => {
   }
 
 
-  const SELECT_STUDENTS_GROUP = async () => {
-    try {
-      performSQLAction(async (db: SQLiteDBConnection | undefined) => {
+  // const SELECT_STUDENTS_GROUP = async () => {
+  //   try {
+  //     performSQLAction(async (db: SQLiteDBConnection | undefined) => {
 
-        // Join the student, group, and group_student tables to get the student's group
-
-
-        const result = await db?.query(`
-                SELECT 
-                    student.student_id,
-                    student.student_code,
-                    student.first_name,
-                    student.last_name ,
-                    group_student.group_id
-                    FROM 
-                    student 
-                    INNER JOIN 
-                      group_student ON student.student_id = group_student.student_id
-                    INNER JOIN 
-                      Groupp ON group_student.group_id = Groupp.group_id
-            `);
+  //       // Join the student, group, and group_student tables to get the student's group
 
 
-
-
-        // Log the result
-        console.log(result?.values);
-      });
-    } catch (error) {
-      alert((error as Error).message);
-    }
-  };
-
-
-  const TEST = async () => {
-    try {
-      performSQLAction(async (db: SQLiteDBConnection | undefined) => {
-        const respSelect = await db?.query(`
-          SELECT  * FROM class
-
-        `);
-
-
-        console.log(respSelect?.values)
-
-      });
+  //       const resultSelectStudentsGroup = await db?.query(`
+  //               SELECT 
+  //                   student.student_id,
+  //                   student.student_code,
+  //                   student.first_name,
+  //                   student.last_name ,
+  //                   group_student.group_id
+  //                   FROM 
+  //                   student 
+  //                   INNER JOIN 
+  //                     group_student ON student.student_id = group_student.student_id
+  //                   INNER JOIN 
+  //                     Groupp ON group_student.group_id = Groupp.group_id
+  //           `);
 
 
 
 
-    } catch (error) {
-      alert((error as Error).message);
-    }
+  //       // Log the result
+  //       console.log(resultSelectStudentsGroup?.values);
+  //     });
+  //   } catch (error) {
+  //     alert((error as Error).message);
+  //   }
+  // };
 
-  };
+
+  // const TEST = async () => {
+  //   try {
+  //     performSQLAction(async (db: SQLiteDBConnection | undefined) => {
+  //       const respSelect = await db?.query(`
+  //         SELECT  * FROM class
+
+  //       `);
+
+
+  //       console.log(respSelect?.values)
+
+  //     });
+
+
+
+
+  //   } catch (error) {
+  //     alert((error as Error).message);
+  //   }
+
+  // };
 
 
 
