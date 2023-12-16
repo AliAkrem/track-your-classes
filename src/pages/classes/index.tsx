@@ -120,17 +120,12 @@ export const Classes: React.FC = () => {
 
   useEffect(() => {
 
-    const loadAll = async () => {
       // await useLoadData({setModules, setSpecialties})
-      await loadData()
-      await SELECT_CLASSES()
-      await SELECT_STUDENTS_GROUP()
-      // await TEST()
+       loadData()
+       SELECT_CLASSES()
+       SELECT_STUDENTS_GROUP()
+        TEST()
       // await CREATE_GROUP(1, 'TP')
-    }
-
-
-    loadAll()
 
 
 
@@ -314,11 +309,6 @@ export const Classes: React.FC = () => {
 
   const ActionResult = (result: OverlayEventDetail, classPayload: { class_id: number, module_id: number, specialty_id: number }) => {
 
-
-
-    console.log(classPayload.class_id)
-
-
     if (result.data?.action === "delete") {
 
       showConfirmationAlert("Are You Sure You Want To Delete this class? the information related to this class will deleted also! ", () => {
@@ -337,7 +327,9 @@ export const Classes: React.FC = () => {
 
       setSelectedClassIDToAddGroup(classPayload.class_id)
 
-      console.log('create new group in this class ', classPayload)
+      // console.log('create new group in this class ', classPayload)
+
+
     }
 
 
@@ -419,25 +411,28 @@ export const Classes: React.FC = () => {
 
 
 
+  const classesGroupRef = useRef<HTMLIonAccordionGroupElement | null >(null)
+
+
+
   const ListClasses = classes_list?.map((classe) => {
     return (
 
       <div key={nanoid()}  >
-        <IonAccordion toggleIconSlot="start" value={classe.module.module_id + "" + classe.specialty.specialty_id}>
+        <IonAccordion toggleIconSlot="start"   value={nanoid()}>
           <IonItem slot="header" color="light">
-            <IonLabel> {classe.module.module_name_abv + " / " + classe.specialty.specialty_name_abv} </IonLabel>
-            <IonButton fill="clear" id={"open-action-sheet" + classe.module.module_id + "" + classe.specialty.specialty_id} >
+            <IonLabel> {classe.module.module_name_abv + " / " + classe.specialty.specialty_name_abv}</IonLabel>
+            <IonButton fill="clear"   id={"open-action-sheet" + classe.module.module_id + "" + classe.specialty.specialty_id} >
               <IonIcon  size="small" icon={ellipsisVertical}></IonIcon>
             </IonButton>
-
           </IonItem>
-
+          
           {classe.groups?.map(group => {
-            return (<IonItem slot="content">
+            return (<IonItem slot="content"   key={nanoid()}   >
               <IonLabel>
                 group {group.group_number} /{group.group_type}
               </IonLabel>
-              <IonButton fill="clear" routerLink={`/classes/${ group.group_id }`} size="large" >
+              <IonButton fill="clear" href={`/classes/${ group.group_id }`} size="large" >
               <IonIcon  size="small"  icon={arrowRedo}></IonIcon>
             </IonButton>
             </IonItem>)
@@ -485,53 +480,12 @@ export const Classes: React.FC = () => {
 
 
 
-
-  const CREATE_STUDENT = async (first_name: string, last_name: string, code: string) => {
-
-
-
-    try {
-
-
-      performSQLAction(async (db: SQLiteDBConnection | undefined) => {
-
-        await db?.query(`INSERT OR IGNORE INTO student( first_name, last_name, student_code) VALUES (?, ?, ?)`, [first_name, last_name, code]);
-
-        const resStudent_id: any = await db?.query(`SELECT student_id as id FROM student WHERE  student_code = ? `, [code]);
-
-        const resGroup_id: any = await db?.query(`SELECT group_id as id FROM Groupp WHERE group_id IN (SELECT max(group_id) FROM Groupp);`);
-
-
-        const student_id = resStudent_id?.values[0]?.id
-
-        const group_id = resGroup_id?.values[0]?.id
-
-        console.log(student_id)
-        console.log(group_id)
-
-        await db?.query(`INSERT OR IGNORE INTO group_student( group_id, student_id) VALUES (?, ?)`, [group_id, student_id]);
-
-
-
-
-
-      });
-    } catch (error) {
-      alert((error as Error).message);
-    }
-
-  };
-
-
   const CREATE_GROUP = async (group_number: number, group_type: string, student_list: Students[]) => {
 
     try {
 
 
-      // scholar_year_id
-      // class_id
-      // group_type
-      // group_number
+
       performSQLAction(async (db: SQLiteDBConnection | undefined) => {
         // Assuming there is a 'class_group' table with columns: class_id, group_id, year
         await db?.query(`INSERT INTO Groupp( group_type, group_number, scholar_year_id, class_id) VALUES ( ?, ?, ?, ?)`, [group_type, group_number, 1, selectedClassIDToAddGroup]);
@@ -556,14 +510,17 @@ export const Classes: React.FC = () => {
 
           await db?.query(`INSERT OR IGNORE INTO group_student( group_id, student_id) VALUES (?, ?)`, [group_id, student_id]);
 
+
+
         }))
 
-
+        location.reload()
         // await db?.query(`INSERT INTO class_group (class_id,  group_id,  scholar_year_id, group_number, group_type) VALUES (?, ?, ?, ? , ? )`, [selectedClassIDToAddGroup, group_id, 1,]);
 
 
       });
 
+      
 
 
     } catch (error) {
@@ -591,6 +548,7 @@ export const Classes: React.FC = () => {
 
 
     }
+
 
 
 
@@ -633,77 +591,27 @@ export const Classes: React.FC = () => {
   };
 
 
-  // const TEST = async () => {
-  //   try {
-  //     performSQLAction(async (db: SQLiteDBConnection | undefined) => {
-  //       const respSelect = await db?.query(`
-  //         SELECT
-  //           class.class_id,
-  //           specialty.specialty_id,
-  //           specialty.specialty_name,
-  //           specialty.specialty_name_abv,
-  //           specialty.specialty_level,
-  //           specialty.collage_year,
-  //           module.module_id,
-  //           module.module_name,
-  //           module.module_name_abv,
-  //           Groupp.group_id,
-  //           Groupp.group_number,
-  //           Groupp.group_type
-  //         FROM class
-  //         JOIN specialty ON class.specialty_id = specialty.specialty_id
-  //         JOIN module ON class.module_id = module.module_id
-  //         LEFT JOIN Groupp ON class.class_id = Groupp.class_id;
-  //       `);
+  const TEST = async () => {
+    try {
+      performSQLAction(async (db: SQLiteDBConnection | undefined) => {
+        const respSelect = await db?.query(`
+          SELECT  * FROM class
 
-  //       const classesWithGroups = respSelect?.values?.reduce((result: any, row: any) => {
-  //         const classInfo = result[row.class_id] || {
-  //           class_id: row.class_id,
-  //           specialty: {
-  //             specialty_id: row.specialty_id,
-  //             specialty_name: row.specialty_name,
-  //             specialty_name_abv: row.specialty_name_abv,
-  //             specialty_level: row.specialty_level,
-  //             collage_year: row.collage_year,
-  //           },
-  //           module: {
-  //             module_id: row.module_id,
-  //             module_name: row.module_name,
-  //             module_name_abv: row.module_name_abv,
-  //           },
-  //           groups: [],
-  //         };
-
-  //         if (row.group_id) {
-  //           const groupInfo = {
-  //             group_id: row.group_id,
-  //             group_number: row.group_number,
-  //             group_type: row.group_type,
-  //           };
-
-  //           classInfo.groups.push(groupInfo);
-  //         }
-
-  //         result[row.class_id] = classInfo;
-  //         return result;
-  //       }, {});
+        `);
 
 
-  //       if (classesWithGroups) {
-  //         const classes_formatted = Object.values(classesWithGroups);
-  //         console.log(classes_formatted)
-  //         setListClasses(classes_formatted);
-  //       }
+        console.log(respSelect?.values)
+
+      });
 
 
 
-  //     });
 
-  //   } catch (error) {
-  //     alert((error as Error).message);
-  //   }
+    } catch (error) {
+      alert((error as Error).message);
+    }
 
-  // };
+  };
 
 
 
@@ -739,11 +647,12 @@ export const Classes: React.FC = () => {
             <IonIcon icon={add}></IonIcon>
           </IonFabButton>
         </IonFab>
-        <IonAccordionGroup>
+
+        <IonAccordionGroup ref={classesGroupRef} multiple={false} >
           {classes_list ? ListClasses : <IonProgressBar type="indeterminate"  ></IonProgressBar>}
         </IonAccordionGroup>
 
-        <IonModal ref={create_class_modal_create_group} isOpen={modalCreateGroupOpened}   >
+        <IonModal ref={create_class_modal_create_group} isOpen={modalCreateGroupOpened}     >
           <IonHeader>
             <IonToolbar>
               <IonTitle >create new group</IonTitle>
@@ -761,7 +670,6 @@ export const Classes: React.FC = () => {
               <IonSelect
 
                 ref={type_of_group}
-
                 // ref={specialty_level}
                 aria-label="type of group"
                 interface="popover"
@@ -793,7 +701,7 @@ export const Classes: React.FC = () => {
 
             {student_list ? student_list?.map((student =>
 
-              <IonItem >
+              <IonItem key={student.student_code+student.first_name}>
                 <IonText key={nanoid()} >{student.first_name} / {student.last_name} / {student.student_code} </IonText>
               </IonItem>
             )) : null
@@ -804,14 +712,15 @@ export const Classes: React.FC = () => {
                 onCreateGroup();
                 setModalCreateGroupOpened(false)
                 setSelectedClassIDToAddGroup(-1);
-                setStudent_list([])
+                setStudent_list([]) ; 
+
+
               }} slot="start" fill="outline" size="default" >
                 submit
               </IonButton>
             </IonItem>
           </IonContent>
         </IonModal>
-
 
         <IonModal ref={create_class_modal} trigger="open-create-class" >
           <IonHeader>

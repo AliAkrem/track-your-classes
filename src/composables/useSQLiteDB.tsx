@@ -86,8 +86,8 @@ const useSQLiteDB = () => {
       CREATE TABLE IF NOT EXISTS  group_student (
           group_id INTEGER ,
           student_id  INTEGER  ,
-          FOREIGN KEY (group_id) REFERENCES Groupp(group_id) ON DELETE  NO ACTION ,
-          FOREIGN KEY (student_id) REFERENCES student(student_id) ON DELETE  NO ACTION,
+          FOREIGN KEY (group_id) REFERENCES Groupp(group_id) ON DELETE  CASCADE ,
+          FOREIGN KEY (student_id) REFERENCES student(student_id) ON DELETE  CASCADE,
           UNIQUE (group_id, student_id)
         );  
         `;
@@ -149,6 +149,7 @@ const useSQLiteDB = () => {
         class_id INTEGER NOT NULL,
 
         group_type VARCHAR(2) CHECK (group_type IN ('TD', 'TP')), 
+
         group_number  INTEGER NOT NULL,
 
         FOREIGN KEY (class_id) REFERENCES class(class_id) ON DELETE NO ACTION,
@@ -161,8 +162,8 @@ const useSQLiteDB = () => {
 
 
 
-
-      const respCTM = await db?.execute(queryCreateTable); // MODULE 
+      await db?.execute(queryCreateTable); // MODULE 
+      
       await db?.execute(createSpecialtyTable);// SPECIALTY
 
 
@@ -171,7 +172,6 @@ const useSQLiteDB = () => {
 
       await db?.execute(createStudentTable); // STUDENT
 
-      // await db?.execute(createTableClassGroup);
 
       await db?.execute(createTableYearScholar); // YEAR_SCHOLAR
 
@@ -180,6 +180,7 @@ const useSQLiteDB = () => {
       await db?.execute(createGroupTable); // GROUP 
 
       await db?.execute(createStudentGroupTable); // ASSIGN STUDENT TO CLASSES
+    
 
 
 
@@ -190,7 +191,7 @@ const useSQLiteDB = () => {
 
 
 
-      console.log(`res: ${JSON.stringify(respCTM)}`);
+      // console.log(`res: ${JSON.stringify(respCTM)}`);
     });
   };
 
