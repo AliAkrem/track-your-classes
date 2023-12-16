@@ -10,6 +10,8 @@ import {
     IonIcon,
     IonButton,
     IonActionSheet,
+    IonRefresher,
+    IonRefresherContent,
 
 } from "@ionic/react";
 import React, { useEffect, useState } from "react";
@@ -22,7 +24,7 @@ import { nanoid } from "nanoid";
 import { chevronBack, ellipsisVertical } from "ionicons/icons";
 import { OverlayEventDetail } from "@ionic/core";
 
-
+import { RefresherEventDetail } from "@ionic/react";
 
 
 
@@ -48,12 +50,7 @@ export const Group: React.FC = () => {
 
     useEffect(() => {
 
-        const loadAll = async () => {
-            await SELECT_STUDENTS_IN_GROUP(Number(group));
-        }
-
-        loadAll()
-
+        SELECT_STUDENTS_IN_GROUP(Number(group));
 
     }, [initialized]);
 
@@ -62,7 +59,7 @@ export const Group: React.FC = () => {
 
     const SELECT_STUDENTS_IN_GROUP = async (group_id: number) => {
         try {
-            performSQLAction(async (db: SQLiteDBConnection | undefined) => {
+        await performSQLAction(async (db: SQLiteDBConnection | undefined) => {
                 const respSelect = await db?.query(`
               SELECT
                 student.student_id,
@@ -141,7 +138,7 @@ export const Group: React.FC = () => {
 
     const DELETE_GROUP = async (group_id: number) => {
         try {
-            performSQLAction(async (db: SQLiteDBConnection | undefined) => {
+           await  performSQLAction(async (db: SQLiteDBConnection | undefined) => {
                 await db?.query(`DELETE FROM Groupp WHERE group_id = ? `, [group_id])
             })
         } catch (error) {
@@ -163,13 +160,23 @@ export const Group: React.FC = () => {
     })
 
 
+    const handleRefresh=async (event: CustomEvent<RefresherEventDetail>) =>{
+        setTimeout(() => {
+          // Any calls to load data go here
+          event.detail.complete();
+        }, 2000);
+        
+        await SELECT_STUDENTS_IN_GROUP(Number(group));
+
+      }
+
 
 
     return (
         <IonPage>
             <IonHeader>
                 <IonToolbar>
-                    <IonButton fill="clear" slot="start" href="/" >
+                    <IonButton fill="clear" slot="start" routerLink="/classes" >
                         <IonIcon size="small" icon={chevronBack}></IonIcon>
                     </IonButton>
 
@@ -185,6 +192,9 @@ export const Group: React.FC = () => {
             </IonHeader>
 
             <IonContent fullscreen >
+            <IonRefresher slot="fixed" onIonRefresh={handleRefresh}>
+          <IonRefresherContent></IonRefresherContent>
+        </IonRefresher>
                 <IonItem  >
                     <IonLabel >
                         <h1>students </h1>
