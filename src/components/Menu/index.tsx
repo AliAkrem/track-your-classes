@@ -68,11 +68,11 @@ const Menu: React.FC = () => {
     <IonMenu    contentId="main" type="reveal">
       <IonContent>
         <IonList id="inbox-list">
-          <IonListHeader>{page}</IonListHeader>
+          {/* <IonListHeader>{page}</IonListHeader> */}
           {appPages.map((appPage, index) => {
             return (
               <IonMenuToggle key={index} autoHide={false}>
-                <IonItem className={location.pathname === appPage.url ? 'selected' : ''} routerLink={appPage.url} routerDirection="none" lines="none" detail={false}>
+                <IonItem className={location.pathname === appPage.url ? 'selected' : ''} href={appPage.url} routerDirection="none" lines="none" detail={false}>
                   <IonIcon aria-hidden="true" slot="start" ios={appPage.iosIcon} md={appPage.mdIcon} />
                   <IonLabel>{appPage.title}</IonLabel>
                 </IonItem>

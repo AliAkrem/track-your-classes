@@ -6,6 +6,10 @@ import {
     IonContent,
     IonItem,
     IonLabel,
+    IonItemGroup,
+    IonIcon,
+    IonButton,
+    IonActionSheet,
 
 } from "@ionic/react";
 import React, { useEffect, useState } from "react";
@@ -13,7 +17,10 @@ import { SQLiteDBConnection } from "@capacitor-community/sqlite";
 import useSQLiteDB from "../../composables/useSQLiteDB";
 import useConfirmationAlert from "../../composables/useConfirmationAlert";
 import { useParams } from "react-router";
-import { Students } from "../classes";
+import { GroupSQL, Students } from "../classes";
+import { nanoid } from "nanoid";
+import { chevronBack, ellipsisVertical } from "ionicons/icons";
+import { OverlayEventDetail } from "@ionic/core";
 
 
 
@@ -33,23 +40,24 @@ export const Group: React.FC = () => {
     const { showConfirmationAlert, ConfirmationAlert } = useConfirmationAlert();
 
 
-
+    const [groupOptionOpened, setGroupOptionOpened] = useState(false)
 
     const [list_student, setList_student] = useState<Students[]>()
-
+    const [groupInfo, setGroupInfo] = useState<GroupSQL>()
     // const params = useParams<{id : string } >();
 
     useEffect(() => {
 
         const loadAll = async () => {
             await SELECT_STUDENTS_IN_GROUP(Number(group));
-
         }
 
         loadAll()
 
 
     }, [initialized]);
+
+
 
 
     const SELECT_STUDENTS_IN_GROUP = async (group_id: number) => {
@@ -60,7 +68,10 @@ export const Group: React.FC = () => {
                 student.student_id,
                 student.student_code,
                 student.first_name,
-                student.last_name
+                student.last_name,
+                Groupp.group_id,
+                Groupp.group_number , 
+                Groupp.group_type
               FROM Groupp
               JOIN group_student ON Groupp.group_id = group_student.group_id
               JOIN student ON group_student.student_id = student.student_id
@@ -74,8 +85,21 @@ export const Group: React.FC = () => {
                     last_name: row.last_name,
                 }));
 
+                // setGroupInfo({group_id : respSelect?.values.})
+
                 // Use the studentsInGroup array as needed
-                console.log(studentsInGroup);
+                if (respSelect?.values) {
+                    console.log(respSelect?.values[0]?.group_type);
+                    console.log(respSelect?.values[0]?.group_number);
+                    console.log(respSelect?.values[0]?.group_id);
+                    setGroupInfo(
+                        {
+                            group_id: respSelect?.values[0]?.group_id,
+                            group_number: respSelect?.values[0]?.group_number,
+                            group_type: respSelect?.values[0]?.group_type
+                        }
+                    )
+                }
 
                 setList_student(studentsInGroup)
 
@@ -86,17 +110,58 @@ export const Group: React.FC = () => {
     };
 
 
+    const ActionResult = (result: OverlayEventDetail) => {
+
+        if (result.data?.action === "delete") {
+
+            showConfirmationAlert("Are You Sure You Want To Delete this group? the information related to this class will deleted also! ", () => {
+
+                if (groupInfo?.group_id) {
+                    DELETE_GROUP(groupInfo?.group_id)
+                }
+
+            })
+
+        };
+
+
+        if (result.data?.action === "create-student") {
+
+
+
+
+        }
+
+
+
+
+
+    }
+
+
+    const DELETE_GROUP = async (group_id: number) => {
+        try {
+            performSQLAction(async (db: SQLiteDBConnection | undefined) => {
+                await db?.query(`DELETE FROM Groupp WHERE group_id = ? `, [group_id])
+            })
+        } catch (error) {
+            alert((error as Error).message);
+        }
+    };
+
+
+
 
     const DisplayListStudent = list_student?.map((student) => {
 
-        return (<IonItem  >
-
-            {student.first_name} {" "} {student.last_name}
-
-
+        return (<IonItem key={nanoid()}  >
+            <IonLabel style={{ padding: "10px" }} class="ion-text-wrap" >
+                {student.first_name} {" "} {student.last_name}
+            </IonLabel>
         </IonItem>)
 
     })
+
 
 
 
@@ -104,25 +169,56 @@ export const Group: React.FC = () => {
         <IonPage>
             <IonHeader>
                 <IonToolbar>
-                    <IonTitle>
-                        Group
+                    <IonButton fill="clear" slot="start" href="/" >
+                        <IonIcon size="small" icon={chevronBack}></IonIcon>
+                    </IonButton>
+
+                    <IonTitle class="ion-text-wrap" >
+                        Group {groupInfo?.group_number} {groupInfo?.group_type}
                     </IonTitle>
+
+                    <IonButton id="open-action-group-option" fill="clear" slot="end" onClick={() => { setGroupOptionOpened(true) }} >
+                        <IonIcon size="small" icon={ellipsisVertical}></IonIcon>
+                    </IonButton>
+
                 </IonToolbar>
             </IonHeader>
 
-            <IonContent fullscreen className="ion-padding">
-                <IonItem>
-                    <IonLabel>
-                        <IonTitle size="large" >
-                            students
-                        </IonTitle>
+            <IonContent fullscreen >
+                <IonItem  >
+                    <IonLabel >
+                        <h1>students </h1>
                     </IonLabel>
-
                 </IonItem>
-                {DisplayListStudent}
-
-
+                <IonItemGroup style={{ padding: '10px' }} >
+                    {DisplayListStudent}
+                </IonItemGroup>
+                <IonActionSheet
+                    // trigger={"open-action-group-option"}
+                    isOpen={groupOptionOpened}
+                    onIonActionSheetWillDismiss={() => setGroupOptionOpened(false)}
+                    header="Actions"
+                    buttons={[
+                        {
+                            text: 'Delete Group ',
+                            role: 'delete',
+                            data: {
+                                action: 'delete',
+                            },
+                        },
+                        {
+                            text: 'create new student',
+                            role: 'create',
+                            data: {
+                                action: 'create-group',
+                            },
+                        },
+                    ]}
+                    onDidDismiss={({ detail }) => ActionResult(detail)}
+                ></IonActionSheet>
+                {ConfirmationAlert}
             </IonContent>
+
         </IonPage>
     );
 };

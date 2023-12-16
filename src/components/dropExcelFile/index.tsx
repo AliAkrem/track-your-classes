@@ -69,8 +69,14 @@ function DragDropFile({ setStudent_list }: Props) {
                         const worksheetName = workbook.SheetNames[0];
                         const worksheet = workbook.Sheets[worksheetName];
 
+
+
                         // Convert the worksheet to JSON
-                        const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+                        const jsonData = XLSX.utils.sheet_to_json(worksheet, 
+                        {   header: 1, 
+                            range: { s: { c: 0, r: 8 }, e: { c: 2, r: 100 } }
+                        }
+                        );
 
                         // Now jsonData contains the data from the worksheet
                         console.log(jsonData);
@@ -82,13 +88,15 @@ function DragDropFile({ setStudent_list }: Props) {
 
                         jsonData.map((student: any) => {
 
+                            if(student[0]){
                             payload = {
                                 ...payload,
-                                first_name: student[0],
-                                last_name: student[1],
-                                student_code: student[2]
+                                first_name: student[1],
+                                last_name: student[2],
+                                student_code: student[0]
                             }
-                            array_students = [... array_students , payload]
+                            array_students = [... array_students , payload]}
+
                            
                         })
 
