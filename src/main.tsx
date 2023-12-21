@@ -8,6 +8,7 @@ import {
   SQLiteConnection,
 } from "@capacitor-community/sqlite";
 import { JeepSqlite } from "jeep-sqlite/dist/components/jeep-sqlite";
+import { GlobalContextProvider } from "./context/globalContext";
 
 
 
@@ -24,7 +25,7 @@ window.addEventListener("DOMContentLoaded", async () => {
       customElements.define("jeep-sqlite", JeepSqlite);
 
       const jeepSqliteEl = document.createElement("jeep-sqlite");
-      
+
       document.body.appendChild(jeepSqliteEl);
       await customElements.whenDefined("jeep-sqlite");
       console.log(`after customElements.whenDefined`);
@@ -35,12 +36,17 @@ window.addEventListener("DOMContentLoaded", async () => {
     }
 
 
-    
+
+
+
+
     const container = document.getElementById("root");
     const root = createRoot(container!);
     root.render(
       <React.StrictMode>
-        <App />
+        <GlobalContextProvider >
+          <App />
+        </GlobalContextProvider>
       </React.StrictMode>
     );
   } catch (e) {

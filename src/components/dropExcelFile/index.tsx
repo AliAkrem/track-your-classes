@@ -5,12 +5,12 @@ import { readXLSXFile } from "../../utils/xlsxStudentReader";
 
 import * as XLSX from 'xlsx';
 import { documentOutline } from "ionicons/icons";
-import { Students } from "../../pages/classes";
+import { Students } from "../../context/globalContext";
 // Assuming you have the utility function in a separate file
 
 
 type Props = {
-    setStudent_list: React.Dispatch<React.SetStateAction<Students[] | undefined>>
+    setStudent_list: React.Dispatch<React.SetStateAction<Students[] | []>>
 }
 
 function DragDropFile({ setStudent_list }: Props) {
@@ -111,6 +111,8 @@ function DragDropFile({ setStudent_list }: Props) {
                     reader.readAsBinaryString(file);
                 } else {
                     alert(`Invalid file type: ${fileName}. Please select an Excel file.`);
+                    setStudent_list([])
+
                 }
             });
         }

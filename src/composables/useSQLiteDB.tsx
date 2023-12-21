@@ -4,6 +4,7 @@ import {
   SQLiteConnection,
   CapacitorSQLite,
 } from "@capacitor-community/sqlite";
+import { useGlobalContext } from "../context/globalContext";
 
 const useSQLiteDB = () => {
 
@@ -35,12 +36,15 @@ const useSQLiteDB = () => {
       }
     };
 
-     
     initializeDB().then(async () => {
-      await initializeTables().then(()=>{
-        setInitialized(true);
-      });
-      
+      await initializeTables()
+        .then(
+          () => {
+            setInitialized(true);
+          }
+        );
+
+
     });
   }, []);
 
@@ -51,7 +55,7 @@ const useSQLiteDB = () => {
     cleanup?: () => Promise<void>
   ) => {
     try {
-      await db.current?.open().then(async()=>{
+      await db.current?.open().then(async () => {
         await action(db.current);
       });
     } catch (error) {
@@ -62,6 +66,9 @@ const useSQLiteDB = () => {
         cleanup && (await cleanup());
       } catch { }
     }
+
+
+
   };
 
   /**
@@ -71,16 +78,17 @@ const useSQLiteDB = () => {
 
   const initializeTables = async () => {
 
+
     const queryCreateTable = `
     CREATE TABLE IF NOT EXISTS module( module_id INTEGER PRIMARY KEY NOT NULL,
-       module_name  varchar(30) NOT NULL UNIQUE,
-      module_name_abv  varchar(10) NOT NULL UNIQUE  ) ; 
+       module_name  varchar(30) NOT NULL ,
+      module_name_abv  varchar(10) NOT NULL   ) ; 
   `;
 
     const createSpecialtyTable = `CREATE TABLE IF NOT EXISTS specialty(
       specialty_id INTEGER PRIMARY KEY NOT NULL,
-      specialty_name VARCHAR(30) NOT NULL UNIQUE,
-      specialty_name_abv VARCHAR(10) NOT NULL UNIQUE,
+      specialty_name VARCHAR(30) NOT NULL ,
+      specialty_name_abv VARCHAR(10) NOT NULL ,
       specialty_level VARCHAR(1) CHECK (specialty_level IN ('L', 'M')),
       collage_year INTEGER
   );`;
@@ -101,9 +109,11 @@ const useSQLiteDB = () => {
         class_id INTEGER PRIMARY KEY NOT NULL,
         module_id INTEGER,
         specialty_id INTEGER,
+        scholar_year_id INTEGER,
         FOREIGN KEY (module_id) REFERENCES module(module_id) ON DELETE  NO ACTION,
         FOREIGN KEY (specialty_id) REFERENCES specialty(specialty_id) ON DELETE  NO ACTION,
-        UNIQUE (module_id, specialty_id)
+      FOREIGN KEY (scholar_year_id) REFERENCES scholar_year(scholar_year_id) ON DELETE NO ACTION
+
       );
     `
 
@@ -122,45 +132,32 @@ const useSQLiteDB = () => {
         scholar_year_id INTEGER PRIMARY KEY NOT NULL, 
         year VARCHAR(9) UNIQUE NOT NULL CHECK(year LIKE '____/____')
        ) ; 
+
+       INSERT OR IGNORE INTO scholar_year (year) VALUES ('2022/2023'); 
     `
-    const insertYear = `INSERT OR IGNORE INTO scholar_year (year) VALUES ('2023/2024')`
-      
+
+    const keyValue = `CREATE TABLE IF NOT EXISTS 
+      keys(
+        selected_year_id INTEGER NOT NULL UNIQUE
+       ); 
+
+       
+    `
 
 
+    const insertYear = `INSERT OR IGNORE INTO scholar_year (year) VALUES ('2022/2023')`
 
-    // const createTableClassGroup = `CREATE TABLE IF NOT EXISTS
-    // class_group (
-    //   class_id INTEGER NOT NULL, 
-    //   group_id INTEGER NOT NULL, 
-    //   scholar_year_id INTEGER NOT NULL, 
-    //   group_number  INTEGER NOT NULL  ,
-    //   group_type VARCHAR(2) CHECK (group_type IN ('TD', 'TP')) , 
-
-    //   FOREIGN KEY (class_id) REFERENCES class(class_id) ON DELETE NO ACTION,
-    //   FOREIGN KEY (group_id) REFERENCES Groupp(group_id) ON DELETE NO ACTION,
-
-    //   FOREIGN KEY (scholar_year_id) REFERENCES scholar_year(scholar_year_id) ON DELETE NO ACTION,
-
-    //   UNIQUE (class_id, group_id, group_number, group_type) 
-    // ); 
-    // `
 
     const createGroupTable = `
 
     CREATE TABLE IF NOT EXISTS Groupp(
       group_id INTEGER PRIMARY KEY NOT NULL , 
-      scholar_year_id INTEGER NOT NULL, 
       class_id INTEGER NOT NULL,
-
       group_type VARCHAR(2) CHECK (group_type IN ('TD', 'TP')), 
-
       group_number  INTEGER NOT NULL,
-
       FOREIGN KEY (class_id) REFERENCES class(class_id) ON DELETE NO ACTION,
-      FOREIGN KEY (scholar_year_id) REFERENCES scholar_year(scholar_year_id) ON DELETE NO ACTION,
-
-      UNIQUE (class_id, group_number, group_type, scholar_year_id) 
-
+      UNIQUE (class_id, group_number, group_type ) 
+      
       );
       `;
 
@@ -168,9 +165,9 @@ const useSQLiteDB = () => {
 
 
     await performSQLAction(async (db: SQLiteDBConnection | undefined) => {
-   
+
       await db?.query(queryCreateTable); // MODULE 
-      
+
       await db?.query(createSpecialtyTable);// SPECIALTY
 
 
@@ -182,12 +179,61 @@ const useSQLiteDB = () => {
 
       await db?.query(createTableYearScholar); // YEAR_SCHOLAR
 
-      await db?.query(insertYear); 
+      await db?.query(insertYear); // insert year
+
+      await db?.query(keyValue);
+
+
+      let respSELECTED_YEAR = await db?.query(`SELECT selected_year_id FROM keys`)
+
+      if (respSELECTED_YEAR?.values) {
+
+        const respLATES_YEAR_ID = await db?.query(`
+    SELECT scholar_year_id FROM scholar_year WHERE year IN 
+    (SELECT MAX(year) FROM scholar_year );
+    `)
+
+        if (respSELECTED_YEAR?.values?.length == 0) {
+          console.log(respLATES_YEAR_ID?.values)
+          if (respLATES_YEAR_ID?.values) {
+            await db?.query(`INSERT OR IGNORE INTO keys (selected_year_id) values (?) ;
+          `, [Number(respLATES_YEAR_ID?.values[0]?.scholar_year_id)])
+
+
+
+          }
+
+
+        }
+      }
+
+      // const respSELECTED_YEAR = await db?.query(`
+      // SELECT selected_year_id
+      // FROM keys  `)
+      // if (respSELECTED_YEAR?.values?.length == 0) {
+
+
+      //     const respLATES_YEAR_ID = await db?.query(`
+      //   SELECT scholar_year_id FROM scholar_year WHERE year IN 
+      //   (SELECT MAX(year) FROM scholar_year );
+      //   `)
+
+      //   console.log(respLATES_YEAR_ID?.values)
+
+
+      //   if (respLATES_YEAR_ID?.values) {
+      //     await db?.query(`
+      //     INSERT OR IGNORE INTO keys (selected_year_id) values (?) ;
+      //     `, [Number(respLATES_YEAR_ID?.values[0]?.scholar_year_id)])
+      //   }
+
+
+      // }
 
       await db?.query(createGroupTable); // GROUP 
 
       await db?.query(createStudentGroupTable); // ASSIGN STUDENT TO CLASSES
-  
+
 
       // console.log(`res: ${JSON.stringify(respCTM)}`);
     });

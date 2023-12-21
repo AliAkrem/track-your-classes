@@ -22,19 +22,20 @@ import { OverlayEventDetail } from '@ionic/core/components';
 
 import useSQLiteDB from '../../composables/useSQLiteDB';
 import { SQLiteDBConnection } from '@capacitor-community/sqlite';
-import { SpecialtiesSQL } from '../../pages/classes';
+import { SpecialtiesSQL, useGlobalContext } from '../../context/globalContext';
 
 type updateModuleModal = {
     label: string
-    setSpecialties: React.Dispatch<React.SetStateAction<SpecialtiesSQL[] | undefined>>
     specialty: SpecialtiesSQL
 
 }
 
 
-export default function UpdateSpecialtyModal({ label, setSpecialties, specialty }: updateModuleModal) {
+export default function UpdateSpecialtyModal({ label,  specialty }: updateModuleModal) {
 
     const { performSQLAction, initialized } = useSQLiteDB();
+
+    const {setSpecialties}  = useGlobalContext()
 
     const modal = useRef<HTMLIonModalElement>(null);
     const specialty_name = useRef<HTMLIonInputElement>(null);
@@ -111,7 +112,7 @@ export default function UpdateSpecialtyModal({ label, setSpecialties, specialty 
 
                 const res = await db?.query('SELECT * FROM specialty');
 
-                setSpecialties(res?.values)
+                setSpecialties(res?.values as SpecialtiesSQL[] )
 
             });
         } catch (error) {

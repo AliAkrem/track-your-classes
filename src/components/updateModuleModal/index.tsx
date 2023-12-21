@@ -20,18 +20,20 @@ import { OverlayEventDetail } from '@ionic/core/components';
 import { addCircleOutline } from 'ionicons/icons';
 import useSQLiteDB from '../../composables/useSQLiteDB';
 import { SQLiteDBConnection } from '@capacitor-community/sqlite';
-import { SQLModule } from '../../pages/classes';
+import { SQLModule, useGlobalContext } from '../../context/globalContext';
 
 type updateModuleModal = {
     label: string
-    setModules: React.Dispatch<React.SetStateAction<SQLModule[] | undefined>>
+    // setModules: React.Dispatch<React.SetStateAction<SQLModule[] | undefined>>
     module: SQLModule
 
 }
 
 
-export default function UpdateModuleModal({ label, setModules, module }: updateModuleModal) {
+export default function UpdateModuleModal({ label, module }: updateModuleModal) {
 
+
+    const {setModules} = useGlobalContext()
     const { performSQLAction, initialized } = useSQLiteDB();
 
     const modal = useRef<HTMLIonModalElement>(null);
@@ -70,7 +72,7 @@ export default function UpdateModuleModal({ label, setModules, module }: updateM
                 );
 
                 const respSelect = await db?.query(`SELECT * FROM module`);
-                setModules(respSelect?.values);
+                setModules(respSelect?.values as SQLModule[]  );
             });
         } catch (error) {
             alert((error as Error).message);

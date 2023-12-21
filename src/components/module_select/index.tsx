@@ -1,33 +1,18 @@
 import React, { useRef, useState } from 'react';
 import { IonContent, IonItem, IonLabel, IonList, IonModal, IonPage } from '@ionic/react';
 import AppTypeahead from './searchModal';
-import { SQLModule } from '../../pages/classes';
+import { useGlobalContext } from '../../context/globalContext';
 ;
 
-export interface Module {
-  module_id: number;
-  module_name: string;
-  module_name_abv: string;
-
-}
-
-type ModuleSelectProps = { 
-  modules : Module[], 
-  setModules: React.Dispatch<React.SetStateAction<SQLModule[] | undefined>>
-  
-
-  setSelectedModule: React.Dispatch<React.SetStateAction<string[]>>
-
-  selectedModule: string[]
-}
 
 
 
 
+export default function ModuleSelect() {
 
-export default function ModuleSelect({modules, setModules, selectedModule, setSelectedModule} : ModuleSelectProps) {
 
 
+  const {modules, setModules, selectedModule, setSelectedModule} = useGlobalContext()
 
   const [selectedText, setSelectedText] = useState<string>('not selected yet');
 
@@ -43,10 +28,10 @@ export default function ModuleSelect({modules, setModules, selectedModule, setSe
   const formatData = (data: string[]) => {
     if (data.length === 1) {
       const moduleText = modules.find((module) => String(module.module_id) === data[0])!;
-      return moduleText.module_name_abv;
+      return moduleText.module_name_abv
     }
 
-    return `not selected yet`;
+    return ``;
   };
 
 
@@ -66,7 +51,7 @@ export default function ModuleSelect({modules, setModules, selectedModule, setSe
       <IonList inset>
         <IonItem button={true} detail={false} id="select-module">
           <IonLabel>module</IonLabel>
-          <div slot="end" id="selected-module">
+          <div slot="end" >
             {selectedText}
           </div>
         </IonItem>
@@ -76,13 +61,13 @@ export default function ModuleSelect({modules, setModules, selectedModule, setSe
       <IonModal trigger="select-module" ref={modal}>
         <AppTypeahead
           title="module"
-          modules={modules}
+          // modules={modules}
           selectedItems={selectedModule}
           onSelectionCancel={() => modal.current?.dismiss()}
           onSelectionChange={moduleSelectionChanged}
         
 
-          setModules={setModules}
+          // setModules={setModules}
 
         />
       </IonModal>
