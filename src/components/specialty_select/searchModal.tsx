@@ -20,27 +20,31 @@ import {
 import type { CheckboxCustomEvent } from '@ionic/react';
 import CreateSpecialtyModal from '../createSpecialtyModal';
 import { create, trash } from 'ionicons/icons';
-import { SpecialtiesSQL } from '../../pages/classes';
 import useSQLiteDB from '../../composables/useSQLiteDB';
 import { SQLiteDBConnection } from '@capacitor-community/sqlite';
 import useConfirmationAlert from '../../composables/useConfirmationAlert';
 import UpdateSpecialtyModal from '../updateSpecialtyModal';
+import { SpecialtiesSQL, useGlobalContext } from '../../context/globalContext';
 // import type { Item } from './types';
 
 
 interface TypeaheadProps {
-    specialties: SpecialtiesSQL[];
-    selectedItems: string[];
     title?: string;
     onSelectionCancel?: () => void;
     onSelectionChange?: (items: string[]) => void;
-    setSpecialties: React.Dispatch<React.SetStateAction<SpecialtiesSQL[] | undefined>>
 
 }
 
 function AppTypeahead(props: TypeaheadProps) {
-    const [filteredItems, setFilteredItems] = useState<SpecialtiesSQL[]>([...props.specialties]);
-    const [workingSelectedValues, setWorkingSelectedValues] = useState<string[]>([...props.selectedItems]);
+
+
+
+    const {setSpecialties, specialties, selectedSpecialties} = useGlobalContext()
+
+
+    const [filteredItems, setFilteredItems] = useState([...specialties]);
+
+    const [workingSelectedValues, setWorkingSelectedValues] = useState<string[]>([...selectedSpecialties]);
 
     const {  performSQLAction } = useSQLiteDB()
     const { ConfirmationAlert, showConfirmationAlert } = useConfirmationAlert()
@@ -86,7 +90,7 @@ function AppTypeahead(props: TypeaheadProps) {
          * return all options.
          */
         if (searchQuery === undefined || searchQuery === null) {
-            setFilteredItems([...props.specialties]);
+            setFilteredItems([...specialties]);
         } else {
             /**
              * Otherwise, normalize the search
@@ -95,7 +99,7 @@ function AppTypeahead(props: TypeaheadProps) {
              */
             const normalizedQuery = searchQuery.toLowerCase();
             setFilteredItems(
-                props.specialties.filter((specialty) => {
+                specialties.filter((specialty) => {
                     return specialty.specialty_name.toLowerCase().includes(normalizedQuery);
                 })
             );
@@ -128,7 +132,7 @@ function AppTypeahead(props: TypeaheadProps) {
 
                 const res = await db?.query('SELECT * FROM specialty');
 
-                props.setSpecialties(res?.values)
+                setSpecialties(res?.values as SpecialtiesSQL[] )
 
             });
         } catch (error) {
@@ -149,7 +153,7 @@ function AppTypeahead(props: TypeaheadProps) {
 
     useEffect(() => {
         filterList('');
-    }, [props.specialties])
+    }, [specialties])
 
 
 
@@ -170,7 +174,7 @@ function AppTypeahead(props: TypeaheadProps) {
                 </IonToolbar>
                 <IonToolbar>
                     <IonSearchbar onIonInput={searchbarInput}></IonSearchbar>
-                    <IonItem > <CreateSpecialtyModal setSpecialties={props.setSpecialties}  label={"create new specialty"} /></IonItem>
+                    <IonItem > <CreateSpecialtyModal   label={"create new specialty"} /></IonItem>
                 </IonToolbar>
             </IonHeader>
 
@@ -184,7 +188,7 @@ function AppTypeahead(props: TypeaheadProps) {
                                 {item.specialty_name_abv} / {item.specialty_level} {item.collage_year}
                                 </IonCheckbox>
 
-                                <UpdateSpecialtyModal setSpecialties={props.setSpecialties}   label='specialty' specialty={item} />
+                                <UpdateSpecialtyModal    label='specialty' specialty={item} />
 
                             </IonItem>
                             <IonItemOptions side="start" >

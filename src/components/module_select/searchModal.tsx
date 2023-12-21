@@ -20,12 +20,12 @@ import {
 import type { CheckboxCustomEvent } from '@ionic/react';
 // import CreateSpecialtyModal from '../createSpecialtyModal';
 import CreateModuleModal from '../createModuleModal';
-import { SQLModule } from '../../pages/classes';
 import { SQLiteDBConnection } from '@capacitor-community/sqlite';
 import useSQLiteDB from '../../composables/useSQLiteDB';
 import useConfirmationAlert from '../../composables/useConfirmationAlert';
 import { create, trash } from 'ionicons/icons';
 import UpdateModuleModal from '../updateModuleModal';
+import { SQLModule, useGlobalContext } from '../../context/globalContext';
 // import type { Item } from './types';
 
 export interface Module {
@@ -35,23 +35,25 @@ export interface Module {
 
 }
 interface TypeaheadProps {
-    modules: Module[];
+    // modules: Module[];
     selectedItems: string[];
     title?: string;
     onSelectionCancel?: () => void;
     onSelectionChange?: (items: string[]) => void;
     // setList:React.Dispatch<React.SetStateAction<Module[]>>
-    setModules: React.Dispatch<React.SetStateAction<SQLModule[] | undefined>>
+    // setModules: React.Dispatch<React.SetStateAction<SQLModule[] | undefined>>
 }
 
 function AppTypeahead(props: TypeaheadProps) {
 
 
+    const {modules, setModules} = useGlobalContext()
+
     const { initialized, performSQLAction } = useSQLiteDB()
 
     const { showConfirmationAlert, ConfirmationAlert } = useConfirmationAlert();
 
-    const [filteredItems, setFilteredItems] = useState<Module[]>([...props.modules]);
+    const [filteredItems, setFilteredItems] = useState([...modules]);
 
 
     const [workingSelectedValues, setWorkingSelectedValues] = useState<string[]>([...props.selectedItems]);
@@ -64,7 +66,7 @@ function AppTypeahead(props: TypeaheadProps) {
                 await db?.query(`DELETE FROM module WHERE module_id = ?`, [Number(moduleId)]);
 
                 const respSelect = await db?.query(`SELECT * FROM module`);
-                props.setModules(respSelect?.values);
+                setModules(respSelect?.values as SQLModule[] );
             });
         } catch (error) {
             alert((error as Error).message);
@@ -73,7 +75,7 @@ function AppTypeahead(props: TypeaheadProps) {
 
 
     const confirmDelete = (module_id: number) => {
-        showConfirmationAlert("Are You Sure You Want To Delete This Item?", () => {
+        showConfirmationAlert("Are You Sure You Want To Delete This Module?", () => {
             deleteModule(module_id);
         });
     };
@@ -127,7 +129,7 @@ function AppTypeahead(props: TypeaheadProps) {
          * return all options.
          */
         if (searchQuery === undefined || searchQuery === null) {
-            setFilteredItems([...props.modules]);
+            setFilteredItems([...modules]);
         } else {
             /**
              * Otherwise, normalize the search
@@ -136,7 +138,7 @@ function AppTypeahead(props: TypeaheadProps) {
              */
             const normalizedQuery = searchQuery.toLowerCase();
             setFilteredItems(
-                props.modules.filter((item) => {
+                modules.filter((item) => {
 
                     const normalizedModule = item.module_name.toLowerCase();
                     const normalizedAbv = item.module_name_abv.toLowerCase();
@@ -148,7 +150,6 @@ function AppTypeahead(props: TypeaheadProps) {
 
     const checkboxChange = (ev: CheckboxCustomEvent) => {
         const { checked, value } = ev.detail;
-
         if (checked) {
             setWorkingSelectedValues([String(value)]);
         } else {
@@ -163,7 +164,7 @@ function AppTypeahead(props: TypeaheadProps) {
                 <IonCheckbox value={item.module_id} checked={isChecked(String(item.module_id))} onIonChange={checkboxChange}>
                     {item.module_name} / {item.module_name_abv}
                 </IonCheckbox>
-                <UpdateModuleModal setModules={props.setModules} label='module' module={item} />
+                <UpdateModuleModal  label='module' module={item} />
             </IonItem>
             <IonItemOptions side="start"     >
                 <IonItemOption onClick={() => confirmDelete(item.module_id)} color="danger">
@@ -186,7 +187,7 @@ function AppTypeahead(props: TypeaheadProps) {
 
     useEffect(() => {
         filterList('');
-    }, [props.modules])
+    }, [modules])
 
 
 
@@ -204,7 +205,7 @@ function AppTypeahead(props: TypeaheadProps) {
                 </IonToolbar>
                 <IonToolbar>
                     <IonSearchbar onIonInput={searchbarInput}></IonSearchbar>
-                    <IonItem > <CreateModuleModal setModules={props.setModules} label={"create new module "} /></IonItem>
+                    <IonItem > <CreateModuleModal  label={"create new module "} /></IonItem>
                 </IonToolbar>
             </IonHeader>
 

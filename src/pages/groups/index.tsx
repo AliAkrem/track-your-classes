@@ -14,17 +14,18 @@ import {
     IonRefresherContent,
 
 } from "@ionic/react";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { SQLiteDBConnection } from "@capacitor-community/sqlite";
 import useSQLiteDB from "../../composables/useSQLiteDB";
 import useConfirmationAlert from "../../composables/useConfirmationAlert";
-import { useParams } from "react-router";
+import { Redirect, useParams } from "react-router";
 import { GroupSQL, Students } from "../classes";
 import { nanoid } from "nanoid";
 import { chevronBack, ellipsisVertical } from "ionicons/icons";
 import { OverlayEventDetail } from "@ionic/core";
 
 import { RefresherEventDetail } from "@ionic/react";
+import { redirect } from "next/dist/server/api-utils";
 
 
 
@@ -141,6 +142,9 @@ export const Group: React.FC = () => {
            await  performSQLAction(async (db: SQLiteDBConnection | undefined) => {
                 await db?.query(`DELETE FROM Groupp WHERE group_id = ? `, [group_id])
             })
+            // navigate('/classes')
+            location.replace('/classes')
+
         } catch (error) {
             alert((error as Error).message);
         }
@@ -166,17 +170,19 @@ export const Group: React.FC = () => {
           event.detail.complete();
         }, 2000);
         
-        await SELECT_STUDENTS_IN_GROUP(Number(group));
+         location.reload();
 
       }
 
+
+      const listGroup  = useRef(null)
 
 
     return (
         <IonPage>
             <IonHeader>
                 <IonToolbar>
-                    <IonButton fill="clear" slot="start" routerLink="/classes" >
+                    <IonButton fill="clear" slot="start" href="/classes" >
                         <IonIcon size="small" icon={chevronBack}></IonIcon>
                     </IonButton>
 
@@ -184,7 +190,7 @@ export const Group: React.FC = () => {
                         Group {groupInfo?.group_number} {groupInfo?.group_type}
                     </IonTitle>
 
-                    <IonButton id="open-action-group-option" fill="clear" slot="end" onClick={() => { setGroupOptionOpened(true) }} >
+                    <IonButton id="open-action-group-option" fill="clear" slot="end"  onClick={() => { setGroupOptionOpened(true) }} >
                         <IonIcon size="small" icon={ellipsisVertical}></IonIcon>
                     </IonButton>
 
@@ -197,7 +203,7 @@ export const Group: React.FC = () => {
         </IonRefresher>
                 <IonItem  >
                     <IonLabel >
-                        <h1>students </h1>
+                        <h1>students</h1>
                     </IonLabel>
                 </IonItem>
                 <IonItemGroup style={{ padding: '10px' }} >
@@ -206,10 +212,13 @@ export const Group: React.FC = () => {
                 <IonActionSheet
                     // trigger={"open-action-group-option"}
                     isOpen={groupOptionOpened}
+                    ref={listGroup}
                     onIonActionSheetWillDismiss={() => setGroupOptionOpened(false)}
                     header="Actions"
                     buttons={[
-                        {
+                        {   
+                           
+
                             text: 'Delete Group ',
                             role: 'delete',
                             data: {

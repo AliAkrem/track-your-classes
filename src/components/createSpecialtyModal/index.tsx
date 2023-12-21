@@ -18,15 +18,18 @@ import { OverlayEventDetail } from '@ionic/core/components';
 import { add, addCircleOutline, logoIonic } from 'ionicons/icons';
 import useSQLiteDB from '../../composables/useSQLiteDB';
 import { SQLiteDBConnection } from '@capacitor-community/sqlite';
-import { SpecialtiesSQL } from '../../pages/classes';
+import { SpecialtiesSQL, useGlobalContext } from '../../context/globalContext';
 
 type CreateSpecialtyModalProps = {
     label: string
-    setSpecialties: React.Dispatch<React.SetStateAction<SpecialtiesSQL[] | undefined>>
 }
 
 
-export default function CreateSpecialtyModal({ label, setSpecialties }: CreateSpecialtyModalProps) {
+export default function CreateSpecialtyModal({ label }: CreateSpecialtyModalProps) {
+
+
+    const {setSpecialties } =  useGlobalContext()
+
 
     const { performSQLAction, initialized } = useSQLiteDB()
     const modal = useRef<HTMLIonModalElement>(null);
@@ -52,7 +55,7 @@ export default function CreateSpecialtyModal({ label, setSpecialties }: CreateSp
 
                 const res = await db?.query('SELECT * FROM specialty');
 
-                setSpecialties(res?.values)
+                setSpecialties(res?.values as SpecialtiesSQL[] )
 
             });
         } catch (error) {
