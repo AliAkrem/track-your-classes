@@ -19,13 +19,13 @@ import { SQLiteDBConnection } from "@capacitor-community/sqlite";
 import useSQLiteDB from "../../composables/useSQLiteDB";
 import useConfirmationAlert from "../../composables/useConfirmationAlert";
 import { Redirect, useParams } from "react-router";
-import { GroupSQL, Students } from "../classes";
 import { nanoid } from "nanoid";
 import { chevronBack, ellipsisVertical } from "ionicons/icons";
 import { OverlayEventDetail } from "@ionic/core";
 
 import { RefresherEventDetail } from "@ionic/react";
 import { redirect } from "next/dist/server/api-utils";
+import { GroupSQL, Students } from "../../context/globalContext";
 
 
 
@@ -142,7 +142,6 @@ export const Group: React.FC = () => {
            await  performSQLAction(async (db: SQLiteDBConnection | undefined) => {
                 await db?.query(`DELETE FROM Groupp WHERE group_id = ? `, [group_id])
             })
-            // navigate('/classes')
             location.replace('/classes')
 
         } catch (error) {
