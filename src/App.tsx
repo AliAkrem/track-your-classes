@@ -23,9 +23,11 @@ import "@ionic/react/css/display.css";
 /* Theme variables */
 import "./theme/variables.css";
 
-import Menu from "./components/Menu";
 import { Classes } from "./pages/classes";
 import { Group } from "./pages/groups";
+import { GlobalContextProvider, useGlobalContext } from "./context/globalContext";
+import useSQLiteDB from "./composables/useSQLiteDB";
+import Menu from "./components/Menu";
 
 
 
@@ -35,35 +37,30 @@ setupIonicReact();
 
 const App: React.FC = () => {
 
- 
-
-
+  
 
   return (
+
+
     <IonApp>
+      <GlobalContextProvider >
 
-
-      <IonReactRouter>
-        <IonSplitPane contentId="main">
-          <Menu />
-          <IonRouterOutlet id="main" >
-
-
-            <Route exact path="/">
-              <Redirect to="/classes" />
-            </Route>
-
-            <Route exact path="/classes">
-              <Classes  />
-            </Route>
-            <Route exact path="/classes/:group">
-              <Group />
-            </Route>
-
-          </IonRouterOutlet>
-        </IonSplitPane>
-      </IonReactRouter>
+        <IonReactRouter>
+          <IonSplitPane contentId="main">
+            <Menu />
+            <IonRouterOutlet id="main" >
+              <Route exact path="/">
+               <Classes />
+              </Route>
+              <Route exact path="/:group">
+               <Group />
+              </Route>
+            </IonRouterOutlet>
+          </IonSplitPane>
+        </IonReactRouter>
+      </GlobalContextProvider>
     </IonApp>
+
   );
 };
 

@@ -47,7 +47,8 @@ export const Classes: React.FC = () => {
     selectedSpecialties,
     year, setYear,
     years,
-    setRevalidate
+    setRevalidate, 
+    isLoading
   } = useGlobalContext()
 
 
@@ -164,6 +165,9 @@ export const Classes: React.FC = () => {
   const ListClasses = classes_list?.map((classe) => {
 
     const trigger = nanoid()
+
+
+
     return (
 
       <div key={nanoid()}  >
@@ -230,21 +234,10 @@ export const Classes: React.FC = () => {
   }
 
 
-  // const TEST = async () => {
-  //   try {
-  //     performSQLAction(async (db: SQLiteDBConnection | undefined) => {
-  //       const respSelect = await db?.query(`SELECT  * FROM class`);
-  //       console.log(respSelect?.values)
-  //     });
-  //   } catch (error) {
-  //     alert((error as Error).message);
-  //   }
-  // };
 
+  if (isLoading) return null ; 
 
-
-
-
+  
   return (
 
 
