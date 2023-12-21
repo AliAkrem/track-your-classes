@@ -65,6 +65,8 @@ export interface GlobalState {
     revalidate: number
     setRevalidate: React.Dispatch<React.SetStateAction<number>>
 
+    isLoading: boolean
+    setIsLoading: React.Dispatch<React.SetStateAction<boolean>>
 }
 // END  Global state --------------------------------
 
@@ -89,13 +91,23 @@ export const GlobalContextProvider = ({ children }: { children: React.ReactNode 
     const [years, setYears] = useState<SQLYearScholar[] | []>([])
     const [revalidate, setRevalidate] = useState(0)
 
+    const [isLoading, setIsLoading] = useState(false)
+
+
     useEffect(() => {
         loadData()
-    }, [initialized, revalidate])
+    }, [initialized, year])
 
 
     const loadData = async () => {
+        console.log(initialized)
+        console.log('a')
+
+
+
         try {
+
+            setIsLoading(true)
             await performSQLAction(async (db: SQLiteDBConnection | undefined) => {
 
                 const respSelect = await db?.query(`SELECT * FROM module`);
@@ -104,38 +116,45 @@ export const GlobalContextProvider = ({ children }: { children: React.ReactNode 
                 setSpecialties(respSelectSpecialties?.values as SpecialtiesSQL[]);
 
 
+
                 await db?.query(`INSERT OR IGNORE INTO scholar_year (year) VALUES ('2023/2024')`); // insert year
+
+
+
+
+                const resp = await db?.query(`SELECT * FROM scholar_year`)
+                setYears(resp?.values as SQLYearScholar[])
+
 
 
                 let respSELECTED_YEAR = await db?.query(`SELECT selected_year_id FROM keys`)
 
-                if (respSELECTED_YEAR?.values) {
+                if (!respSELECTED_YEAR?.values) {
 
-                    const respLATES_YEAR_ID = await db?.query(`
-              SELECT scholar_year_id FROM scholar_year WHERE year IN 
-              (SELECT MAX(year) FROM scholar_year );
-              `)
+                    // IF THERE ARE NO SELECTED_YEAR YET GET THE LATEST YEAR 
+                    const respLATEST_YEAR_ID = await db?.query(`
+                SELECT scholar_year_id FROM scholar_year WHERE year IN 
+                (SELECT MAX(year) FROM scholar_year );
+                `)
 
-                    if (respSELECTED_YEAR?.values?.length == 0) {
-                        
-                        if (respLATES_YEAR_ID?.values) {
-                            await db?.query(`INSERT OR IGNORE INTO keys (selected_year_id) values (?) ;
-                    `, [Number(respLATES_YEAR_ID?.values[0]?.scholar_year_id)])
-
-                            setYear(Number(respLATES_YEAR_ID?.values[0].selected_year_id))
-
-                        }
+                    if (respLATEST_YEAR_ID?.values && respLATEST_YEAR_ID?.values[0].scholar_year_id) {
 
 
-                    } else {
-                        setYear(Number(respSELECTED_YEAR?.values[0].selected_year_id))
+                        await db?.query(`
+                            INSERT OR IGNORE INTO keys (selected_year_id) values (?) ;
+
+                    `, [respLATEST_YEAR_ID?.values[0]?.scholar_year_id])
+
+
+                        setYear(respLATEST_YEAR_ID?.values[0].selected_year_id)
+
 
                     }
+
+                } else {
+                    setYear(respSELECTED_YEAR?.values[0].selected_year_id)
                 }
 
-                const resp = await db?.query(`SELECT * FROM scholar_year`)
-
-                setYears(resp?.values as SQLYearScholar[])
 
 
                 const respSelectClasses = await db?.query(`
@@ -202,7 +221,11 @@ export const GlobalContextProvider = ({ children }: { children: React.ReactNode 
 
 
             });
+
+            setIsLoading(false)
+
         } catch (error) {
+            setIsLoading(false)
             alert((error as Error).message);
             // setModules([])
             // setSpecialties([])// await CREATE_GROUP(1, 'TP')
@@ -222,7 +245,8 @@ export const GlobalContextProvider = ({ children }: { children: React.ReactNode 
             selectedSpecialties, setSelectedSpecialties,
             year, setYear,
             years, setYears,
-            revalidate, setRevalidate
+            revalidate, setRevalidate,
+            isLoading, setIsLoading
         };
     }, [modules, setModules,
         specialties, setSpecialties,
@@ -231,7 +255,8 @@ export const GlobalContextProvider = ({ children }: { children: React.ReactNode 
         selectedSpecialties, setSelectedSpecialties,
         year, setYear,
         years, setYears,
-        revalidate, setRevalidate
+        revalidate, setRevalidate,
+        isLoading, setIsLoading
     ]);
 
     return <GlobalContext.Provider value={value}>{children} </GlobalContext.Provider>;

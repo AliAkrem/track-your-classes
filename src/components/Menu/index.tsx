@@ -31,7 +31,7 @@ interface AppPage {
 const appPages: AppPage[] = [
   {
     title: 'Classes',
-    url: '/classes',
+    url: '/',
     iosIcon: schoolOutline,
     mdIcon: schoolOutline
   },
@@ -59,14 +59,17 @@ const appPages: AppPage[] = [
 
 
 
-const Menu: React.FC = () => {
+export default  function Menu(){
   const _location = useLocation();
 
   const [page, setPage] = useState("")
+  console.log('b')
 
 
   
-  const {years, setYears, year, setYear, setRevalidate} = useGlobalContext()
+
+  
+  const {years,  year, setYear, setRevalidate, isLoading} = useGlobalContext()
 
 
 
@@ -74,19 +77,15 @@ const Menu: React.FC = () => {
 
   useEffect(() => {
 
-    appPages.map((appPage, index) => {
+    appPages.map((appPage) => {
       if (_location.pathname === appPage.url)
         setPage(appPage.title)
     })
 
+
   }, [_location.pathname])
 
 
-  useEffect(() => {
-
-    setRevalidate(Math.random())
-    
-  }, [year])
   
 
 
@@ -126,7 +125,13 @@ const Menu: React.FC = () => {
 
   }
 
+  console.log(isLoading)
+
+  if (isLoading) return null ; 
+
   return (
+
+
     <IonMenu contentId="main" type="reveal">
       <IonContent>
         <IonList id="inbox-list">
@@ -134,7 +139,7 @@ const Menu: React.FC = () => {
 
           <IonItem style={{ padding: "20px 0 " }} >
             <IonIcon slot="start" icon={calendar} aria-hidden="true"></IonIcon>
-            <IonSelect onIonChange={()=>{handleYearChange}} labelPlacement='stacked' label={"year scholar"} value={String(year)}  >
+            <IonSelect onIonChange={handleYearChange} labelPlacement='stacked' label={"year scholar"} value={String(year)}  >
               {YearsOptions}
             </IonSelect>
 
@@ -158,5 +163,3 @@ const Menu: React.FC = () => {
     </IonMenu>
   );
 };
-
-export default Menu;
