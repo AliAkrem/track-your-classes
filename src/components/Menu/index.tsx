@@ -10,6 +10,8 @@ import {
   IonNote,
   IonSelect,
   IonSelectOption,
+  useIonViewDidEnter,
+  useIonViewWillEnter,
 } from '@ionic/react';
 
 import { useLocation } from 'react-router-dom';
@@ -60,16 +62,14 @@ const appPages: AppPage[] = [
 
 
 export default  function Menu(){
+
+
   const _location = useLocation();
 
   const [page, setPage] = useState("")
   console.log('b')
-
-
   
-
-  
-  const {years,  year, setYear, setRevalidate, isLoading} = useGlobalContext()
+  const {years,  year, setYear, setRevalidate, isLoading, loadData} = useGlobalContext()
 
 
 
@@ -82,8 +82,8 @@ export default  function Menu(){
         setPage(appPage.title)
     })
 
-
-  }, [_location.pathname])
+    loadData()
+  }, [initialized])
 
 
   

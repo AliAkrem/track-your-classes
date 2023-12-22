@@ -1,6 +1,8 @@
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import useSQLiteDB from "../composables/useSQLiteDB";
 import { SQLiteDBConnection } from "@capacitor-community/sqlite";
+import { useIonViewDidEnter, useIonViewWillEnter } from "@ionic/react";
+import useEffectX from "../composables/useEffectX";
 
 
 // define the types ----------------------------------------
@@ -67,6 +69,8 @@ export interface GlobalState {
 
     isLoading: boolean
     setIsLoading: React.Dispatch<React.SetStateAction<boolean>>
+
+    loadData: () => Promise<void>
 }
 // END  Global state --------------------------------
 
@@ -94,17 +98,10 @@ export const GlobalContextProvider = ({ children }: { children: React.ReactNode 
     const [isLoading, setIsLoading] = useState(false)
 
 
-    useEffect(() => {
-        loadData()
-    }, [initialized, year])
-
 
     const loadData = async () => {
-        console.log(initialized)
+
         console.log('a')
-
-
-
         try {
 
             setIsLoading(true)
@@ -236,8 +233,13 @@ export const GlobalContextProvider = ({ children }: { children: React.ReactNode 
     };
 
 
-    const value = useMemo(() => {
-        return {
+    // useEffect(() => {
+    //     loadData()
+    // }, [initialized])
+
+
+
+    const value =  {
             modules, setModules,
             specialties, setSpecialties,
             classes_list, setListClasses,
@@ -246,18 +248,10 @@ export const GlobalContextProvider = ({ children }: { children: React.ReactNode 
             year, setYear,
             years, setYears,
             revalidate, setRevalidate,
-            isLoading, setIsLoading
+            isLoading, setIsLoading, 
+            loadData
         };
-    }, [modules, setModules,
-        specialties, setSpecialties,
-        classes_list, setListClasses,
-        selectedModule, setSelectedModule,
-        selectedSpecialties, setSelectedSpecialties,
-        year, setYear,
-        years, setYears,
-        revalidate, setRevalidate,
-        isLoading, setIsLoading
-    ]);
+        
 
     return <GlobalContext.Provider value={value}>{children} </GlobalContext.Provider>;
 
