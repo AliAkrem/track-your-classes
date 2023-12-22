@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from "react";
 
-
 import {
   SQLiteDBConnection,
   SQLiteConnection,
@@ -26,8 +25,6 @@ const useSQLiteDB = () => {
 
       const isConn = (await sqlite.current.isConnection("db_vite", false)).result;
 
-
-
       if (ret.result && isConn) {
 
         db.current = await sqlite.current.retrieveConnection("db_vite", false);
@@ -46,22 +43,12 @@ const useSQLiteDB = () => {
       }
     };
 
-    // initializeDB()
-    // .then(async () => {
-    //   await initializeTables()
-    //     .then(
-    //       () => {
-    //         setInitialized(true);
-    //       }
-    //     );
-
-
-    // });
-
-
     initializeDB().then(async () => {
-     await  initializeTables();
-      setInitialized(true);
+     await  initializeTables().then(() => {
+
+       setInitialized(true);
+
+     } );
     });
 
   }, []);
@@ -109,7 +96,7 @@ const useSQLiteDB = () => {
     const createStudentTable = `CREATE TABLE IF NOT EXISTS student( student_id INTEGER PRIMARY KEY NOT NULL, student_code varchar(30) NOT NULL UNIQUE , first_name varchar(30) NOT NULL , last_name varchar(30) NOT NULL );
     `
 
-    const createTableYearScholar = `CREATE TABLE IF NOT EXISTS scholar_year(  scholar_year_id INTEGER PRIMARY KEY NOT NULL,   year VARCHAR(9) UNIQUE NOT NULL CHECK(year LIKE '____/____') ) ; INSERT OR IGNORE INTO scholar_year (year) VALUES ('2022/2023'); 
+    const createTableYearScholar = `CREATE TABLE IF NOT EXISTS scholar_year(  scholar_year_id INTEGER PRIMARY KEY NOT NULL,   year VARCHAR(9) UNIQUE NOT NULL CHECK(year LIKE '____/____') ) ; 
     `
 
     const keyValue = `CREATE TABLE IF NOT EXISTS keys( selected_year_id INTEGER NOT NULL UNIQUE); `
@@ -125,7 +112,6 @@ const useSQLiteDB = () => {
 
     await performSQLAction(async (db: SQLiteDBConnection | undefined) => {
 
-      console.log('c')
 
       await db?.execute(queryCreateTable); // MODULE 
       
@@ -156,7 +142,7 @@ const useSQLiteDB = () => {
           console.log(respLATES_YEAR_ID?.values)
           if (respLATES_YEAR_ID?.values) {
             await db?.query(`INSERT OR IGNORE INTO keys (selected_year_id) values (?) ;
-          `, [Number(respLATES_YEAR_ID?.values[0]?.scholar_year_id)])
+        `, [Number(respLATES_YEAR_ID?.values[0]?.scholar_year_id)])
 
 
           }

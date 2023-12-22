@@ -1,4 +1,5 @@
 import {
+  IonButton,
   IonContent,
   IonIcon,
   IonItem,
@@ -8,6 +9,7 @@ import {
   IonMenu,
   IonMenuToggle,
   IonNote,
+  IonPage,
   IonSelect,
   IonSelectOption,
   useIonViewDidEnter,
@@ -61,46 +63,34 @@ const appPages: AppPage[] = [
 
 
 
-export default  function Menu(){
+export const Menu: React.FC = () => {
 
 
-  const _location = useLocation();
 
   const [page, setPage] = useState("")
-  console.log('b')
+
+  const { counter, setCounter, years, year, setYear, setRevalidate, isLoading } = useGlobalContext()
+
+
+
+  const {  performSQLAction } = useSQLiteDB()
+
+
   
-  const {years,  year, setYear, setRevalidate, isLoading, loadData} = useGlobalContext()
-
-
-
-  const { initialized, performSQLAction } = useSQLiteDB()
-
-  useEffect(() => {
-
-    appPages.map((appPage) => {
-      if (_location.pathname === appPage.url)
-        setPage(appPage.title)
-    })
-
-    loadData()
-  }, [initialized])
-
-
   
 
 
 
 
 
-
-  const CHANGE_SELECTED_YEARS = async (year_id : number ) => {
+  const CHANGE_SELECTED_YEARS = async (year_id: number) => {
     try {
       await performSQLAction(async (db: SQLiteDBConnection | undefined) => {
-  
-          await db?.query(`
+
+        await db?.query(`
           UPDATE Keys SET selected_year_id = ? WHERE selected_year_id = ? ;
-          `, [year_id,year])
-          setYear(year_id)
+          `, [year_id, year])
+        setYear(year_id)
 
       })
       setRevalidate(Math.random)
@@ -125,41 +115,42 @@ export default  function Menu(){
 
   }
 
-  console.log(isLoading)
 
-  if (isLoading) return null ; 
+  if (isLoading) return null;
 
   return (
 
+    
+      <IonMenu contentId="main" type="reveal">
+        <IonContent>
+          <IonList id="inbox-list">
+            {/* <IonListHeader>{page}</IonListHeader> */}
 
-    <IonMenu contentId="main" type="reveal">
-      <IonContent>
-        <IonList id="inbox-list">
-          {/* <IonListHeader>{page}</IonListHeader> */}
+            <IonItem style={{ padding: "20px 0 " }} >
+              <IonIcon slot="start" icon={calendar} aria-hidden="true"></IonIcon>
+              <IonSelect onIonChange={handleYearChange} labelPlacement='stacked' label={"year scholar"} value={String(year)}  >
+                {YearsOptions}
+              </IonSelect>
+            </IonItem>
 
-          <IonItem style={{ padding: "20px 0 " }} >
-            <IonIcon slot="start" icon={calendar} aria-hidden="true"></IonIcon>
-            <IonSelect onIonChange={handleYearChange} labelPlacement='stacked' label={"year scholar"} value={String(year)}  >
-              {YearsOptions}
-            </IonSelect>
+            <IonButton  onClick={()=>{setCounter(counter+1)}} >
+              + {counter}
+            </IonButton>
 
+            {appPages.map((appPage, index) => {
+              return (
+                <IonMenuToggle key={index} autoHide={false}>
+                  <IonItem className={location.pathname === appPage.url ? 'selected' : ''} routerLink={appPage.url} routerDirection="none" lines="none" detail={false}>
+                    <IonIcon aria-hidden="true" slot="start" ios={appPage.iosIcon} md={appPage.mdIcon} />
+                    <IonLabel>{appPage.title}</IonLabel>
+                  </IonItem>
+                </IonMenuToggle>
+              );
+            })}
+          </IonList>
 
-
-
-          </IonItem>
-          {appPages.map((appPage, index) => {
-            return (
-              <IonMenuToggle key={index} autoHide={false}>
-                <IonItem className={location.pathname === appPage.url ? 'selected' : ''} routerLink={appPage.url} routerDirection="none" lines="none" detail={false}>
-                  <IonIcon aria-hidden="true" slot="start" ios={appPage.iosIcon} md={appPage.mdIcon} />
-                  <IonLabel>{appPage.title}</IonLabel>
-                </IonItem>
-              </IonMenuToggle>
-            );
-          })}
-        </IonList>
-
-      </IonContent>
-    </IonMenu>
+        </IonContent>
+      </IonMenu>
+   
   );
 };

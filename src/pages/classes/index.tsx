@@ -20,18 +20,20 @@ import {
   IonRefresherContent,
   IonCard,
   IonCardContent,
+  useIonViewWillEnter,
+
 } from "@ionic/react";
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import "./classes.css";
 import { SQLiteDBConnection } from "@capacitor-community/sqlite";
 import useSQLiteDB from "../../composables/useSQLiteDB";
 import useConfirmationAlert from "../../composables/useConfirmationAlert";
-import { add, arrowRedo, ellipsisVertical, } from "ionicons/icons";
+import { add, arrowRedo, ellipsisVertical, list, } from "ionicons/icons";
 import { OverlayEventDetail } from "@ionic/react/dist/types/components/react-component-lib/interfaces";
-import { nanoid } from "nanoid";
-import { Students, useGlobalContext } from "../../context/globalContext";
+import {  SQLClass, useGlobalContext } from "../../context/globalContext";
 import { CreateClassModal } from "../../components/createClassModal";
 import CreateGroupModal from "../../components/createGroupModal";
+import { nanoid } from "nanoid";
 
 
 
@@ -42,13 +44,14 @@ import CreateGroupModal from "../../components/createGroupModal";
 
 export const Classes: React.FC = () => {
 
-  const { classes_list, setListClasses,
-    selectedModule,
+  const { 
+    year,
+    setRevalidate,
+    isLoading,
+    counter, 
+    selectedModule, 
     selectedSpecialties,
-    year, setYear,
-    years,
-    setRevalidate, 
-    isLoading
+    revalidate
   } = useGlobalContext()
 
 
@@ -56,7 +59,6 @@ export const Classes: React.FC = () => {
   const [openedCreateClassModel, setopenedCreateClassModel] = useState(false)
 
   const [modalCreateGroupOpened, setModalCreateGroupOpened] = useState(false)
-
 
   const classesGroupRef = useRef<HTMLIonAccordionGroupElement | null>(null)
 
@@ -67,48 +69,13 @@ export const Classes: React.FC = () => {
 
 
   // hook for sqlite db
-  const { performSQLAction } = useSQLiteDB();
+  const { performSQLAction, initialized } = useSQLiteDB();
 
-  // hook for confirmation dialog
+  // hook for confirmation dialogperformSQLAction
   const { showConfirmationAlert, ConfirmationAlert } = useConfirmationAlert();
 
 
 
-  // related to create class modal 
-  const INSERT_NEW_CLASS = async (specialty_id: number, module_id: number) => {
-
-    try {
-      await performSQLAction(async (db: SQLiteDBConnection | undefined) => {
-
-        const respSELECTED_YEAR = await db?.query(`
-        SELECT selected_year_id FROM keys LIMIT 1  
-        `)
-
-        console.log(respSELECTED_YEAR?.values)
-        if (respSELECTED_YEAR?.values)
-          setYear(Number(respSELECTED_YEAR?.values[0].selected_year_id))
-
-
-
-        await db?.query(`INSERT INTO class( module_id, specialty_id, scholar_year_id ) VALUES (?, ?, ?)`, [specialty_id, module_id, respSELECTED_YEAR?.values ? Number(respSELECTED_YEAR?.values[0].selected_year_id) : year]);
-
-
-
-      });
-
-      setRevalidate(module_id + specialty_id)
-
-
-    } catch (error) {
-      alert((error as Error).message);
-
-
-
-
-    }
-  };
-
-  // related to display classes 
   const DELETE_CLASS = async (classId: number) => {
 
     try {
@@ -116,25 +83,14 @@ export const Classes: React.FC = () => {
 
         await db?.query(`DELETE FROM class WHERE class_id = ? `, [classId]);
 
-        setRevalidate(classId)
+        setRevalidate(Math.random)
 
       });
     } catch (error) {
       alert((error as Error).message);
 
-
-
-
-      INSERT_NEW_CLASS(Number(selectedModule[0]), Number(selectedSpecialties[0]))
-
-
-
     }
   };
-
-
-
-
 
 
   // related to display classes list
@@ -162,9 +118,105 @@ export const Classes: React.FC = () => {
   }
 
 
-  const ListClasses = classes_list?.map((classe) => {
+  const [classesList, setclassesList] = useState<Array<SQLClass> | []>([])
+
+
+
+
+
+  useEffect(() => {
+
+    LOAD_CLASSES()
+    // LOAD_CLASSES()
+
+  }, [revalidate, initialized ])
+  
+
+  const LOAD_CLASSES = async () => {
+
+    try {
+        await performSQLAction(async (db: SQLiteDBConnection | undefined) => {
+  
+            const respSelectClasses = await db?.query(`
+            SELECT 
+             class.class_id,
+             specialty.specialty_id,
+              specialty.specialty_name,
+               specialty.specialty_name_abv,
+                specialty.specialty_level, specialty.collage_year,
+                 module.module_id,
+                  module.module_name,
+                   module.module_name_abv,
+                    Groupp.group_id,
+                     Groupp.group_number, 
+                     Groupp.group_type FROM class 
+                      JOIN specialty ON class.specialty_id = specialty.specialty_id JOIN module ON class.module_id = module.module_id
+                       LEFT JOIN Groupp ON class.class_id = Groupp.class_id
+                        WHERE class.scholar_year_id = ? ; `, [year]);
+
+            const classesWithGroups = respSelectClasses?.values?.reduce((result: any, row: any) => {
+                const classInfo = result[row.class_id] || {
+                    class_id: row.class_id,
+                    specialty: {
+                        specialty_id: row.specialty_id,
+                        specialty_name: row.specialty_name,
+                        specialty_name_abv: row.specialty_name_abv,
+                        specialty_level: row.specialty_level,
+                        collage_year: row.collage_year,
+                    },
+                    module: {
+                        module_id: row.module_id,
+                        module_name: row.module_name,
+                        module_name_abv: row.module_name_abv,
+                    },
+                    groups: [],
+                };
+
+                if (row.group_id) {
+                    const groupInfo = {
+                        group_id: row.group_id,
+                        group_number: row.group_number,
+                        group_type: row.group_type,
+                    };
+
+                    classInfo.groups.push(groupInfo);
+                }
+
+                result[row.class_id] = classInfo;
+                return result;
+            }, {});
+
+
+                const classes_formatted  = Object.values(classesWithGroups);
+                setclassesList(classes_formatted as SQLClass[]);
+
+
+                // setListClasses(classes_formatted as  SQLClass[]);
+
+        });
+
+
+
+
+
+        // setRevalidate(Math.random)
+
+    } catch (error) {
+        alert((error as Error).message);
+        // setRevalidate(Math.random)
+    }
+};
+
+  
+
+
+
+
+  const ListClasses = classesList?.map((classe) => {
+
 
     const trigger = nanoid()
+
 
 
 
@@ -180,7 +232,7 @@ export const Classes: React.FC = () => {
           </IonItem>
 
           {classe.groups?.map(group => {
-            return (<IonItem slot="content" key={nanoid()}   >
+            return (<IonItem slot="content" key={group.group_id}   >
               <IonLabel>
                 group {group.group_number} /{group.group_type}
               </IonLabel>
@@ -223,6 +275,8 @@ export const Classes: React.FC = () => {
 
 
 
+
+
   const handleRefresh = async (event: CustomEvent<RefresherEventDetail>) => {
     setTimeout(() => {
       // Any calls to load data go here
@@ -235,19 +289,19 @@ export const Classes: React.FC = () => {
 
 
 
-  if (isLoading) return null ; 
+  if (isLoading) return null;
 
-  
+
   return (
 
 
-    <IonPage>
+    <IonPage  >
       <IonHeader>
         <IonToolbar>
           <IonButtons slot="start">
             <IonMenuButton />
           </IonButtons>
-          <IonTitle size="small" >Manage Classes {String(year)}</IonTitle>
+          <IonTitle size="small" >Manage Classes {String(year)}  counter : {counter}  </IonTitle>
 
         </IonToolbar>
       </IonHeader>
@@ -271,7 +325,7 @@ export const Classes: React.FC = () => {
 
 
         {
-          classes_list?.length > 0 ?
+          classesList?.length > 0   ?
             <IonAccordionGroup ref={classesGroupRef} multiple={false} >
               {ListClasses}
             </IonAccordionGroup> :
@@ -283,8 +337,14 @@ export const Classes: React.FC = () => {
 
         }
         <pre>
-          {JSON.stringify(years, null, 2)}
+          {JSON.stringify(classesList, null, 2)}
+          {JSON.stringify(selectedModule, null, 2)}
+          {JSON.stringify(selectedSpecialties, null, 2)}
+
+          
         </pre>
+
+
 
 
 

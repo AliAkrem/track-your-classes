@@ -24,7 +24,7 @@ import { chevronBack, ellipsisVertical } from "ionicons/icons";
 import { OverlayEventDetail } from "@ionic/core";
 
 import { RefresherEventDetail } from "@ionic/react";
-import { redirect } from "next/dist/server/api-utils";
+
 import { GroupSQL, Students } from "../../context/globalContext";
 
 

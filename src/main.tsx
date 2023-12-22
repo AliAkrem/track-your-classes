@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { createRoot } from "react-dom/client";
 import App from "./App";
 
@@ -8,7 +8,7 @@ import {
   SQLiteConnection,
 } from "@capacitor-community/sqlite";
 import { JeepSqlite } from "jeep-sqlite/dist/components/jeep-sqlite";
-import { GlobalContextProvider } from "./context/globalContext";
+import { GlobalContextProvider, useGlobalContext } from "./context/globalContext";
 
 
 
@@ -40,12 +40,15 @@ window.addEventListener("DOMContentLoaded", async () => {
 
 
 
+
     const container = document.getElementById("root");
     const root = createRoot(container!);
     root.render(
-      <React.StrictMode>
+      // <React.StrictMode>
+        <GlobalContextProvider >
           <App />
-      </React.StrictMode>
+        </GlobalContextProvider>
+      // </React.StrictMode>
     );
   } catch (e) {
     console.log(e);

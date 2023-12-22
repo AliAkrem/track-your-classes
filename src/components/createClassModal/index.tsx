@@ -1,21 +1,26 @@
 import React, { useRef } from 'react'
-import { SQLModule, SpecialtiesSQL, useGlobalContext } from '../../context/globalContext';
+import { SQLClass, SQLModule, SpecialtiesSQL, useGlobalContext } from '../../context/globalContext';
 import { IonButton, IonButtons, IonContent, IonHeader, IonItem, IonList, IonModal, IonTitle, IonToolbar } from '@ionic/react';
 import ModuleSelect from '../module_select';
 import SpecialtiesSelect from "../specialty_select"
 import useSQLiteDB from '../../composables/useSQLiteDB';
 import { SQLiteDBConnection } from '@capacitor-community/sqlite';
-import { nanoid } from 'nanoid';
 
 
 
 
-export function CreateClassModal({ isOpen, close }: { isOpen: boolean, close: React.Dispatch<React.SetStateAction<boolean>> }) {
+type CreateClassModalProps = {
+  isOpen: boolean;
+  close: React.Dispatch<React.SetStateAction<boolean>>;
+};
+
+export const CreateClassModal: React.FC<CreateClassModalProps> = ({ isOpen, close }) => {
+
 
     const create_class_modal = useRef<HTMLIonModalElement | null>(null)
 
 
-    const { setSelectedModule, setSelectedSpecialties, selectedModule, selectedSpecialties, setYear, year, setRevalidate } = useGlobalContext()
+    const { selectedModule, selectedSpecialties,setSelectedModule, setSelectedSpecialties, setRevalidate, year } = useGlobalContext()
 
     const { performSQLAction } = useSQLiteDB()
 
@@ -23,43 +28,39 @@ export function CreateClassModal({ isOpen, close }: { isOpen: boolean, close: Re
 
         try {
             await performSQLAction(async (db: SQLiteDBConnection | undefined) => {
-
-                // const respSELECTED_YEAR = await db?.query(` SELECT selected_year_id FROM keys LIMIT 1  `)
-
-
-                // console.log(respSELECTED_YEAR?.values)
-                // if (respSELECTED_YEAR?.values) {
-                //     setYear(Number(respSELECTED_YEAR?.values[0].selected_year_id))
-                //     console.log(Number(respSELECTED_YEAR?.values[0].selected_year_id))
-                // }
-
-
                 await db?.query(
-                    "INSERT INTO class(module_id, specialty_id, scholar_year_id) VALUES (?, ?, (SELECT selected_year_id FROM keys ORDER BY selected_year_id LIMIT 1))",
-                    [module_id, specialty_id]
+                    "INSERT INTO class(module_id, specialty_id, scholar_year_id) VALUES (?, ?, ?)",
+                    [module_id, specialty_id, year]
                 );
 
-             
-
-
-
-
+                    setRevalidate(Math.random)
 
             });
 
-            setRevalidate(Math.random)
+
+
+
+
+            // setRevalidate(Math.random)
 
         } catch (error) {
             alert((error as Error).message);
+            setRevalidate(Math.random)
+
+            // setRevalidate(Math.random)
         }
     };
 
 
-    const onSubmit = () => {
+    const createClass = async (ev: any) => {
+
         if (selectedModule.length > 0 && selectedSpecialties.length > 0) {
-            INSERT_NEW_CLASS(Number(selectedModule[0]), Number(selectedSpecialties[0]))
+            await INSERT_NEW_CLASS(Number(selectedModule[0]), Number(selectedSpecialties[0]))
         }
 
+        create_class_modal?.current?.dismiss();
+
+        close(false)
         setSelectedSpecialties([])
         setSelectedModule([])
 
@@ -83,8 +84,8 @@ export function CreateClassModal({ isOpen, close }: { isOpen: boolean, close: Re
                     <SpecialtiesSelect />
                     <IonList inset>
                         <IonItem >
-                            <IonButton disabled={selectedModule.length == 0 || selectedSpecialties.length == 0} onClick={() => { onSubmit(); create_class_modal?.current?.dismiss(); close(false) }} slot="end" fill="outline" size="default" >
-                                submit
+                            <IonButton onClick={createClass} slot="end" fill="outline" size="default" >
+                                submit {Number(selectedModule[0]) + " " + Number(selectedSpecialties[0]) + " " + year}
                             </IonButton>
                         </IonItem>
                     </IonList>
