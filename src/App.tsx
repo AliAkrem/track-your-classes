@@ -1,5 +1,5 @@
-import { Redirect, Route } from "react-router-dom";
-import { IonApp, IonRefresher, IonRefresherContent, IonRouterOutlet, IonSplitPane, setupIonicReact } from "@ionic/react";
+import {  Route } from "react-router-dom";
+import { IonApp,  IonRouterOutlet, IonSplitPane, setupIonicReact } from "@ionic/react";
 import { IonReactRouter } from "@ionic/react-router";
 
 // import Home from "./pages/Home";
@@ -25,8 +25,7 @@ import "./theme/variables.css";
 
 import { Classes } from "./pages/classes";
 import { Group } from "./pages/groups";
-import { GlobalContextProvider, useGlobalContext } from "./context/globalContext";
-import useSQLiteDB from "./composables/useSQLiteDB";
+import { GlobalContextProvider } from "./context/globalContext";
 import Menu from "./components/Menu";
 
 
@@ -44,7 +43,6 @@ const App: React.FC = () => {
 
     <IonApp>
       <GlobalContextProvider >
-
         <IonReactRouter>
           <IonSplitPane contentId="main">
             <Menu />
