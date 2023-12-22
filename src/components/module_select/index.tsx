@@ -14,7 +14,7 @@ export default function ModuleSelect() {
 
   const {modules, setModules, selectedModule, setSelectedModule} = useGlobalContext()
 
-  const [selectedText, setSelectedText] = useState<string>('not selected yet');
+  const [selectedText, setSelectedText] = useState<string>('');
 
 
  

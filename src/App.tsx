@@ -1,5 +1,5 @@
-import {  Route } from "react-router-dom";
-import { IonApp,  IonRouterOutlet, IonSplitPane, setupIonicReact } from "@ionic/react";
+import { Route } from "react-router-dom";
+import { IonApp, IonRouterOutlet, IonSplitPane, setupIonicReact } from "@ionic/react";
 import { IonReactRouter } from "@ionic/react-router";
 
 // import Home from "./pages/Home";
@@ -25,38 +25,47 @@ import "./theme/variables.css";
 
 import { Classes } from "./pages/classes";
 import { Group } from "./pages/groups";
-import { GlobalContextProvider } from "./context/globalContext";
-import Menu from "./components/Menu";
-
+import { GlobalContextProvider, useGlobalContext } from "./context/globalContext";
+import { Menu } from "./components/Menu";
+import { useEffect, useState } from "react";
+import useSQLiteDB from "./composables/useSQLiteDB";
 
 
 setupIonicReact();
 
 
 
+
+
 const App: React.FC = () => {
 
-  
+
+
+  const { isLoading: isloadingContext } = useGlobalContext()
+
+
+
+
+  if (isloadingContext) return <IonApp> <div>loading... {String(isloadingContext)}</div> </IonApp>
 
   return (
-
-
     <IonApp>
-      <GlobalContextProvider >
-        <IonReactRouter>
-          <IonSplitPane contentId="main">
-            <Menu />
-            <IonRouterOutlet id="main" >
-              <Route exact path="/">
-               <Classes />
-              </Route>
-              <Route exact path="/:group">
-               <Group />
-              </Route>
-            </IonRouterOutlet>
-          </IonSplitPane>
-        </IonReactRouter>
-      </GlobalContextProvider>
+      <IonReactRouter>
+        <IonSplitPane contentId="main">
+          <Menu />
+
+          <IonRouterOutlet id="main" >
+            <Route >
+              <Classes />
+            </Route>
+            <Route exact path="/:group">
+              <Group />
+            </Route>
+          </IonRouterOutlet>
+
+        </IonSplitPane>
+      </IonReactRouter>
+
     </IonApp>
 
   );
