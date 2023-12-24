@@ -20,7 +20,8 @@ import {
   IonRefresherContent,
   IonCard,
   IonCardContent,
-  useIonViewWillEnter,
+  IonText,
+  IonChip,
 
 } from "@ionic/react";
 import React, { useEffect, useRef, useState } from "react";
@@ -28,29 +29,25 @@ import "./classes.css";
 import { SQLiteDBConnection } from "@capacitor-community/sqlite";
 import useSQLiteDB from "../../composables/useSQLiteDB";
 import useConfirmationAlert from "../../composables/useConfirmationAlert";
-import { add, arrowRedo, ellipsisVertical, list, } from "ionicons/icons";
+import { add, calendar, create, ellipsisVertical,  trash, } from "ionicons/icons";
 import { OverlayEventDetail } from "@ionic/react/dist/types/components/react-component-lib/interfaces";
-import {  SQLClass, useGlobalContext } from "../../context/globalContext";
+import { SQLClass, useGlobalContext } from "../../context/globalContext";
 import { CreateClassModal } from "../../components/createClassModal";
 import CreateGroupModal from "../../components/createGroupModal";
 import { nanoid } from "nanoid";
-
-
-
-
-
+import { Group } from "../groups";
+import { UpdateClass } from "../../components/updateClassModal";
 
 
 
 export const Classes: React.FC = () => {
 
-  const { 
+  const {
     year,
     setRevalidate,
     isLoading,
-    counter, 
-    selectedModule, 
-    selectedSpecialties,
+    counter,
+
     revalidate
   } = useGlobalContext()
 
@@ -60,9 +57,15 @@ export const Classes: React.FC = () => {
 
   const [modalCreateGroupOpened, setModalCreateGroupOpened] = useState(false)
 
+  const [modalUpdateClassOpened, setModalUpdateClassOpened] = useState(false)
+
+
+
+
   const classesGroupRef = useRef<HTMLIonAccordionGroupElement | null>(null)
 
   const [selectedClassIDToAddGroup, setSelectedClassIDToAddGroup] = useState(-1)
+  const [selectedClass, setSelectedClass] = useState<SQLClass | undefined>()
 
 
 
@@ -94,12 +97,12 @@ export const Classes: React.FC = () => {
 
 
   // related to display classes list
-  const ActionResult = (result: OverlayEventDetail, classPayload: { class_id: number, module_id: number, specialty_id: number }) => {
+  const ActionResult = (result: OverlayEventDetail, classPayload: { classe: SQLClass }) => {
 
     if (result.data?.action === "delete") {
 
       showConfirmationAlert("Are You Sure You Want To Delete this class? the information related to this class will deleted also! ", () => {
-        DELETE_CLASS(classPayload?.class_id)
+        DELETE_CLASS(classPayload?.classe.class_id)
 
       })
 
@@ -109,7 +112,14 @@ export const Classes: React.FC = () => {
     if (result.data?.action === "create-group") {
 
       setModalCreateGroupOpened(true)
-      setSelectedClassIDToAddGroup(classPayload.class_id)
+      setSelectedClassIDToAddGroup(classPayload.classe.class_id)
+
+    }
+
+    if (result.data?.action === "edit-class") {
+
+      setModalUpdateClassOpened(true)
+      setSelectedClass(classPayload.classe)
 
     }
 
@@ -118,114 +128,109 @@ export const Classes: React.FC = () => {
   }
 
 
-  const [classesList, setclassesList] = useState<Array<SQLClass> | []>([])
+  const [classesList, setClassesList] = useState<Array<SQLClass> | []>([])
 
 
 
 
 
   useEffect(() => {
+    if (initialized) {
+      LOAD_CLASSES()
+    }
+  }, [revalidate, initialized])
 
-    LOAD_CLASSES()
-    // LOAD_CLASSES()
 
-  }, [revalidate, initialized ])
-  
+
 
   const LOAD_CLASSES = async () => {
 
     try {
-        await performSQLAction(async (db: SQLiteDBConnection | undefined) => {
-  
-            const respSelectClasses = await db?.query(`
+      await performSQLAction(async (db: SQLiteDBConnection | undefined) => {
+        console.log(year)
+        const respSelectClasses = await db?.query(`
             SELECT 
-             class.class_id,
-             specialty.specialty_id,
-              specialty.specialty_name,
-               specialty.specialty_name_abv,
-                specialty.specialty_level, specialty.collage_year,
-                 module.module_id,
-                  module.module_name,
-                   module.module_name_abv,
-                    Groupp.group_id,
-                     Groupp.group_number, 
-                     Groupp.group_type FROM class 
-                      JOIN specialty ON class.specialty_id = specialty.specialty_id JOIN module ON class.module_id = module.module_id
-                       LEFT JOIN Groupp ON class.class_id = Groupp.class_id
-                        WHERE class.scholar_year_id = ? ; `, [year]);
+              class.class_id, 
+              class.module_name,
+              class.specialty_name,
+              class.specialty_level, 
+              class.level_year,
+              class.collage_year,
+              Groupp.group_id,
+              Groupp.group_number, 
+              Groupp.group_type 
+            FROM class 
 
-            const classesWithGroups = respSelectClasses?.values?.reduce((result: any, row: any) => {
-                const classInfo = result[row.class_id] || {
-                    class_id: row.class_id,
-                    specialty: {
-                        specialty_id: row.specialty_id,
-                        specialty_name: row.specialty_name,
-                        specialty_name_abv: row.specialty_name_abv,
-                        specialty_level: row.specialty_level,
-                        collage_year: row.collage_year,
-                    },
-                    module: {
-                        module_id: row.module_id,
-                        module_name: row.module_name,
-                        module_name_abv: row.module_name_abv,
-                    },
-                    groups: [],
-                };
+              LEFT JOIN Groupp ON class.class_id = Groupp.class_id
 
-                if (row.group_id) {
-                    const groupInfo = {
-                        group_id: row.group_id,
-                        group_number: row.group_number,
-                        group_type: row.group_type,
-                    };
+            WHERE class.collage_year = ? 
+              `, [year]);
 
-                    classInfo.groups.push(groupInfo);
-                }
+        const classesWithGroups = respSelectClasses?.values?.reduce((result: any, row: any) => {
+          const classInfo = result[row.class_id] || {
+            class_id: row.class_id,
 
-                result[row.class_id] = classInfo;
-                return result;
-            }, {});
+            specialty_name: row.specialty_name,
+            specialty_level: row.specialty_level,
+            level_year: row.level_year,
+            collage_year: row.collage_year,
 
+            module_name: row.module_name,
 
-                const classes_formatted  = Object.values(classesWithGroups);
-                setclassesList(classes_formatted as SQLClass[]);
+            groups: [],
+          };
 
+          if (row.group_id) {
+            const groupInfo = {
+              group_id: row.group_id,
+              group_number: row.group_number,
+              group_type: row.group_type,
+            };
 
-                // setListClasses(classes_formatted as  SQLClass[]);
+            classInfo.groups.push(groupInfo);
+          }
 
-        });
+          result[row.class_id] = classInfo;
+          return result;
+        }, {});
 
 
 
 
+        const classes_formatted = Object.values(classesWithGroups);
+        setClassesList(classes_formatted as SQLClass[]);
 
-        // setRevalidate(Math.random)
+
+        // setListClasses(classes_formatted as  SQLClass[]);
+
+      });
+
+
+
+
+
+      // setRevalidate(Math.random)
 
     } catch (error) {
-        alert((error as Error).message);
-        // setRevalidate(Math.random)
+      alert((error as Error).message);
+      // setRevalidate(Math.random)
     }
-};
+  };
 
-  
 
+
+  const [selectedGroup, setSelectedGroup] = useState<number | undefined>()
 
 
 
   const ListClasses = classesList?.map((classe) => {
-
-
     const trigger = nanoid()
-
-
-
-
     return (
 
       <div key={nanoid()}  >
-        <IonAccordion toggleIconSlot="start" value={nanoid()} >
+        <IonAccordion toggleIconSlot="start" value={nanoid()}  >
           <IonItem slot="header" color="light">
-            <IonLabel> {classe.module.module_name_abv + " / " + classe.specialty.specialty_name_abv + " / " + classe.specialty.specialty_level + classe.specialty.collage_year}</IonLabel>
+            <IonLabel class="ion-text-wrap" > {classe.module_name + " / " + classe.specialty_name + " / " + classe.specialty_level + classe.level_year}</IonLabel>
             <IonButton fill="clear" id={trigger} >
               <IonIcon size="small" icon={ellipsisVertical}></IonIcon>
             </IonButton>
@@ -233,12 +238,12 @@ export const Classes: React.FC = () => {
 
           {classe.groups?.map(group => {
             return (<IonItem slot="content" key={group.group_id}   >
-              <IonLabel>
-                group {group.group_number} /{group.group_type}
-              </IonLabel>
-              <IonButton fill="clear" href={`/classes/${group.group_id}`} size="large" >
-                <IonIcon size="small" icon={arrowRedo}></IonIcon>
-              </IonButton>
+              <IonText style={{ cursor: 'pointer' }} onClick={() => { setSelectedGroup(group.group_id) }} color={'primary'} >
+
+                group {group.group_number} / {group.group_type}
+
+              </IonText>
+
             </IonItem>)
           })
           }
@@ -247,25 +252,36 @@ export const Classes: React.FC = () => {
         </IonAccordion>
         <IonActionSheet
           trigger={trigger}
-          header={classe.module.module_name_abv + " / " + classe.specialty.specialty_name_abv + " / " + classe.specialty.specialty_level + classe.specialty.collage_year}
+          header={classe.module_name + " / " + classe.specialty_name + " / " + classe.specialty_level + classe.level_year}
           buttons={[
             {
-              text: 'Delete',
-              role: 'delete',
+
+              icon: create,
+              text: 'edit',
+              role: 'edit-class',
               data: {
-                action: 'delete',
+                action: 'edit-class',
               },
             },
             {
-
+              icon: add,
               text: 'create new group',
               role: 'create',
               data: {
                 action: 'create-group',
               },
             },
+
+            {
+              icon: trash,
+              text: 'Delete',
+              role: 'delete',
+              data: {
+                action: 'delete',
+              },
+            },
           ]}
-          onDidDismiss={({ detail }) => ActionResult(detail, { class_id: classe.class_id, module_id: classe.module.module_id, specialty_id: classe.specialty.specialty_id })}
+          onDidDismiss={({ detail }) => ActionResult(detail, { classe: classe })}
         ></IonActionSheet>
       </div>
     )
@@ -301,7 +317,16 @@ export const Classes: React.FC = () => {
           <IonButtons slot="start">
             <IonMenuButton />
           </IonButtons>
-          <IonTitle size="small" >Manage Classes {String(year)}  counter : {counter}  </IonTitle>
+          <IonTitle size="small" >
+            {counter}
+            <IonChip color={"success"} >
+              <IonIcon icon={calendar}></IonIcon>
+              <IonLabel>{String(year)}</IonLabel>
+            </IonChip>
+
+          </IonTitle>
+
+
 
         </IonToolbar>
       </IonHeader>
@@ -322,10 +347,8 @@ export const Classes: React.FC = () => {
 
 
 
-
-
         {
-          classesList?.length > 0   ?
+          classesList?.length > 0 ?
             <IonAccordionGroup ref={classesGroupRef} multiple={false} >
               {ListClasses}
             </IonAccordionGroup> :
@@ -336,16 +359,6 @@ export const Classes: React.FC = () => {
             </div>
 
         }
-        <pre>
-          {JSON.stringify(classesList, null, 2)}
-          {JSON.stringify(selectedModule, null, 2)}
-          {JSON.stringify(selectedSpecialties, null, 2)}
-
-          
-        </pre>
-
-
-
 
 
 
@@ -353,6 +366,12 @@ export const Classes: React.FC = () => {
 
         <CreateClassModal isOpen={openedCreateClassModel} close={setopenedCreateClassModel} />
 
+
+        {selectedClass && <UpdateClass isOpen={modalUpdateClassOpened} classe={selectedClass}  setSelectedClass={setSelectedClass} close={setModalUpdateClassOpened}  />}
+
+
+
+        <Group group_id={selectedGroup} setSelectedGroup={setSelectedGroup} />
 
         {ConfirmationAlert}
 

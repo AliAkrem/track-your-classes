@@ -1,11 +1,12 @@
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import useSQLiteDB from "../composables/useSQLiteDB";
 import { SQLiteDBConnection } from "@capacitor-community/sqlite";
-import { read } from "xlsx";
+
 
 // define the types ----------------------------------------
 
 export type Students = {
+    student_id : number ;  
     student_code: string
     first_name: string;
     last_name: string;
@@ -15,30 +16,23 @@ export type GroupSQL = {
     group_number: number,
     group_type: "TP" | 'TD'
 }
-export interface SpecialtiesSQL {
-    specialty_id: number,
-    specialty_name: string,
-    specialty_name_abv: string,
-    specialty_level: string,
-    collage_year: number
-}
-export type SQLModule = {
-    module_id: number;
-    module_name: string;
-    module_name_abv: string;
-};
+
 export type SQLClass = {
+
     class_id: number
-    specialty: SpecialtiesSQL
-    module: SQLModule
+    module_name: string;
+    specialty_name: string,
+    specialty_level: string,
+    level_year: number
+    collage_year: string
     groups?: GroupSQL[]
 
 }
 
-export type SQLYearScholar = {
-    scholar_year_id: number,
-    year: string
+export type Scholar_years = {
+    collage_year: string
 }
+
 
 // END define the types ----------------------------------------
 
@@ -46,26 +40,16 @@ export type SQLYearScholar = {
 // Global state --------------------------------
 
 export interface GlobalState {
-    modules: SQLModule[] | [];
-    setModules: React.Dispatch<React.SetStateAction<SQLModule[] | []>>
-    specialties: SpecialtiesSQL[] | [];
-    setSpecialties: React.Dispatch<React.SetStateAction<[] | SpecialtiesSQL[]>>
-    selectedModule: string[]
-    setSelectedModule: React.Dispatch<React.SetStateAction<string[]>>
-    selectedSpecialties: string[]
-    setSelectedSpecialties: React.Dispatch<React.SetStateAction<string[]>>
-    year: Number
-    setYear: React.Dispatch<React.SetStateAction<Number>>
-    years: [] | SQLYearScholar[]
-    setYears: React.Dispatch<React.SetStateAction<[] | SQLYearScholar[]>>
+    year: string
+    setYear: React.Dispatch<React.SetStateAction<string>>
     revalidate: number
     setRevalidate: React.Dispatch<React.SetStateAction<number>>
     isLoading: boolean
     setIsLoading: React.Dispatch<React.SetStateAction<boolean>>
-
-
     counter: number
     setCounter: React.Dispatch<React.SetStateAction<number>>
+    years: Scholar_years[]
+    setYears: React.Dispatch<React.SetStateAction<Scholar_years[]>>
 }
 // END  Global state --------------------------------
 
@@ -80,21 +64,14 @@ export const GlobalContextProvider = ({ children }: { children: React.ReactNode 
 
     const { initialized, performSQLAction } = useSQLiteDB()
 
-    const [modules, setModules] = useState<Array<SQLModule> | []>([]);
-    const [specialties, setSpecialties] = useState<Array<SpecialtiesSQL> | []>([])
-
-    const [selectedModule, setSelectedModule] = useState<string[]>([]);
-    const [selectedSpecialties, setSelectedSpecialties] = useState<string[]>([]);
 
 
-    const [year, setYear] = useState<Number>(1)
-    const [years, setYears] = useState<SQLYearScholar[] | []>([])
-
+    const [year, setYear] = useState<string>('')
+    const [years, setYears] = useState<Scholar_years[]>([])
 
     const [revalidate, setRevalidate] = useState(0)
 
     const [isLoading, setIsLoading] = useState(true)
-
 
     const [counter, setCounter] = useState(0)
 
@@ -103,62 +80,87 @@ export const GlobalContextProvider = ({ children }: { children: React.ReactNode 
         try {
             await performSQLAction(async (db: SQLiteDBConnection | undefined) => {
 
-                const respSelect = await db?.query(`SELECT * FROM module`);
-                setModules(respSelect?.values as SQLModule[]);
-
-                const respSelectSpecialties = await db?.query(`SELECT * FROM specialty`);
-
-                setSpecialties(respSelectSpecialties?.values as SpecialtiesSQL[]);
+                // await db?.query(`INSERT OR IGNORE INTO scholar_year (year) VALUES ('2023/2024')`); // insert year
 
 
+                // ? fix me  select list of years grouping from classes  
 
-                await db?.query(`INSERT OR IGNORE INTO scholar_year (year) VALUES ('2023/2024')`); // insert year
+                const resp = await db?.query(`SELECT DISTINCT collage_year FROM class`)
 
-                const resp = await db?.query(`SELECT * FROM scholar_year`)
-                setYears(resp?.values as SQLYearScholar[])
+                setYears(resp?.values as Scholar_years[])
 
 
 
-                let respSELECTED_YEAR = await db?.query(`SELECT selected_year_id FROM keys`)
+                const respSELECTED_YEAR = await db?.query(`SELECT * FROM keys`)
 
-                if (!respSELECTED_YEAR?.values) {
+                console.log(respSELECTED_YEAR?.values)
 
-                    // IF THERE ARE NO SELECTED_YEAR YET GET THE LATEST YEAR 
+
+                if (respSELECTED_YEAR?.values && respSELECTED_YEAR?.values.length > 0) {
+
+                    setYear(respSELECTED_YEAR.values[0].selected_year)
+                   
+                } else {
+                    // if there are ne selected collage_year select latest collage_year
                     const respLATEST_YEAR_ID = await db?.query(`
-                SELECT scholar_year_id FROM scholar_year WHERE year IN 
-                (SELECT MAX(year) FROM scholar_year );
-                `)
-
-                    if (respLATEST_YEAR_ID?.values && respLATEST_YEAR_ID?.values[0].scholar_year_id) {
-
+                        SELECT MAX(collage_year) as collage_year  FROM class WHERE collage_year 
+                     `)
+                    if (respLATEST_YEAR_ID?.values) {
+                        console.log(respLATEST_YEAR_ID?.values[0]?.collage_year)
 
                         await db?.query(`
-                            INSERT OR IGNORE INTO keys (selected_year_id) values (?) ;
+                            INSERT OR IGNORE INTO keys (selected_year) values (?) ;        
+                            `, 
+                            [respLATEST_YEAR_ID?.values[0]?.collage_year])
 
-                    `, [respLATEST_YEAR_ID?.values[0]?.scholar_year_id])
 
-
-                        setYear(respLATEST_YEAR_ID?.values[0].selected_year_id)
 
 
                     }
 
-                } else {
-                    setYear(respSELECTED_YEAR?.values[0].selected_year_id)
                 }
 
 
 
-                setCounter(7)
+
+                // if (respSELECTED_YEAR?.values && respSELECTED_YEAR?.values.length == 0) {
+
+                //     // IF THERE ARE NO SELECTED_YEAR YET GET THE LATEST YEAR 
+
+                //     // ? fix me select max from  year grouping from class table
+                //    
+
+                //     console.log(respLATEST_YEAR_ID?.values)
+
+                //     if (respLATEST_YEAR_ID?.values && respLATEST_YEAR_ID?.values[0].collage_year) {
 
 
+                //         await db?.query(`
+                //             INSERT OR IGNORE INTO keys (selected_year) values (?) ;
+
+                //     `, [respLATEST_YEAR_ID?.values[0]?.collage_year])
 
 
+                //         setYear(respLATEST_YEAR_ID?.values[0].collage_year)
 
-            });
+
+                //     }
+
+                // } else {
+
+                //     if (respSELECTED_YEAR?.values )
+                //         setYear(respSELECTED_YEAR?.values[0].selected_year)
+
+                // }
+            }
+
+
+            );
+
 
 
             setIsLoading(false)
+
 
 
 
@@ -179,15 +181,11 @@ export const GlobalContextProvider = ({ children }: { children: React.ReactNode 
 
 
     const value = {
-        modules, setModules,
-        specialties, setSpecialties,
-        selectedModule, setSelectedModule,
-        selectedSpecialties, setSelectedSpecialties,
         year, setYear,
-        years, setYears,
         revalidate, setRevalidate,
         isLoading, setIsLoading,
-        counter, setCounter
+        counter, setCounter,
+        years, setYears
     };
 
 

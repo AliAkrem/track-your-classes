@@ -5,25 +5,20 @@ import {
   IonItem,
   IonLabel,
   IonList,
-  IonListHeader,
   IonMenu,
   IonMenuToggle,
-  IonNote,
-  IonPage,
   IonSelect,
   IonSelectOption,
-  useIonViewDidEnter,
-  useIonViewWillEnter,
+
 } from '@ionic/react';
 
-import { useLocation } from 'react-router-dom';
-import { archiveOutline, archiveSharp, bookmarkOutline, calendar, heartOutline, heartSharp, leaf, mailOutline, mailSharp, paperPlaneOutline, paperPlaneSharp, schoolOutline, trashOutline, trashSharp, warningOutline, warningSharp } from 'ionicons/icons';
+import { add, calendar, calendarClear, eye, schoolOutline } from 'ionicons/icons';
 import './Menu.css';
-import { useEffect, useState } from 'react';
+import { useRef, useState } from 'react';
 import useSQLiteDB from '../../composables/useSQLiteDB';
 import { SQLiteDBConnection } from '@capacitor-community/sqlite';
-import { nanoid } from 'nanoid';
 import { useGlobalContext } from '../../context/globalContext';
+import { useLocation } from 'react-router';
 
 interface AppPage {
   url: string;
@@ -40,15 +35,12 @@ const appPages: AppPage[] = [
     mdIcon: schoolOutline
   },
 
-
-
-
-  // {
-  //   title: 'students',
-  //   url: '/Outbox',
-  //   iosIcon: paperPlaneOutline,
-  //   mdIcon: paperPlaneSharp
-  // },
+  {
+    title: 'Calendar',
+    url: '/calendar',
+    iosIcon: calendar,
+    mdIcon: calendar
+  },
   // {
   //   title: 'calender',
   //   url: '/calender',
@@ -69,28 +61,30 @@ export const Menu: React.FC = () => {
 
   const [page, setPage] = useState("")
 
-  const { counter, setCounter, years, year, setYear, setRevalidate, isLoading } = useGlobalContext()
+  const { counter, setCounter, year, years, setYear, setRevalidate, isLoading } = useGlobalContext()
 
 
 
-  const {  performSQLAction } = useSQLiteDB()
-
-
-  
-  
+  const { performSQLAction } = useSQLiteDB()
 
 
 
 
 
-  const CHANGE_SELECTED_YEARS = async (year_id: number) => {
+
+
+
+
+
+
+  const CHANGE_SELECTED_YEARS = async (new_year: string ) => {
     try {
       await performSQLAction(async (db: SQLiteDBConnection | undefined) => {
 
         await db?.query(`
-          UPDATE Keys SET selected_year_id = ? WHERE selected_year_id = ? ;
-          `, [year_id, year])
-        setYear(year_id)
+          UPDATE Keys SET selected_year = ? WHERE selected_year = ? ;
+          `, [new_year, year])
+        setYear(new_year)
 
       })
       setRevalidate(Math.random)
@@ -102,55 +96,75 @@ export const Menu: React.FC = () => {
   };
 
 
+  
 
+  // ? fixme select year group by classes 
   const YearsOptions = years?.map((year) => {
-    return (<IonSelectOption key={year.scholar_year_id} value={String(year.scholar_year_id)}>{year.year}</IonSelectOption>
+    return (<IonSelectOption key={year.collage_year} value={String(year.collage_year)}>{year.collage_year}</IonSelectOption>
     )
   })
 
+  const selectOptionYear = useRef<HTMLIonSelectElement | null>(null)
   const handleYearChange = async (ev: any) => {
 
-    await CHANGE_SELECTED_YEARS(Number(ev.detail.value))
+
+
+    await CHANGE_SELECTED_YEARS(String(ev.detail.value))
 
 
   }
 
 
+  const location  = useLocation()
+
+
+
+
+
+
+
+
+
+
   if (isLoading) return null;
+
+
+
+
 
   return (
 
-    
-      <IonMenu contentId="main" type="reveal">
-        <IonContent>
-          <IonList id="inbox-list">
-            {/* <IonListHeader>{page}</IonListHeader> */}
 
-            <IonItem style={{ padding: "20px 0 " }} >
-              <IonIcon slot="start" icon={calendar} aria-hidden="true"></IonIcon>
-              <IonSelect onIonChange={handleYearChange} labelPlacement='stacked' label={"year scholar"} value={String(year)}  >
+    <IonMenu contentId="main" type="reveal">
+      <IonContent>
+        <IonList id="inbox-list">
+          {/* <IonListHeader>{page}</IonListHeader> */}
+
+
+          {years.length > 0 ?
+            <IonItem style={{ padding: "10px 0 " }} >
+              <IonIcon slot="start" icon={calendar} size='small' aria-hidden="true"></IonIcon>
+              <IonSelect ref={selectOptionYear} interface="popover" onIonChange={handleYearChange} labelPlacement='stacked' label={"year scholar"} value={String(year)}  >
                 {YearsOptions}
               </IonSelect>
             </IonItem>
+            : null
+          }
 
-            <IonButton  onClick={()=>{setCounter(counter+1)}} >
-              + {counter}
-            </IonButton>
+          {appPages.map((appPage, index) => {
+            return (
+              <IonMenuToggle key={index} autoHide={false}>
+                <IonItem className={location.pathname === appPage.url ? 'selected' : ''} routerLink={appPage.url} routerDirection="none" lines="none" detail={false}>
+                  <IonIcon aria-hidden="true" slot="start" ios={appPage.iosIcon} md={appPage.mdIcon} />
+                  <IonLabel>{appPage.title}</IonLabel>
+                </IonItem>
+              </IonMenuToggle>
+            );
+          })}
+        </IonList>
 
-            {appPages.map((appPage, index) => {
-              return (
-                <IonMenuToggle key={index} autoHide={false}>
-                  <IonItem className={location.pathname === appPage.url ? 'selected' : ''} routerLink={appPage.url} routerDirection="none" lines="none" detail={false}>
-                    <IonIcon aria-hidden="true" slot="start" ios={appPage.iosIcon} md={appPage.mdIcon} />
-                    <IonLabel>{appPage.title}</IonLabel>
-                  </IonItem>
-                </IonMenuToggle>
-              );
-            })}
-          </IonList>
+      </IonContent>
+    </IonMenu>
 
-        </IonContent>
-      </IonMenu>
-   
   );
 };

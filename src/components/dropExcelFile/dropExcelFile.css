@@ -9,7 +9,7 @@
   
   #form-file-upload {
     padding: 10px;
-    height: 40vh;
+    height: 20vh;
     width: 100%;
     max-width: 100%;
     text-align: center;
@@ -28,7 +28,7 @@
     border-width: 2px;
     border-radius: 1rem;
     border-style: dashed;
-    /* border-color: #cbd5e1; */
+    border-color: #cbd5e1;
     /* background-color: #f8fafc; */
   }
   
