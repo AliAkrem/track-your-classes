@@ -12,55 +12,71 @@ import {
     IonActionSheet,
     IonRefresher,
     IonRefresherContent,
+    IonModal,
+    IonAvatar,
+    IonChip,
+    IonItemSliding,
+    IonItemOptions,
+    IonItemOption,
 
 } from "@ionic/react";
 import React, { useEffect, useRef, useState } from "react";
 import { SQLiteDBConnection } from "@capacitor-community/sqlite";
 import useSQLiteDB from "../../composables/useSQLiteDB";
 import useConfirmationAlert from "../../composables/useConfirmationAlert";
-import { Redirect, useParams } from "react-router";
 import { nanoid } from "nanoid";
-import { chevronBack, ellipsisVertical } from "ionicons/icons";
+import { add, chevronBack, ellipsisVertical, people, person, trash } from "ionicons/icons";
 import { OverlayEventDetail } from "@ionic/core";
 
 import { RefresherEventDetail } from "@ionic/react";
 
-import { GroupSQL, Students } from "../../context/globalContext";
+import { GroupSQL, Students, useGlobalContext } from "../../context/globalContext";
+import { CreateStudentModal } from "../../components/createStudentModal";
 
 
 
+type Props = {
+    group_id: number | undefined,
+    setSelectedGroup: React.Dispatch<React.SetStateAction<number | undefined>>
+}
 
 
-export const Group: React.FC = () => {
+export const Group: React.FC<Props> = ({ group_id, setSelectedGroup }: Props) => {
 
 
 
     const { performSQLAction, initialized } = useSQLiteDB();
 
 
-    const { group } = useParams<{ group: string; }>();
+    const { setRevalidate } = useGlobalContext()
+
+
 
     const { showConfirmationAlert, ConfirmationAlert } = useConfirmationAlert();
 
 
     const [groupOptionOpened, setGroupOptionOpened] = useState(false)
 
+    const [addStudentModalOpened, setOpenAddStudentModal] = useState(false)
+
     const [list_student, setList_student] = useState<Students[]>()
+
     const [groupInfo, setGroupInfo] = useState<GroupSQL>()
     // const params = useParams<{id : string } >();
 
+    const [revalidateGroup, setRevalidateGroup] = useState(0)
+
+
     useEffect(() => {
 
-        SELECT_STUDENTS_IN_GROUP(Number(group));
+        if (initialized && group_id)
+            SELECT_STUDENTS_IN_GROUP(group_id);
 
-    }, [initialized]);
-
-
-
+    }, [initialized, group_id, revalidateGroup]);
 
     const SELECT_STUDENTS_IN_GROUP = async (group_id: number) => {
         try {
-        await performSQLAction(async (db: SQLiteDBConnection | undefined) => {
+            await performSQLAction(async (db: SQLiteDBConnection | undefined) => {
                 const respSelect = await db?.query(`
               SELECT
                 student.student_id,
@@ -107,7 +123,6 @@ export const Group: React.FC = () => {
         }
     };
 
-
     const ActionResult = (result: OverlayEventDetail) => {
 
         if (result.data?.action === "delete") {
@@ -125,7 +140,7 @@ export const Group: React.FC = () => {
 
         if (result.data?.action === "create-student") {
 
-
+            setOpenAddStudentModal(true)
 
 
         }
@@ -136,10 +151,9 @@ export const Group: React.FC = () => {
 
     }
 
-
     const DELETE_GROUP = async (group_id: number) => {
         try {
-           await  performSQLAction(async (db: SQLiteDBConnection | undefined) => {
+            await performSQLAction(async (db: SQLiteDBConnection | undefined) => {
                 await db?.query(`DELETE FROM Groupp WHERE group_id = ? `, [group_id])
             })
             location.replace('/classes')
@@ -150,46 +164,111 @@ export const Group: React.FC = () => {
     };
 
 
+    const DELETE_STUDENT = async (student_id: number) => {
+
+
+        await performSQLAction(async (db: SQLiteDBConnection | undefined) => {
+
+            await db?.query(`
+                DELETE FROM group_student WHERE student_id = ?  AND group_id = ? 
+                  `
+                   , [student_id, group_id] )  
+
+            setRevalidateGroup(Math.random())
+
+
+        })
+
+    }
+
+    const handleDeleteStudent = (student_id: number) => {
+
+
+        showConfirmationAlert("Are You Sure You Want To Delete this student? the information related to this student will deleted also!", () => {
+
+            DELETE_STUDENT(student_id)
+
+        })
+
+
+
+    }
+
+
+
+
+
+
+
+
+
 
 
     const DisplayListStudent = list_student?.map((student) => {
 
-        return (<IonItem key={nanoid()}  >
-            <IonLabel style={{ padding: "10px" }} class="ion-text-wrap" >
-                {student.first_name} {" "} {student.last_name}
-            </IonLabel>
-        </IonItem>)
+        return (
+            <IonItemSliding key={nanoid()}  >
+                <IonItem  >
+                    <IonAvatar slot="start">
+                        <IonIcon size="large" icon={person} ></IonIcon>
+                    </IonAvatar>
+                    <IonLabel class="ion-text-wrap" >
+                        <h2 > {(student.first_name).toLowerCase()} {" "} {(student.last_name).toLowerCase()}</h2>
+                    </IonLabel>
+                </IonItem>
+
+                <IonItemOptions side="start" >
+                    <IonItemOption onClick={() => { handleDeleteStudent(student.student_id) }} color="danger">
+                        <IonIcon slot="icon-only" icon={trash} ></IonIcon>
+                    </IonItemOption>
+                </IonItemOptions>
+
+            </IonItemSliding>
+        )
 
     })
 
 
-    const handleRefresh=async (event: CustomEvent<RefresherEventDetail>) =>{
+
+
+
+    // console.log(new_student_code)
+
+    const handleRefresh = async (event: CustomEvent<RefresherEventDetail>) => {
         setTimeout(() => {
-          // Any calls to load data go here
-          event.detail.complete();
+            // Any calls to load data go here
+            event.detail.complete();
+
         }, 2000);
-        
-         location.reload();
-
-      }
+        setRevalidate(Math.random());
 
 
-      const listGroup  = useRef(null)
+    }
+
+
+    const listGroup = useRef(null)
 
 
     return (
-        <IonPage>
+        <IonModal isOpen={group_id ? true : false} canDismiss={group_id ? false : true}  >
             <IonHeader>
                 <IonToolbar>
-                    <IonButton fill="clear" slot="start" href="/classes" >
+                    <IonButton fill="clear" slot="start" onClick={() => { setSelectedGroup(undefined) }}   >
                         <IonIcon size="small" icon={chevronBack}></IonIcon>
                     </IonButton>
 
                     <IonTitle class="ion-text-wrap" >
-                        Group {groupInfo?.group_number} {groupInfo?.group_type}
+
+                        <IonChip color={"success"} >
+                            <IonIcon icon={people}></IonIcon>
+                            <IonLabel>Group {groupInfo?.group_number} {groupInfo?.group_type}</IonLabel>
+                        </IonChip>
+
+
+
                     </IonTitle>
 
-                    <IonButton id="open-action-group-option" fill="clear" slot="end"  onClick={() => { setGroupOptionOpened(true) }} >
+                    <IonButton id="open-action-group-option" fill="clear" slot="end" onClick={() => { setGroupOptionOpened(true) }} >
                         <IonIcon size="small" icon={ellipsisVertical}></IonIcon>
                     </IonButton>
 
@@ -197,9 +276,9 @@ export const Group: React.FC = () => {
             </IonHeader>
 
             <IonContent fullscreen >
-            <IonRefresher slot="fixed" onIonRefresh={handleRefresh}>
-          <IonRefresherContent></IonRefresherContent>
-        </IonRefresher>
+                <IonRefresher slot="fixed" onIonRefresh={handleRefresh}>
+                    <IonRefresherContent></IonRefresherContent>
+                </IonRefresher>
                 <IonItem  >
                     <IonLabel >
                         <h1>students</h1>
@@ -208,6 +287,7 @@ export const Group: React.FC = () => {
                 <IonItemGroup style={{ padding: '10px' }} >
                     {DisplayListStudent}
                 </IonItemGroup>
+
                 <IonActionSheet
                     // trigger={"open-action-group-option"}
                     isOpen={groupOptionOpened}
@@ -215,29 +295,34 @@ export const Group: React.FC = () => {
                     onIonActionSheetWillDismiss={() => setGroupOptionOpened(false)}
                     header="Actions"
                     buttons={[
-                        {   
-                           
-
-                            text: 'Delete Group ',
+                        {
+                            icon: trash,
+                            text: 'Delete Group',
                             role: 'delete',
                             data: {
                                 action: 'delete',
                             },
                         },
                         {
+                            icon: add,
                             text: 'create new student',
-                            role: 'create',
+                            role: 'create-student',
                             data: {
-                                action: 'create-group',
+                                action: 'create-student',
                             },
                         },
                     ]}
                     onDidDismiss={({ detail }) => ActionResult(detail)}
                 ></IonActionSheet>
+
+
+                <CreateStudentModal setRevalidateGroup={setRevalidateGroup} student_code={Number(list_student?.toReversed()[0].student_code) + 1} group_id={group_id} isOpen={addStudentModalOpened} close={setOpenAddStudentModal} />
+
+
                 {ConfirmationAlert}
             </IonContent>
 
-        </IonPage>
+        </IonModal>
     );
 };
 

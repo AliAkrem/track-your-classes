@@ -128,11 +128,10 @@ function DragDropFile({ setStudent_list }: Props) {
                     {!fileAttached ?
                         <>
                             <IonText color={'primary'} >
-                                Drag and drop your file here or
-                                <IonIcon icon={documentOutline}></IonIcon>
+                                Drag and drop your file here or click
                             </IonText>
 
-                            <IonButton size="small" fill="outline" onClick={onButtonClick}>Upload a file</IonButton>
+                            <IonButton   onClick={onButtonClick}>Upload a file</IonButton>
                         </>
                         : <>
                             <IonText color={'primary'} style={{ display: "flex", flexDirection: "column", gap: "10px", alignItems: "center", padding: '15px' }}  >

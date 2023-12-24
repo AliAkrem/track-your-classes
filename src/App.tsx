@@ -1,5 +1,5 @@
 import { Route } from "react-router-dom";
-import { IonApp, IonRouterOutlet, IonSplitPane, setupIonicReact } from "@ionic/react";
+import { IonApp, IonLoading, IonRouterOutlet, IonSplitPane, setupIonicReact } from "@ionic/react";
 import { IonReactRouter } from "@ionic/react-router";
 
 // import Home from "./pages/Home";
@@ -24,11 +24,9 @@ import "@ionic/react/css/display.css";
 import "./theme/variables.css";
 
 import { Classes } from "./pages/classes";
-import { Group } from "./pages/groups";
-import { GlobalContextProvider, useGlobalContext } from "./context/globalContext";
+import {  useGlobalContext } from "./context/globalContext";
 import { Menu } from "./components/Menu";
-import { useEffect, useState } from "react";
-import useSQLiteDB from "./composables/useSQLiteDB";
+import { Calender } from "./pages/calendar";
 
 
 setupIonicReact();
@@ -46,20 +44,22 @@ const App: React.FC = () => {
 
 
 
-  if (isloadingContext) return <IonApp> <div>loading... {String(isloadingContext)}</div> </IonApp>
+  if (isloadingContext) return <>
+    <IonLoading className="custom-loading" isOpen={true}  spinner={'bubbles'} message="Loading" />
+
+  </>
 
   return (
     <IonApp>
       <IonReactRouter>
         <IonSplitPane contentId="main">
           <Menu />
-
-          <IonRouterOutlet id="main" >
-            <Route >
+          <IonRouterOutlet id="main"  >
+            <Route path="/" >
               <Classes />
             </Route>
-            <Route exact path="/:group">
-              <Group />
+            <Route path="/calendar" >
+              <Calender />
             </Route>
           </IonRouterOutlet>
 

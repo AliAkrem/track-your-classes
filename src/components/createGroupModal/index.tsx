@@ -1,10 +1,11 @@
-import { IonButton, IonButtons, IonContent, IonHeader, IonInput, IonItem, IonModal, IonSelect, IonSelectOption, IonText, IonTitle, IonToolbar } from '@ionic/react';
+import { IonAvatar, IonButton, IonButtons, IonContent, IonHeader, IonIcon, IonInput, IonItem, IonLabel, IonModal, IonSelect, IonSelectOption, IonText, IonTitle, IonToolbar } from '@ionic/react';
 import React, { useRef, useState } from 'react'
 import DragDropFile from '../dropExcelFile';
 import { Students, useGlobalContext } from '../../context/globalContext';
 import { nanoid } from 'nanoid';
 import useSQLiteDB from '../../composables/useSQLiteDB';
 import { SQLiteDBConnection } from '@capacitor-community/sqlite';
+import { person } from 'ionicons/icons';
 
 type Props = {
   isOpen: boolean
@@ -43,7 +44,8 @@ export default function CreateGroupModal({ isOpen, setToClose, selectedClassIDTo
     try {
       // tayeb insert  student
       await performSQLAction(async (db: SQLiteDBConnection | undefined) => {
-        // Assuming there is a 'class_group' table with columns: class_id, group_id, year
+
+
         await db?.query(`INSERT INTO Groupp( group_type, group_number, class_id) VALUES ( ?, ?, ?)`, [group_type, group_number, selectedClassIDToAddGroup]);
 
         const resGroup_id: any = await db?.query(`SELECT group_id as id FROM Groupp WHERE group_id IN (SELECT max(group_id) FROM Groupp) AND class_id = ? ;`, [selectedClassIDToAddGroup]);
@@ -57,13 +59,16 @@ export default function CreateGroupModal({ isOpen, setToClose, selectedClassIDTo
           await db?.query(`INSERT OR IGNORE INTO group_student( group_id, student_id) VALUES (?, ?)`, [group_id, student_id]);
 
         }))
+
+
+
       });
 
-      setRevalidate(Math.random());
 
       setToClose(false);
       setSelectedClassIDToAddGroup(-1);
       setStudent_list([])
+      setRevalidate(Math.random());
 
 
     } catch (error) {
@@ -71,7 +76,7 @@ export default function CreateGroupModal({ isOpen, setToClose, selectedClassIDTo
 
 
 
-    } 
+    }
   };
 
 
@@ -136,11 +141,11 @@ export default function CreateGroupModal({ isOpen, setToClose, selectedClassIDTo
             labelPlacement="start"
             ref={group_number}
             type="text"
-            maxlength={1}
+            maxlength={2}
             onIonChange={(e) => {
               const inputValue = e.detail.value;
 
-              const numericInput = String(inputValue).replace(/[^0-5]/g, '');
+              const numericInput = String(inputValue).replace(/[^0-9]/g, '');
 
               if (group_number.current)
                 group_number.current.value = numericInput;
@@ -149,25 +154,35 @@ export default function CreateGroupModal({ isOpen, setToClose, selectedClassIDTo
 
         </IonItem>
 
-        {student_list ? student_list?.map((student =>
-
-          <IonItem key={student.student_code + student.first_name}>
-            <IonText key={nanoid()} >{student.first_name} / {student.last_name} / {student.student_code} </IonText>
-          </IonItem>
-        )) : null
-        }
 
         <IonItem >
           <IonButton onClick={() => {
 
             onCreateGroup();
 
-
           }}
-            slot="start" fill="outline" size="default" >
+            slot="start" size="default" >
             submit
           </IonButton>
         </IonItem>
+
+
+
+
+        {student_list ? student_list?.map((student =>
+
+          <IonItem key={nanoid()}  >
+            <IonAvatar slot="start">
+              <IonIcon size="large" icon={person} ></IonIcon>
+            </IonAvatar>
+            <IonLabel class="ion-text-wrap" >
+              <h2 >{student.student_code} - {(student.first_name).toLowerCase()} {" "} {(student.last_name).toLowerCase()}</h2>
+            </IonLabel>
+          </IonItem>
+
+
+        )) : null
+        }
       </IonContent>
     </IonModal>
   )
