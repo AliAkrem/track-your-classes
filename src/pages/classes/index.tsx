@@ -29,7 +29,7 @@ import "./classes.css";
 import { SQLiteDBConnection } from "@capacitor-community/sqlite";
 import useSQLiteDB from "../../composables/useSQLiteDB";
 import useConfirmationAlert from "../../composables/useConfirmationAlert";
-import { add, calendar, create, ellipsisVertical,  trash, } from "ionicons/icons";
+import { add, calendar, create, ellipsisVertical, trash, } from "ionicons/icons";
 import { OverlayEventDetail } from "@ionic/react/dist/types/components/react-component-lib/interfaces";
 import { SQLClass, useGlobalContext } from "../../context/globalContext";
 import { CreateClassModal } from "../../components/createClassModal";
@@ -47,8 +47,9 @@ export const Classes: React.FC = () => {
     setRevalidate,
     isLoading,
     counter,
-
-    revalidate
+    classesList, 
+    setClassesList
+    
   } = useGlobalContext()
 
 
@@ -86,8 +87,10 @@ export const Classes: React.FC = () => {
 
         await db?.query(`DELETE FROM class WHERE class_id = ? `, [classId]);
 
-        setRevalidate(Math.random)
 
+
+      }, async () => {
+        setRevalidate(Math.random)
       });
     } catch (error) {
       alert((error as Error).message);
@@ -128,98 +131,30 @@ export const Classes: React.FC = () => {
   }
 
 
-  const [classesList, setClassesList] = useState<Array<SQLClass> | []>([])
-
-
-
-
-
-  useEffect(() => {
-    if (initialized) {
-      LOAD_CLASSES()
-    }
-  }, [revalidate, initialized])
-
-
 
 
   const LOAD_CLASSES = async () => {
-
     try {
       await performSQLAction(async (db: SQLiteDBConnection | undefined) => {
-        console.log(year)
-        const respSelectClasses = await db?.query(`
-            SELECT 
-              class.class_id, 
-              class.module_name,
-              class.specialty_name,
-              class.specialty_level, 
-              class.level_year,
-              class.collage_year,
-              Groupp.group_id,
-              Groupp.group_number, 
-              Groupp.group_type 
-            FROM class 
 
-              LEFT JOIN Groupp ON class.class_id = Groupp.class_id
+  
 
-            WHERE class.collage_year = ? 
-              `, [year]);
-
-        const classesWithGroups = respSelectClasses?.values?.reduce((result: any, row: any) => {
-          const classInfo = result[row.class_id] || {
-            class_id: row.class_id,
-
-            specialty_name: row.specialty_name,
-            specialty_level: row.specialty_level,
-            level_year: row.level_year,
-            collage_year: row.collage_year,
-
-            module_name: row.module_name,
-
-            groups: [],
-          };
-
-          if (row.group_id) {
-            const groupInfo = {
-              group_id: row.group_id,
-              group_number: row.group_number,
-              group_type: row.group_type,
-            };
-
-            classInfo.groups.push(groupInfo);
-          }
-
-          result[row.class_id] = classInfo;
-          return result;
-        }, {});
-
-
-
-
-        const classes_formatted = Object.values(classesWithGroups);
-        setClassesList(classes_formatted as SQLClass[]);
-
-
-        // setListClasses(classes_formatted as  SQLClass[]);
 
       });
 
 
 
-
-
-      // setRevalidate(Math.random)
-
     } catch (error) {
       alert((error as Error).message);
-      // setRevalidate(Math.random)
     }
   };
 
 
 
   const [selectedGroup, setSelectedGroup] = useState<number | undefined>()
+
+
+
 
 
 
@@ -247,7 +182,6 @@ export const Classes: React.FC = () => {
             </IonItem>)
           })
           }
-
 
         </IonAccordion>
         <IonActionSheet
@@ -290,6 +224,9 @@ export const Classes: React.FC = () => {
 
 
 
+  
+
+
 
 
 
@@ -298,9 +235,7 @@ export const Classes: React.FC = () => {
       // Any calls to load data go here
       event.detail.complete();
     }, 2000);
-
     setRevalidate(Math.random());
-
   }
 
 
@@ -339,7 +274,7 @@ export const Classes: React.FC = () => {
         </IonRefresher>
 
 
-        <IonFab slot="fixed" vertical="bottom" horizontal="end">
+        <IonFab id="add-class-button-test" slot="fixed" vertical="bottom" horizontal="end">
           <IonFabButton onClick={() => { setopenedCreateClassModel(true) }}  >
             <IonIcon icon={add}></IonIcon>
           </IonFabButton>
@@ -348,7 +283,7 @@ export const Classes: React.FC = () => {
 
 
         {
-          classesList?.length > 0 ?
+          classesList && classesList?.length > 0 ?
             <IonAccordionGroup ref={classesGroupRef} multiple={false} >
               {ListClasses}
             </IonAccordionGroup> :
@@ -367,7 +302,7 @@ export const Classes: React.FC = () => {
         <CreateClassModal isOpen={openedCreateClassModel} close={setopenedCreateClassModel} />
 
 
-        {selectedClass && <UpdateClass isOpen={modalUpdateClassOpened} classe={selectedClass}  setSelectedClass={setSelectedClass} close={setModalUpdateClassOpened}  />}
+        {selectedClass && <UpdateClass isOpen={modalUpdateClassOpened} classe={selectedClass} setSelectedClass={setSelectedClass} close={setModalUpdateClassOpened} />}
 
 
 

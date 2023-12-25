@@ -24,7 +24,7 @@ import "@ionic/react/css/display.css";
 import "./theme/variables.css";
 
 import { Classes } from "./pages/classes";
-import {  useGlobalContext } from "./context/globalContext";
+import { useGlobalContext } from "./context/globalContext";
 import { Menu } from "./components/Menu";
 import { Calender } from "./pages/calendar";
 
@@ -45,8 +45,7 @@ const App: React.FC = () => {
 
 
   if (isloadingContext) return <>
-    <IonLoading className="custom-loading" isOpen={true}  spinner={'bubbles'} message="Loading" />
-
+    <IonLoading className="custom-loading" isOpen={true} spinner={'bubbles'} message="Loading" />
   </>
 
   return (
@@ -55,14 +54,13 @@ const App: React.FC = () => {
         <IonSplitPane contentId="main">
           <Menu />
           <IonRouterOutlet id="main"  >
-            <Route path="/" >
+            <Route path="/" exact={true} >
               <Classes />
             </Route>
-            <Route path="/calendar" >
+            <Route path="/calendar" exact={true} >
               <Calender />
             </Route>
           </IonRouterOutlet>
-
         </IonSplitPane>
       </IonReactRouter>
 

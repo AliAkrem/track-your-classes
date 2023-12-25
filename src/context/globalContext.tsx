@@ -6,7 +6,7 @@ import { SQLiteDBConnection } from "@capacitor-community/sqlite";
 // define the types ----------------------------------------
 
 export type Students = {
-    student_id : number ;  
+    student_id: number;
     student_code: string
     first_name: string;
     last_name: string;
@@ -50,6 +50,8 @@ export interface GlobalState {
     setCounter: React.Dispatch<React.SetStateAction<number>>
     years: Scholar_years[]
     setYears: React.Dispatch<React.SetStateAction<Scholar_years[]>>
+    classesList: SQLClass[] | [] , 
+    setClassesList: React.Dispatch<React.SetStateAction<[] | SQLClass[]>>
 }
 // END  Global state --------------------------------
 
@@ -66,6 +68,8 @@ export const GlobalContextProvider = ({ children }: { children: React.ReactNode 
 
 
 
+    const [classesList, setClassesList] = useState<Array<SQLClass> | []>([])
+
     const [year, setYear] = useState<string>('')
     const [years, setYears] = useState<Scholar_years[]>([])
 
@@ -76,90 +80,100 @@ export const GlobalContextProvider = ({ children }: { children: React.ReactNode 
     const [counter, setCounter] = useState(0)
 
 
+
     const loadData = async () => {
         try {
             await performSQLAction(async (db: SQLiteDBConnection | undefined) => {
 
-                // await db?.query(`INSERT OR IGNORE INTO scholar_year (year) VALUES ('2023/2024')`); // insert year
+                await db?.query(`SELECT DISTINCT collage_year FROM class`).then((res) => {
+                    setYears(res?.values as Scholar_years[])
+                })
 
+                await db?.query(`SELECT * FROM keys`).then(async (res) => {
 
-                // ? fix me  select list of years grouping from classes  
+                    if (res?.values && res?.values.length > 0) {
 
-                const resp = await db?.query(`SELECT DISTINCT collage_year FROM class`)
+                        setYear(res.values[0].selected_year)
 
-                setYears(resp?.values as Scholar_years[])
-
-
-
-                const respSELECTED_YEAR = await db?.query(`SELECT * FROM keys`)
-
-                console.log(respSELECTED_YEAR?.values)
-
-
-                if (respSELECTED_YEAR?.values && respSELECTED_YEAR?.values.length > 0) {
-
-                    setYear(respSELECTED_YEAR.values[0].selected_year)
-                   
-                } else {
-                    // if there are ne selected collage_year select latest collage_year
-                    const respLATEST_YEAR_ID = await db?.query(`
-                        SELECT MAX(collage_year) as collage_year  FROM class WHERE collage_year 
-                     `)
-                    if (respLATEST_YEAR_ID?.values) {
-                        console.log(respLATEST_YEAR_ID?.values[0]?.collage_year)
-
+                    } else {
+                        // if there are ne selected collage_year select latest collage_year
                         await db?.query(`
-                            INSERT OR IGNORE INTO keys (selected_year) values (?) ;        
-                            `, 
-                            [respLATEST_YEAR_ID?.values[0]?.collage_year])
+                            SELECT MAX(collage_year) as collage_year  FROM class WHERE collage_year 
+                         `).then(async (res) => {
 
 
+                            if (res?.values) {
+                                console.log(res?.values[0]?.collage_year)
 
+                                await db?.query(`
+                                    INSERT OR IGNORE INTO keys (selected_year) values (?) ;        
+                                    `,
+                                    [res?.values[0]?.collage_year])
 
+                            }
+
+                        })
                     }
-
-                }
-
+                })
 
 
+                await db?.query(`
+                SELECT 
+                  class.class_id, 
+                  class.module_name,
+                  class.specialty_name,
+                  class.specialty_level, 
+                  class.level_year,
+                  class.collage_year,
+                  Groupp.group_id,
+                  Groupp.group_number, 
+                  Groupp.group_type 
+                FROM class 
+                  LEFT JOIN Groupp ON class.class_id = Groupp.class_id
+                WHERE class.collage_year = (SELECT selected_year FROM keys LIMIT 1 )
 
-                // if (respSELECTED_YEAR?.values && respSELECTED_YEAR?.values.length == 0) {
+                  `).then(res => {
+                    const classesWithGroups = res.values?.reduce((result: any, row: any) => {
+                        const classInfo = result[row.class_id]
+                            || {
+                            class_id: row.class_id,
+                            specialty_name: row.specialty_name,
+                            specialty_level: row.specialty_level,
+                            level_year: row.level_year,
+                            collage_year: row.collage_year,
+                            module_name: row.module_name,
+                            groups: [],
+                        };
 
-                //     // IF THERE ARE NO SELECTED_YEAR YET GET THE LATEST YEAR 
+                        if (row.group_id) {
+                            const groupInfo = {
+                                group_id: row.group_id,
+                                group_number: row.group_number,
+                                group_type: row.group_type,
+                            };
 
-                //     // ? fix me select max from  year grouping from class table
-                //    
+                            classInfo.groups.push(groupInfo);
+                        }
 
-                //     console.log(respLATEST_YEAR_ID?.values)
+                        result[row.class_id] = classInfo;
+                        return result;
+                    }, {});
 
-                //     if (respLATEST_YEAR_ID?.values && respLATEST_YEAR_ID?.values[0].collage_year) {
+                    
+                    const classes_formatted = Object.values(classesWithGroups);
+                    setClassesList(classes_formatted as SQLClass[]);
 
-
-                //         await db?.query(`
-                //             INSERT OR IGNORE INTO keys (selected_year) values (?) ;
-
-                //     `, [respLATEST_YEAR_ID?.values[0]?.collage_year])
-
-
-                //         setYear(respLATEST_YEAR_ID?.values[0].collage_year)
-
-
-                //     }
-
-                // } else {
-
-                //     if (respSELECTED_YEAR?.values )
-                //         setYear(respSELECTED_YEAR?.values[0].selected_year)
-
-                // }
-            }
+                });
 
 
-            );
 
+
+
+            });
 
 
             setIsLoading(false)
+
 
 
 
@@ -185,7 +199,8 @@ export const GlobalContextProvider = ({ children }: { children: React.ReactNode 
         revalidate, setRevalidate,
         isLoading, setIsLoading,
         counter, setCounter,
-        years, setYears
+        years, setYears,
+        classesList, setClassesList
     };
 
 

@@ -1,4 +1,4 @@
-package io.ionic.starter;
+package ionic.react.sqlite;
 
 import com.getcapacitor.BridgeActivity;
 

@@ -43,8 +43,8 @@ const useSQLiteDB = () => {
       }
     };
 
-    initializeDB().then( async () => {
-       await initializeTables().then(() => {
+    initializeDB().then(async () => {
+      await initializeTables().then(() => {
 
         setInitialized(true);
 
@@ -71,8 +71,6 @@ const useSQLiteDB = () => {
         cleanup && (await cleanup());
       } catch { }
     }
-
-
 
   };
 

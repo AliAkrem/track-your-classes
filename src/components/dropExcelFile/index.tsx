@@ -122,7 +122,7 @@ function DragDropFile({ setStudent_list }: Props) {
     return (
         <form id="form-file-upload" onDragEnter={handleDrag} onSubmit={(e) => e.preventDefault()}>
             <input ref={inputRef} type="file" accept=".xlsx, .xls" id="input-file-upload" onChange={handleChange} />
-            <label id="label-file-upload" htmlFor="input-file-upload" className={dragActive ? "drag-active" : ""}>
+            <label  htmlFor="input-file-upload" className={dragActive ? "drag-active" : ""}>
                 <div style={{ display: "flex", flexDirection: "column", gap: "10px", alignItems: "center", padding: '15px' }}>
 
                     {!fileAttached ?
