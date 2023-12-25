@@ -4,7 +4,6 @@ import { IonButton, IonButtons, IonContent, IonHeader, IonInput, IonItem, IonLab
 
 import useSQLiteDB from '../../composables/useSQLiteDB';
 import { SQLiteDBConnection } from '@capacitor-community/sqlite';
-import { add } from 'ionicons/icons';
 
 
 
@@ -32,19 +31,24 @@ const levels = [
 
 export const CreateClassModal: React.FC<CreateClassModalProps> = ({ isOpen, close }) => {
 
+
+    const { performSQLAction } = useSQLiteDB()
+
     const { setRevalidate, year, setYear } = useGlobalContext()
 
     // credentials of class 
 
-    const module_name = useRef<HTMLIonInputElement>(null);
-    const specialty_name = useRef<HTMLIonInputElement>(null);
-    const specialty_level = useRef<HTMLIonSelectElement | null>(null);
-    const specialty_level_year = useRef<HTMLIonSelectElement>(null);
+    const [module_name, set_module_name] = useState<string>('')
+    const [specialty_name, set_specialty_name] = useState('')
+    const [specialty_level_year, set_specialty_level_year] = useState('')
+    // const [collage_year, set_collage_year] = useState()
 
-    const [selectedLevel, setSelectedLevel] = useState<string | undefined>(undefined);
+    const [selectedLevel, setSelectedLevel] = useState<string>('');
+
+    // const specialty_level = useRef<HTMLIonSelectElement | null>(null);
 
 
-    const collage_year = useRef<HTMLIonInputElement>(null);
+    const specialty_level_year_ref = useRef<HTMLIonSelectElement>(null);
 
 
     const [collage_year_input_state, set_collage_year_input_state] = useState(year)
@@ -55,43 +59,40 @@ export const CreateClassModal: React.FC<CreateClassModalProps> = ({ isOpen, clos
 
 
 
-    const { performSQLAction } = useSQLiteDB()
 
     const INSERT_NEW_CLASS = async (module_name: string, specialty_name: string, specialty_level: string, level_year: number, collage_year: string) => {
 
         try {
-            performSQLAction(async (db: SQLiteDBConnection | undefined) => {
+            await performSQLAction(async (db: SQLiteDBConnection | undefined) => {
                 await db?.query(
-                    `INSERT INTO class
-                (
+                    `INSERT INTO class(
                  module_name ,
                  specialty_name ,
                  specialty_level , 
                  level_year,
                  collage_year
                  )
-                
-                VALUES (?, ?, ?, ?, ?) ;`,
+                VALUES (?, ?, ?, ?, ?);`,
                     [module_name, specialty_name, specialty_level, level_year, collage_year]
-                );
+                ).then(async (res) => {
+                    await db?.query(`
+                    UPDATE Keys SET selected_year = ? WHERE selected_year = ? ;
+                    `, [collage_year, year]).then(() => {
 
-                await db?.query(`
-                UPDATE Keys SET selected_year = ? WHERE selected_year = ? ;
-                `, [collage_year, year])
-                setYear(collage_year)
+                        setRevalidate(Math.random)
 
-
-
-
-
-                close(false)
-                setSelectedLevel(undefined)
-                setRevalidate(Math.random)
+                        setYear(collage_year)
+                        close(false)
+                    })
+                
+                });
 
 
-            });
 
-            // setRevalidate(Math.random)
+            })
+
+            close(false)
+
 
         } catch (error) {
             alert((error as Error).message);
@@ -100,32 +101,38 @@ export const CreateClassModal: React.FC<CreateClassModalProps> = ({ isOpen, clos
     };
 
 
-    const createClass = async (ev: any) => {
+    const createClass = async () => {
+
+
+        alert(JSON.stringify({
+            module_name,
+            specialty_name,
+            selectedLevel,
+            specialty_level_year,
+            collage_year_input_state
+        }))
+
 
 
 
         if (
-            module_name.current?.value !== "" &&
-            specialty_name.current?.value !== "" &&
-            specialty_level.current?.value !== "" &&
-            specialty_level_year.current?.value !== "" &&
-            collage_year.current?.value !== ""
+            module_name &&
+            specialty_name &&
+            selectedLevel &&
+            specialty_level_year &&
+            collage_year_input_state
         ) {
 
 
-            INSERT_NEW_CLASS(
-                String(module_name.current?.value),
-                String(specialty_name.current?.value),
-                String(specialty_level.current?.value),
-                Number(specialty_level_year.current?.value),
-                String(collage_year.current?.value),
+
+            await INSERT_NEW_CLASS(
+                String(module_name),
+                String(specialty_name),
+                String(selectedLevel),
+                Number(specialty_level_year),
+                String(collage_year_input_state),
             )
 
-            console.log(module_name.current?.value,
-                specialty_name.current?.value,
-                specialty_level.current?.value,
-                specialty_level_year.current?.value,
-                collage_year.current?.value)
 
 
 
@@ -133,7 +140,7 @@ export const CreateClassModal: React.FC<CreateClassModalProps> = ({ isOpen, clos
 
 
         // console.log(
-        //     specialty_level.current?.value,
+        //     specialty_level,
         //     specialty_level_year.current?.value,
         //     )
 
@@ -158,12 +165,9 @@ export const CreateClassModal: React.FC<CreateClassModalProps> = ({ isOpen, clos
         if (selectedLevel) {
             const selectedLevelObj = levels.find(item => item.value === selectedLevel);
 
-            // if (specialty_level_year.current) {
-            //     specialty_level_year.current.value = undefined
-            // }
 
-            if (selectedLevelObj && specialty_level_year.current) {
-                specialty_level_year.current.innerHTML = Array.from(
+            if (selectedLevelObj && specialty_level_year_ref.current) {
+                specialty_level_year_ref.current.innerHTML = Array.from(
                     { length: selectedLevelObj.years },
                     (_, index) => `<ion-select-option key=${index + 1} value=${index + 1}>${index + 1}</ion-select-option>`
                 ).join('');
@@ -210,14 +214,16 @@ export const CreateClassModal: React.FC<CreateClassModalProps> = ({ isOpen, clos
                 </IonToolbar>
             </IonHeader>
             <IonContent>
-                <IonList inset>
+                <IonList class='ion-padding' >
 
                     <IonInput
 
                         label="Class"
                         labelPlacement="start"
                         placeholder='class name'
-                        ref={module_name}
+
+                        value={module_name}
+                        onIonChange={(ev: CustomEvent) => { set_module_name(ev.detail.value) }}
                         type="text"
                         required
                     />
@@ -227,16 +233,16 @@ export const CreateClassModal: React.FC<CreateClassModalProps> = ({ isOpen, clos
                         label="Specialty"
                         placeholder='specialty name'
                         labelPlacement="start"
-                        ref={specialty_name}
+                        value={specialty_name}
+                        onIonChange={(ev: CustomEvent) => { set_specialty_name(ev.detail.value) }}
                         type="text"
                     />
 
 
-                    <div  style={{ display : 'flex'   }} >
+                    <div style={{ display: 'flex' }} >
 
                         <IonSelect
 
-                            ref={specialty_level}
                             value={selectedLevel}
                             onIonChange={handleLevelChange}
                             interface="popover"
@@ -250,22 +256,26 @@ export const CreateClassModal: React.FC<CreateClassModalProps> = ({ isOpen, clos
 
                         </IonSelect>
                         <IonSelect
-                            ref={specialty_level_year}
+                            ref={specialty_level_year_ref}
                             interface="popover"
                             placeholder="Year"
+
+                            value={specialty_level_year}
+                            onIonChange={(ev: CustomEvent) => { set_specialty_level_year(ev.detail.value) }}
+
                         ></IonSelect>
 
                     </div>
 
-                        <IonInput
-                            label="Collage Year"
-                            labelPlacement="start"
-                            placeholder='yyyy/yyyy'
-                            ref={collage_year}
-                            value={collage_year_input_state}
-                            onIonChange={handleYearScholarChanged}
-                            type="text"
-                        />
+                    <IonInput
+                        label="Collage Year"
+                        labelPlacement="start"
+                        placeholder='yyyy/yyyy'
+                        // ref={collage_year}
+                        value={collage_year_input_state}
+                        onIonChange={handleYearScholarChanged}
+                        type="text"
+                    />
 
                     {/* </IonContent> */}
                     <IonList inset>
