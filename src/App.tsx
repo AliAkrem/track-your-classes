@@ -27,6 +27,9 @@ import { Classes } from "./pages/classes";
 import { GlobalContextProvider, useGlobalContext } from "./context/globalContext";
 import { Menu } from "./components/Menu";
 import { Calender } from "./pages/calendar";
+import { LoginPage } from "./pages/auth/loginPage";
+import { AccountPage } from "./pages/auth/account";
+import Auth from "./pages/auth";
 
 
 setupIonicReact();
@@ -59,6 +62,9 @@ const App: React.FC = () => {
             </Route>
             <Route path="/calendar" exact={true} >
               <Calender />
+            </Route>
+            <Route path="/auth" exact={true} >
+              <Auth />
             </Route>
           </IonRouterOutlet>
         </IonSplitPane>

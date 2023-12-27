@@ -12,7 +12,7 @@ import {
 
 } from '@ionic/react';
 
-import { add, calendar, calendarClear, eye, schoolOutline } from 'ionicons/icons';
+import { add, calendar, calendarClear, eye, lockClosed, person, schoolOutline } from 'ionicons/icons';
 import './Menu.css';
 import { useRef, useState } from 'react';
 import useSQLiteDB from '../../composables/useSQLiteDB';
@@ -41,12 +41,12 @@ const appPages: AppPage[] = [
     iosIcon: calendar,
     mdIcon: calendar
   },
-  // {
-  //   title: 'calender',
-  //   url: '/calender',
-  //   iosIcon: heartOutline,
-  //   mdIcon: heartSharp
-  // },
+  {
+    title: 'Account',
+    url: '/auth',
+    iosIcon: person,
+    mdIcon: person
+  },
 
 ];
 
