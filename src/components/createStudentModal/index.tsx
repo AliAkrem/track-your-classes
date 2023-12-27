@@ -21,6 +21,7 @@ type Props = {
 export const CreateStudentModal: React.FC<Props> = ({ isOpen, close, group_id, student_code, setRevalidateGroup }) => {
 
 
+    
 
     // credentials of class 
 
@@ -37,7 +38,7 @@ export const CreateStudentModal: React.FC<Props> = ({ isOpen, close, group_id, s
 
     const { setRevalidate, year, setYear } = useGlobalContext()
 
-    const { performSQLAction } = useSQLiteDB()
+    const { performSQLAction, initialized } = useSQLiteDB()
 
     const INSERT_NEW_STUDENT = async (first_name: string, last_name: string, code: number, group_id: number) => {
 
@@ -79,7 +80,7 @@ export const CreateStudentModal: React.FC<Props> = ({ isOpen, close, group_id, s
             // setRevalidate(Math.random)
 
         } catch (error) {
-            alert((error as Error).message);
+            alert((error as Error).message +  ' error insert student');
             setRevalidate(Math.random)
 
             // setRevalidate(Math.random)
@@ -146,7 +147,6 @@ export const CreateStudentModal: React.FC<Props> = ({ isOpen, close, group_id, s
             setIsTouched(!isValidFirstName!)
             setIsTouchedLastName(!isValidLastName!)
         } else {
-
             await INSERT_NEW_STUDENT(String(first_name.current?.value), String(last_name.current?.value), student_code, group_id!)
 
             create_student_modal?.current?.dismiss();

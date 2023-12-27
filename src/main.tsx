@@ -27,6 +27,7 @@ window.addEventListener("DOMContentLoaded", async () => {
       const jeepSqliteEl = document.createElement("jeep-sqlite");
 
       document.body.appendChild(jeepSqliteEl);
+
       await customElements.whenDefined("jeep-sqlite");
       console.log(`after customElements.whenDefined`);
 
@@ -44,11 +45,11 @@ window.addEventListener("DOMContentLoaded", async () => {
     const container = document.getElementById("root");
     const root = createRoot(container!);
     root.render(
-      // <React.StrictMode>
-        <GlobalContextProvider >
+      <React.StrictMode>
+        <GlobalContextProvider>
           <App />
         </GlobalContextProvider>
-      // </React.StrictMode>
+      </React.StrictMode>
     );
   } catch (e) {
     console.log(e);

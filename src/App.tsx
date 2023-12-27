@@ -24,7 +24,7 @@ import "@ionic/react/css/display.css";
 import "./theme/variables.css";
 
 import { Classes } from "./pages/classes";
-import { useGlobalContext } from "./context/globalContext";
+import { GlobalContextProvider, useGlobalContext } from "./context/globalContext";
 import { Menu } from "./components/Menu";
 import { Calender } from "./pages/calendar";
 
@@ -55,7 +55,7 @@ const App: React.FC = () => {
           <Menu />
           <IonRouterOutlet id="main"  >
             <Route path="/" exact={true} >
-              <Classes />
+                <Classes />
             </Route>
             <Route path="/calendar" exact={true} >
               <Calender />
