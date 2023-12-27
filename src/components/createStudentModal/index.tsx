@@ -18,6 +18,7 @@ type Props = {
 
 
 
+
 export const CreateStudentModal: React.FC<Props> = ({ isOpen, close, group_id, student_code, setRevalidateGroup }) => {
 
 
@@ -101,7 +102,6 @@ export const CreateStudentModal: React.FC<Props> = ({ isOpen, close, group_id, s
             /^[a-zA-Z\s]+$/
         );
     };
-
 
     const validateFirstName = (ev: Event) => {
         const value = (ev.target as HTMLInputElement).value;
@@ -194,6 +194,7 @@ export const CreateStudentModal: React.FC<Props> = ({ isOpen, close, group_id, s
                         helperText="enter the first name"
                         errorText="Invalid name"
                     />
+
 
                     <IonInput
                         className={`${isValidLastName && 'ion-valid'} ${isValidLastName === false && 'ion-invalid'} ${isTouchedLastName && 'ion-touched'}`}
