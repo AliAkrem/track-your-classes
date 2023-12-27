@@ -18,6 +18,7 @@ import {
     IonItemSliding,
     IonItemOptions,
     IonItemOption,
+    useIonViewDidEnter,
 
 } from "@ionic/react";
 import React, { useEffect, useRef, useState } from "react";
@@ -48,7 +49,7 @@ export const Group: React.FC<Props> = ({ group_id, setSelectedGroup }: Props) =>
     const { performSQLAction, initialized } = useSQLiteDB();
 
 
-    const { setRevalidate } = useGlobalContext()
+    const { setRevalidate, isLoading } = useGlobalContext()
 
 
 
@@ -68,16 +69,14 @@ export const Group: React.FC<Props> = ({ group_id, setSelectedGroup }: Props) =>
 
 
     useEffect(() => {
-
-        if (initialized && group_id)
+        if (group_id)
             SELECT_STUDENTS_IN_GROUP(group_id);
-
-    }, [initialized, group_id, revalidateGroup]);
+    }, [group_id, initialized, revalidateGroup]);
 
     const SELECT_STUDENTS_IN_GROUP = async (group_id: number) => {
         try {
             await performSQLAction(async (db: SQLiteDBConnection | undefined) => {
-                const respSelect = await db?.query(`
+                await db?.query(`
               SELECT
                 student.student_id,
                 student.student_code,
@@ -90,36 +89,40 @@ export const Group: React.FC<Props> = ({ group_id, setSelectedGroup }: Props) =>
               JOIN group_student ON Groupp.group_id = group_student.group_id
               JOIN student ON group_student.student_id = student.student_id
               WHERE Groupp.group_id = ${group_id};
-            `);
+            `).then(res => {
 
-                const studentsInGroup = respSelect?.values?.map((row: any) => ({
-                    student_id: row.student_id,
-                    student_code: row.student_code,
-                    first_name: row.first_name,
-                    last_name: row.last_name,
-                }));
+                    if (res?.values) {
+                        const studentsInGroup = res?.values?.map((row: any) => ({
+                            student_id: row.student_id,
+                            student_code: row.student_code,
+                            first_name: row.first_name,
+                            last_name: row.last_name,
+                        }));
 
-                // setGroupInfo({group_id : respSelect?.values.})
+                        // setGroupInfo({group_id : res?.values.})
 
-                // Use the studentsInGroup array as needed
-                if (respSelect?.values) {
-                    console.log(respSelect?.values[0]?.group_type);
-                    console.log(respSelect?.values[0]?.group_number);
-                    console.log(respSelect?.values[0]?.group_id);
-                    setGroupInfo(
-                        {
-                            group_id: respSelect?.values[0]?.group_id,
-                            group_number: respSelect?.values[0]?.group_number,
-                            group_type: respSelect?.values[0]?.group_type
-                        }
-                    )
-                }
+                        // Use the studentsInGroup array as needed
+                        console.log(res?.values[0]?.group_type);
+                        console.log(res?.values[0]?.group_number);
+                        console.log(res?.values[0]?.group_id);
+                        setGroupInfo(
+                            {
+                                group_id: res?.values[0]?.group_id,
+                                group_number: res?.values[0]?.group_number,
+                                group_type: res?.values[0]?.group_type
+                            }
+                        )
+                        setList_student(studentsInGroup)
+                    }
+                })
 
-                setList_student(studentsInGroup)
+
+
 
             });
         } catch (error) {
-            alert((error as Error).message);
+
+            alert((error as Error).message + ' error fetch student');
         }
     };
 
@@ -132,6 +135,8 @@ export const Group: React.FC<Props> = ({ group_id, setSelectedGroup }: Props) =>
                 if (groupInfo?.group_id) {
                     DELETE_GROUP(groupInfo?.group_id)
                 }
+
+
 
             })
 
@@ -155,8 +160,9 @@ export const Group: React.FC<Props> = ({ group_id, setSelectedGroup }: Props) =>
         try {
             await performSQLAction(async (db: SQLiteDBConnection | undefined) => {
                 await db?.query(`DELETE FROM Groupp WHERE group_id = ? `, [group_id])
+            }).then(() => {
+                setRevalidate(Math.random());
             })
-            location.replace('/classes')
 
         } catch (error) {
             alert((error as Error).message);
@@ -172,9 +178,11 @@ export const Group: React.FC<Props> = ({ group_id, setSelectedGroup }: Props) =>
             await db?.query(`
                 DELETE FROM group_student WHERE student_id = ?  AND group_id = ? 
                   `
-                   , [student_id, group_id] )  
+                , [student_id, group_id]).then(() => {
+                    setRevalidateGroup(Math.random())
+                })
 
-            setRevalidateGroup(Math.random())
+
 
 
         })
@@ -316,10 +324,12 @@ export const Group: React.FC<Props> = ({ group_id, setSelectedGroup }: Props) =>
                 ></IonActionSheet>
 
 
-                <CreateStudentModal setRevalidateGroup={setRevalidateGroup} student_code={Number(list_student?.toReversed()[0].student_code) + 1} group_id={group_id} isOpen={addStudentModalOpened} close={setOpenAddStudentModal} />
+                {list_student && addStudentModalOpened && list_student.length > 0 ? <CreateStudentModal setRevalidateGroup={setRevalidateGroup} student_code={Number(list_student?.toReversed()[0].student_code) + 1} group_id={group_id} isOpen={addStudentModalOpened} close={setOpenAddStudentModal} /> : null}
 
 
                 {ConfirmationAlert}
+
+
             </IonContent>
 
         </IonModal>

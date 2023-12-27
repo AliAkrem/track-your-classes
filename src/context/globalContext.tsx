@@ -52,6 +52,8 @@ export interface GlobalState {
     setYears: React.Dispatch<React.SetStateAction<Scholar_years[]>>
     classesList: SQLClass[] | [] , 
     setClassesList: React.Dispatch<React.SetStateAction<[] | SQLClass[]>>
+    DBOpened: boolean
+    setDBOpened: React.Dispatch<React.SetStateAction<boolean>>
 }
 // END  Global state --------------------------------
 
@@ -68,6 +70,8 @@ export const GlobalContextProvider = ({ children }: { children: React.ReactNode 
 
 
 
+
+
     const [classesList, setClassesList] = useState<Array<SQLClass> | []>([])
 
     const [year, setYear] = useState<string>('')
@@ -79,6 +83,8 @@ export const GlobalContextProvider = ({ children }: { children: React.ReactNode 
 
     const [counter, setCounter] = useState(0)
 
+
+    const [DBOpened, setDBOpened] = useState<boolean>(initialized)
 
 
     const loadData = async () => {
@@ -97,9 +103,7 @@ export const GlobalContextProvider = ({ children }: { children: React.ReactNode 
 
                     } else {
                         // if there are ne selected collage_year select latest collage_year
-                        await db?.query(`
-                            SELECT MAX(collage_year) as collage_year  FROM class WHERE collage_year 
-                         `).then(async (res) => {
+                        await db?.query(`SELECT MAX(collage_year) as collage_year  FROM class WHERE collage_year `).then(async (res) => {
 
 
                             if (res?.values) {
@@ -117,22 +121,7 @@ export const GlobalContextProvider = ({ children }: { children: React.ReactNode 
                 })
 
 
-                await db?.query(`
-                SELECT 
-                  class.class_id, 
-                  class.module_name,
-                  class.specialty_name,
-                  class.specialty_level, 
-                  class.level_year,
-                  class.collage_year,
-                  Groupp.group_id,
-                  Groupp.group_number, 
-                  Groupp.group_type 
-                FROM class 
-                  LEFT JOIN Groupp ON class.class_id = Groupp.class_id
-                WHERE class.collage_year = (SELECT selected_year FROM keys LIMIT 1 )
-
-                  `).then(res => {
+                await db?.query(`SELECT  class.class_id,  class.module_name, class.specialty_name, class.specialty_level,  class.level_year, class.collage_year, Groupp.group_id, Groupp.group_number,  Groupp.group_type FROM class LEFT JOIN Groupp ON class.class_id = Groupp.class_id WHERE class.collage_year = (SELECT selected_year FROM keys LIMIT 1 )`).then(res => {
                     const classesWithGroups = res.values?.reduce((result: any, row: any) => {
                         const classInfo = result[row.class_id]
                             || {
@@ -188,7 +177,7 @@ export const GlobalContextProvider = ({ children }: { children: React.ReactNode 
     useEffect(() => {
         console.log('this should be the first')
         if (initialized) {
-            loadData()
+            // loadData()
             loadData()
         }
     }, [initialized, revalidate])
@@ -200,7 +189,8 @@ export const GlobalContextProvider = ({ children }: { children: React.ReactNode 
         isLoading, setIsLoading,
         counter, setCounter,
         years, setYears,
-        classesList, setClassesList
+        classesList, setClassesList,
+        DBOpened, setDBOpened
     };
 
 
@@ -211,9 +201,9 @@ export const GlobalContextProvider = ({ children }: { children: React.ReactNode 
 export const useGlobalContext = (): GlobalState => {
     const context = useContext(GlobalContext);
     if (context === undefined) {
-        alert("Global context is undefined")
-        throw new Error("Global context is undefined");
+        // alert("Global context is undefined")
+        // throw new Error("Global context is undefined");
     }
-    return context;
+    return context!;
 };
 

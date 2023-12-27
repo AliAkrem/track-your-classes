@@ -38,7 +38,7 @@ import { nanoid } from "nanoid";
 import { Group } from "../groups";
 import { UpdateClass } from "../../components/updateClassModal";
 
-
+import ConfirmDeleteClass from '../classes/confirmDeleteClass'
 
 export const Classes: React.FC = () => {
 
@@ -47,9 +47,9 @@ export const Classes: React.FC = () => {
     setRevalidate,
     isLoading,
     counter,
-    classesList, 
+    classesList,
     setClassesList
-    
+
   } = useGlobalContext()
 
 
@@ -80,34 +80,37 @@ export const Classes: React.FC = () => {
 
 
 
-  const DELETE_CLASS = async (classId: number) => {
+  const [confirmDeleteOpened, setConfirmDeleteOpened] = useState(false)
 
-    try {
-      await performSQLAction(async (db: SQLiteDBConnection | undefined) => {
+  // const handleConfirmDeleteClass = (classe: SQLClass) => {
 
-        await db?.query(`DELETE FROM class WHERE class_id = ? `, [classId]);
+  //   console.log('handler called', classe.class_id)
+
+  //   setConfirmDeleteOpened(true)
 
 
 
-      }, async () => {
-        setRevalidate(Math.random)
-      });
-    } catch (error) {
-      alert((error as Error).message);
 
-    }
-  };
+  // }
 
 
   // related to display classes list
-  const ActionResult = (result: OverlayEventDetail, classPayload: { classe: SQLClass }) => {
+  const ActionResult = async (result: OverlayEventDetail, classPayload: { classe: SQLClass }) => {
 
     if (result.data?.action === "delete") {
 
-      showConfirmationAlert("Are You Sure You Want To Delete this class? the information related to this class will deleted also! ", () => {
-        DELETE_CLASS(classPayload?.classe.class_id)
+      console.log('DELETE bLOCK')
 
-      })
+
+      // if (classPayload?.classe.class_id)
+      //   showConfirmationAlert("Are You Sure You Want To Delete this class? the information related to this class will deleted also!", () => {
+
+      //     DELETE_CLASS(Number(classPayload?.classe.class_id))
+
+
+      //   })
+
+
 
     };
 
@@ -121,7 +124,7 @@ export const Classes: React.FC = () => {
 
     if (result.data?.action === "edit-class") {
 
-      setModalUpdateClassOpened(true)
+      setModalUpdateClassOpened(!modalUpdateClassOpened)
       setSelectedClass(classPayload.classe)
 
     }
@@ -133,21 +136,10 @@ export const Classes: React.FC = () => {
 
 
 
-  const LOAD_CLASSES = async () => {
-    try {
-      await performSQLAction(async (db: SQLiteDBConnection | undefined) => {
-
-  
-
-
-      });
 
 
 
-    } catch (error) {
-      alert((error as Error).message);
-    }
-  };
+
 
 
 
@@ -160,6 +152,8 @@ export const Classes: React.FC = () => {
 
   const ListClasses = classesList?.map((classe) => {
     const trigger = nanoid()
+
+
     return (
 
       <div key={nanoid()}  >
@@ -169,6 +163,9 @@ export const Classes: React.FC = () => {
             <IonButton fill="clear" id={trigger} >
               <IonIcon size="small" icon={ellipsisVertical}></IonIcon>
             </IonButton>
+            {/* <IonButton fill="clear" onClick={() => { DELETE_CLASS(classe.class_id) }}  >
+              <IonIcon size="small" icon={trash}></IonIcon>
+            </IonButton> */}
           </IonItem>
 
           {classe.groups?.map(group => {
@@ -186,11 +183,14 @@ export const Classes: React.FC = () => {
         </IonAccordion>
         <IonActionSheet
           trigger={trigger}
+          // id="trigger"
+          // isOpen={true}
           header={classe.module_name + " / " + classe.specialty_name + " / " + classe.specialty_level + classe.level_year}
           buttons={[
             {
 
               icon: create,
+              id: 'update-class-modal' + classe.class_id,
               text: 'edit',
               role: 'edit-class',
               data: {
@@ -207,15 +207,19 @@ export const Classes: React.FC = () => {
             },
 
             {
+              id: 'delete-class',
               icon: trash,
               text: 'Delete',
-              role: 'delete',
               data: {
                 action: 'delete',
+                class_id: classe.class_id
               },
+
+
+              handler: () => { setConfirmDeleteOpened(true); setSelectedClass(classe) }
             },
           ]}
-          onDidDismiss={({ detail }) => ActionResult(detail, { classe: classe })}
+          onIonActionSheetDidDismiss={({ detail }) => ActionResult(detail, { classe: classe })}
         ></IonActionSheet>
       </div>
     )
@@ -224,7 +228,7 @@ export const Classes: React.FC = () => {
 
 
 
-  
+
 
 
 
@@ -245,73 +249,82 @@ export const Classes: React.FC = () => {
 
   return (
 
+    <>
+      <IonPage  >
+        <IonHeader>
+          <IonToolbar>
+            <IonButtons slot="start">
+              <IonMenuButton />
+            </IonButtons>
+            <IonTitle size="small" >
+              <IonChip color={"success"} >
+                <IonIcon icon={calendar}></IonIcon>
+                <IonLabel>{String(year)}</IonLabel>
+              </IonChip>
 
-    <IonPage  >
-      <IonHeader>
-        <IonToolbar>
-          <IonButtons slot="start">
-            <IonMenuButton />
-          </IonButtons>
-          <IonTitle size="small" >
-            {counter}
-            <IonChip color={"success"} >
-              <IonIcon icon={calendar}></IonIcon>
-              <IonLabel>{String(year)}</IonLabel>
-            </IonChip>
-
-          </IonTitle>
-
-
-
-        </IonToolbar>
-      </IonHeader>
-
-      <IonContent fullscreen >
-
-
-        <IonRefresher slot="fixed" onIonRefresh={handleRefresh}>
-          <IonRefresherContent></IonRefresherContent>
-        </IonRefresher>
-
-
-        <IonFab id="add-class-button-test" slot="fixed" vertical="bottom" horizontal="end">
-          <IonFabButton onClick={() => { setopenedCreateClassModel(true) }}  >
-            <IonIcon icon={add}></IonIcon>
-          </IonFabButton>
-        </IonFab>
+            </IonTitle>
 
 
 
-        {
-          classesList && classesList?.length > 0 ?
-            <IonAccordionGroup ref={classesGroupRef} multiple={false} >
-              {ListClasses}
-            </IonAccordionGroup> :
-            <div style={{ display: 'flex', alignItems: 'center', height: "80vh", justifyContent: 'center' }}  >
-              <IonCard >
-                <IonCardContent  >no classes here yet!. Click (+) to add one </IonCardContent>
-              </IonCard>
-            </div>
+          </IonToolbar>
+        </IonHeader>
 
-        }
+        <IonContent fullscreen >
 
 
+          <IonRefresher slot="fixed" onIonRefresh={handleRefresh}>
+            <IonRefresherContent></IonRefresherContent>
+          </IonRefresher>
 
-        <CreateGroupModal selectedClassIDToAddGroup={selectedClassIDToAddGroup} setSelectedClassIDToAddGroup={setSelectedClassIDToAddGroup} isOpen={modalCreateGroupOpened} setToClose={setModalCreateGroupOpened} />
 
-        <CreateClassModal isOpen={openedCreateClassModel} close={setopenedCreateClassModel} />
-
-
-        {selectedClass && <UpdateClass isOpen={modalUpdateClassOpened} classe={selectedClass} setSelectedClass={setSelectedClass} close={setModalUpdateClassOpened} />}
+          <IonFab slot="fixed" vertical="bottom" horizontal="end">
+            <IonFabButton id="create-class-modal" onClick={() => { setopenedCreateClassModel(!openedCreateClassModel) }}  >
+              <IonIcon icon={add}></IonIcon>
+            </IonFabButton>
+          </IonFab>
 
 
 
-        <Group group_id={selectedGroup} setSelectedGroup={setSelectedGroup} />
+          {
+            classesList && classesList?.length > 0 ?
+              <IonAccordionGroup ref={classesGroupRef} multiple={false} >
+                {ListClasses}
+              </IonAccordionGroup> :
+              <div style={{ display: 'flex', alignItems: 'center', height: "80vh", justifyContent: 'center' }}  >
+                <IonCard >
+                  <IonCardContent  >no classes here yet!. Click (+) to add one </IonCardContent>
+                </IonCard>
+              </div>
 
-        {ConfirmationAlert}
+          }
 
-      </IonContent >
-    </IonPage >
+          <pre>
+            {JSON.stringify(classesList!, null, 2)}
+          </pre>
+
+
+          {openedCreateClassModel == true ? <CreateClassModal isOpen={openedCreateClassModel} close={setopenedCreateClassModel} /> : null}
+
+
+
+          {selectedClass && modalUpdateClassOpened ? <UpdateClass isOpen={modalUpdateClassOpened} classe={selectedClass} setSelectedClass={setSelectedClass} close={setModalUpdateClassOpened} /> : null}
+
+
+          {selectedClassIDToAddGroup && modalCreateGroupOpened ? <CreateGroupModal selectedClassIDToAddGroup={selectedClassIDToAddGroup} setSelectedClassIDToAddGroup={setSelectedClassIDToAddGroup} isOpen={modalCreateGroupOpened} setToClose={setModalCreateGroupOpened} /> : null}
+
+
+
+          {selectedGroup ? <Group group_id={selectedGroup} setSelectedGroup={setSelectedGroup} /> : null}
+
+
+          {confirmDeleteOpened == true && selectedClass ? <ConfirmDeleteClass selectedClass_id={selectedClass?.class_id} close={setConfirmDeleteOpened} isOpen={confirmDeleteOpened} message="Are You Sure You Want To Delete this class? the information related to this class will deleted also!" /> : null}
+
+
+
+
+        </IonContent >
+      </IonPage >
+    </>
   );
 };
 

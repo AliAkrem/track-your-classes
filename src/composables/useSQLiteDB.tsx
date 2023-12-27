@@ -5,6 +5,8 @@ import {
   SQLiteConnection,
   CapacitorSQLite,
 } from "@capacitor-community/sqlite";
+import { isPlatform } from "@ionic/react";
+import { Capacitor } from "@capacitor/core";
 
 
 const useSQLiteDB = () => {
@@ -16,42 +18,42 @@ const useSQLiteDB = () => {
   const [initialized, setInitialized] = useState<boolean>(false);
 
   useEffect(() => {
-    const initializeDB = async () => {
-      if (sqlite.current) return;
-
-      sqlite.current = new SQLiteConnection(CapacitorSQLite);
-
-      const ret = await sqlite.current.checkConnectionsConsistency();
-
-      const isConn = (await sqlite.current.isConnection("db_vite", false)).result;
-
-      if (ret.result && isConn) {
-
-        db.current = await sqlite.current.retrieveConnection("db_vite", false);
-
-      } else {
-
-        db.current = await sqlite.current.createConnection(
-          "db_vite",
-          false,
-          "no-encryption",
-          1,
-          false
-        );
 
 
-      }
-    };
 
     initializeDB().then(async () => {
-      await initializeTables().then(() => {
-
-        setInitialized(true);
-
-      });
+      await initializeTables();
+      setInitialized(true);
     });
 
   }, []);
+
+  const initializeDB = async () => {
+    if (sqlite.current) return;
+
+    sqlite.current = new SQLiteConnection(CapacitorSQLite);
+
+    const ret = await sqlite.current.checkConnectionsConsistency();
+
+    const isConn = (await sqlite.current.isConnection("db_vite", false)).result;
+
+    if (ret.result && isConn) {
+
+      db.current = await sqlite.current.retrieveConnection("db_vite", false);
+
+    } else {
+
+      db.current = await sqlite.current.createConnection(
+        "db_vite",
+        false,
+        "no-encryption",
+        1,
+        false
+      );
+
+
+    }
+  };
 
 
 
@@ -60,19 +62,27 @@ const useSQLiteDB = () => {
     cleanup?: () => Promise<void>
   ) => {
     try {
-      await db.current?.open().then(async () => {
-        await action(db.current);
-      });
+      await db.current?.open().
+        then(async () => await action(db.current))
+
     } catch (error) {
       alert((error as Error).message);
     } finally {
       try {
-        (await db.current?.isDBOpen())?.result && (await db.current?.close());
-        cleanup && (await cleanup());
-      } catch { }
-    }
+        const platform = Capacitor.getPlatform();
+        if (platform === 'web')
+          (await db.current?.isDBOpen())?.result && (await db.current?.close());
 
+
+        cleanup && (await cleanup());
+      } catch {
+
+
+
+      }
+    }
   };
+
 
   /**
    * here is where you cna check and update table
@@ -81,24 +91,8 @@ const useSQLiteDB = () => {
 
   const initializeTables = async () => {
 
-    // const queryCreateTable = `CREATE TABLE IF NOT EXISTS module( module_id INTEGER PRIMARY KEY NOT NULL, module_name  varchar(30) NOT NULL , module_name_abv  varchar(10) NOT NULL );`;
 
-    // const createSpecialtyTable = `CREATE TABLE IF NOT EXISTS specialty( specialty_id INTEGER PRIMARY KEY NOT NULL, specialty_name VARCHAR(30) NOT NULL , specialty_name_abv VARCHAR(10) NOT NULL , specialty_level VARCHAR(1) CHECK (specialty_level IN ('L', 'M')), collage_year INTEGER);`;
-
-
-    const createClassTable = `
-      CREATE TABLE IF NOT EXISTS 
-      class(
-      class_id INTEGER PRIMARY KEY NOT NULL, 
-      module_name varchar(30) NOT NULL,
-      specialty_name VARCHAR(30) NOT NULL ,
-      specialty_level VARCHAR(1) CHECK (specialty_level IN ('L', 'M', 'E')),
-      level_year INTEGER,
-      collage_year VARCHAR(9) NOT NULL CHECK(collage_year LIKE '____/____') 
-      )
-      ; 
-
-      `
+    const createClassTable = ` CREATE TABLE IF NOT EXISTS class( class_id INTEGER PRIMARY KEY NOT NULL,  module_name varchar(30) NOT NULL, specialty_name VARCHAR(30) NOT NULL , specialty_level VARCHAR(1) CHECK (specialty_level IN ('L', 'M', 'E')), level_year INTEGER, collage_year VARCHAR(9) NOT NULL CHECK(collage_year LIKE '____/____') );`
 
 
     const createStudentGroupTable = `CREATE TABLE IF NOT EXISTS  group_student (group_id INTEGER,student_id  INTEGER,FOREIGN KEY (group_id) REFERENCES Groupp(group_id) ON DELETE  CASCADE ,FOREIGN KEY (student_id) REFERENCES student(student_id) ON DELETE  CASCADE,UNIQUE (group_id, student_id)); `;
@@ -108,10 +102,7 @@ const useSQLiteDB = () => {
     `
 
 
-    const keyValue = `
-    CREATE TABLE IF NOT EXISTS keys
-    ( selected_year VARCHAR(9) NOT NULL UNIQUE CHECK(selected_year LIKE '____/____')); 
-    `
+    const keyValue = `CREATE TABLE IF NOT EXISTS keys ( selected_year VARCHAR(9) NOT NULL UNIQUE CHECK(selected_year LIKE '____/____')); `
 
 
     const createGroupTable = `CREATE TABLE IF NOT EXISTS Groupp(group_id INTEGER PRIMARY KEY NOT NULL , class_id INTEGER NOT NULL,group_type VARCHAR(2) CHECK (group_type IN ('TD', 'TP')), group_number  INTEGER NOT NULL,FOREIGN KEY (class_id) REFERENCES class(class_id) ON DELETE NO ACTION,UNIQUE (class_id, group_number, group_type ) );`;
@@ -122,44 +113,11 @@ const useSQLiteDB = () => {
 
     await performSQLAction(async (db: SQLiteDBConnection | undefined) => {
 
-
-      // await db?.execute(queryCreateTable); // MODULE 
-
-      // await db?.execute(createSpecialtyTable);// SPECIALTY
-
-
       await db?.execute(createClassTable); // CLASS 
 
       await db?.execute(createStudentTable); // STUDENT
 
-
-      // await db?.execute(createTableYearScholar); // YEAR_SCHOLAR
-
-      // await db?.execute(insertYear); // insert year
-
       await db?.execute(keyValue);
-
-
-      // let respSELECTED_YEAR = await db?.query(`SELECT selected_year FROM keys`)
-
-      // if (respSELECTED_YEAR?.values && respSELECTED_YEAR?.values?.length == 0) {
-
-      //   const respLATES_YEAR_ID = await db?.query(`SELECT scholar_year FROM class WHERE collage_year IN (SELECT MAX(collage_year) FROM classes );`)
-
-
-      //   if (respSELECTED_YEAR?.values?.length == 0) {
-      //     console.log(respLATES_YEAR_ID?.values)
-      //     if (respLATES_YEAR_ID?.values) {
-      //       await db?.query(`INSERT OR IGNORE INTO keys (selected_year_id) values (?) ;
-      //   `, [Number(respLATES_YEAR_ID?.values[0]?.scholar_year_id)])
-
-
-      //     }
-
-
-      //   }
-      // }
-
 
 
       await db?.execute(createGroupTable); // GROUP 
@@ -169,14 +127,11 @@ const useSQLiteDB = () => {
 
 
 
-      // console.log(`res: ${JSON.stringify(respCTM)}`);
-
-
     });
   };
 
 
-  return { performSQLAction, initialized };
+  return { performSQLAction, initialized, initializeDB };
 };
 
 export default useSQLiteDB;

@@ -4,6 +4,7 @@ import { IonAlert } from "@ionic/react";
 const useConfirmationAlert = () => {
   const [showAlert, setShowAlert] = useState(false);
   const [alertMessage, setAlertMessage] = useState("");
+
   const [confirmAction, setConfirmAction] = useState<() => void>();
 
   const showConfirmationAlert = (
@@ -15,10 +16,15 @@ const useConfirmationAlert = () => {
     setShowAlert(true);
   };
 
+
+
   const handleConfirm = () => {
     confirmAction && confirmAction();
     setShowAlert(false);
   };
+
+
+
 
   const handleCancel = () => {
     setShowAlert(false);
@@ -28,8 +34,10 @@ const useConfirmationAlert = () => {
     showConfirmationAlert,
     ConfirmationAlert: (
       <IonAlert
+
         isOpen={showAlert}
         message={alertMessage}
+
         buttons={[
           {
             text: "Cancel",

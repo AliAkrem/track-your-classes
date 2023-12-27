@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { useGlobalContext } from '../../context/globalContext';
-import { IonButton, IonButtons, IonContent, IonHeader, IonInput, IonItem, IonLabel, IonList, IonModal, IonSelect, IonSelectOption, IonTitle, IonToolbar } from '@ionic/react';
+import { IonButton, IonButtons, IonContent, IonHeader, IonInput, IonItem, IonLabel, IonList, IonModal, IonPage, IonSelect, IonSelectOption, IonTitle, IonToolbar, useIonViewWillEnter } from '@ionic/react';
 
 import useSQLiteDB from '../../composables/useSQLiteDB';
 import { SQLiteDBConnection } from '@capacitor-community/sqlite';
@@ -29,12 +29,12 @@ const levels = [
 
 
 
-export const CreateClassModal: React.FC<CreateClassModalProps> = ({ isOpen, close }) => {
+export function CreateClassModal({ isOpen, close }: CreateClassModalProps) {
 
 
-    const { performSQLAction } = useSQLiteDB()
+    const { performSQLAction, initialized, initializeDB } = useSQLiteDB()
 
-    const { setRevalidate, year, setYear } = useGlobalContext()
+    const { setRevalidate, year, setYear, DBOpened } = useGlobalContext()
 
     // credentials of class 
 
@@ -59,58 +59,63 @@ export const CreateClassModal: React.FC<CreateClassModalProps> = ({ isOpen, clos
 
 
 
+    // const loadData = async () => {
 
-    const INSERT_NEW_CLASS = async (module_name: string, specialty_name: string, specialty_level: string, level_year: number, collage_year: string) => {
+    //     try {
+    //         await performSQLAction(async (db: SQLiteDBConnection | undefined) => {
+
+
+    //             await db?.query(`SELECT DISTINCT collage_year FROM class`).then(()=>{ 
+
+    //                 console.log('fetched')
+    //             })
+
+
+
+
+
+
+    //         });
+
+    //     } catch (error) {
+    //         alert((error as Error).message);
+    //     }
+    // };
+
+
+    const insert_new_class = async (module_name: string, specialty_name: string, specialty_level: string, level_year: number, collage_year: string) => {
 
         try {
             await performSQLAction(async (db: SQLiteDBConnection | undefined) => {
-                await db?.query(
-                    `INSERT INTO class(
-                 module_name ,
-                 specialty_name ,
-                 specialty_level , 
-                 level_year,
-                 collage_year
-                 )
-                VALUES (?, ?, ?, ?, ?);`,
-                    [module_name, specialty_name, specialty_level, level_year, collage_year]
-                ).then(async (res) => {
+
+
+                await db?.query(`INSERT INTO class(module_name, specialty_name, specialty_level, level_year, collage_year) VALUES (?, ?, ?, ?, ?);`,
+                    [module_name, specialty_name, specialty_level, level_year, collage_year], true
+                ).then(async () => {
                     await db?.query(`
                     UPDATE Keys SET selected_year = ? WHERE selected_year = ? ;
                     `, [collage_year, year]).then(() => {
-
                         setRevalidate(Math.random)
-
                         setYear(collage_year)
                         close(false)
                     })
-                
-                });
 
+                });
 
 
             })
 
-            close(false)
 
 
         } catch (error) {
             alert((error as Error).message);
+            console.log('error')
             setRevalidate(Math.random)
         }
     };
 
 
-    const createClass = async () => {
-
-
-        alert(JSON.stringify({
-            module_name,
-            specialty_name,
-            selectedLevel,
-            specialty_level_year,
-            collage_year_input_state
-        }))
+    const createClass = () => {
 
 
 
@@ -123,33 +128,25 @@ export const CreateClassModal: React.FC<CreateClassModalProps> = ({ isOpen, clos
             collage_year_input_state
         ) {
 
-
-
-            await INSERT_NEW_CLASS(
-                String(module_name),
-                String(specialty_name),
-                String(selectedLevel),
+            insert_new_class(
+                module_name,
+                specialty_name,
+                selectedLevel,
                 Number(specialty_level_year),
-                String(collage_year_input_state),
-            )
-
+                collage_year_input_state
+            ).then(() => {
+                console.log('executed ')
+            })
 
 
 
         }
 
 
-        // console.log(
-        //     specialty_level,
-        //     specialty_level_year.current?.value,
-        //     )
-
-
-        // create_class_modal?.current?.dismiss();
-
-
 
     }
+
+
 
 
 
@@ -173,6 +170,8 @@ export const CreateClassModal: React.FC<CreateClassModalProps> = ({ isOpen, clos
                 ).join('');
             }
         }
+
+
     }, [selectedLevel]);
 
 
@@ -203,8 +202,10 @@ export const CreateClassModal: React.FC<CreateClassModalProps> = ({ isOpen, clos
 
 
     return (
-
-        <IonModal ref={create_class_modal} isOpen={isOpen} >
+        <IonModal ref={create_class_modal}
+            isOpen={isOpen}
+            trigger="create-class-modal"
+        >
             <IonHeader>
                 <IonToolbar>
                     <IonTitle >create new class</IonTitle>
@@ -259,11 +260,10 @@ export const CreateClassModal: React.FC<CreateClassModalProps> = ({ isOpen, clos
                             ref={specialty_level_year_ref}
                             interface="popover"
                             placeholder="Year"
-
                             value={specialty_level_year}
                             onIonChange={(ev: CustomEvent) => { set_specialty_level_year(ev.detail.value) }}
-
-                        ></IonSelect>
+                        >
+                        </IonSelect>
 
                     </div>
 
@@ -289,7 +289,6 @@ export const CreateClassModal: React.FC<CreateClassModalProps> = ({ isOpen, clos
                 </IonList>
             </IonContent>
         </IonModal >
-
     )
 }
 
