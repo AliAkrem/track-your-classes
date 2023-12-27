@@ -1,8 +1,6 @@
 import React, { useRef, useState } from "react";
 import './dropExcelFile.css'
 import { IonButton, IonIcon, IonText } from "@ionic/react";
-import { readXLSXFile } from "../../utils/xlsxStudentReader";
-
 import * as XLSX from 'xlsx';
 import { documentOutline } from "ionicons/icons";
 import { Students } from "../../context/globalContext";
