@@ -5,7 +5,6 @@ import {
   SQLiteConnection,
   CapacitorSQLite,
 } from "@capacitor-community/sqlite";
-import { isPlatform } from "@ionic/react";
 import { Capacitor } from "@capacitor/core";
 
 

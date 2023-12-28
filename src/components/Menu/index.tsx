@@ -36,8 +36,8 @@ const appPages: AppPage[] = [
   },
 
   {
-    title: 'Calendar',
-    url: '/calendar',
+    title: 'Sessions',
+    url: '/sessions',
     iosIcon: calendar,
     mdIcon: calendar
   },

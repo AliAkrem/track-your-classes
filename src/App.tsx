@@ -32,9 +32,8 @@ import { AccountPage } from "./pages/auth/account";
 import Auth from "./pages/auth";
 
 
+
 setupIonicReact();
-
-
 
 
 
@@ -47,8 +46,9 @@ const App: React.FC = () => {
 
 
 
+
   if (isloadingContext) return <>
-    <IonLoading className="custom-loading" isOpen={true} spinner={'bubbles'} message="Loading" />
+    <IonLoading className="custom-loading" isOpen={true} spinner={'bubbles'} message="Loading"   duration={2000}/>
   </>
 
   return (
@@ -60,7 +60,7 @@ const App: React.FC = () => {
             <Route path="/" exact={true} >
                 <Classes />
             </Route>
-            <Route path="/calendar" exact={true} >
+            <Route path="/sessions" exact={true} >
               <Calender />
             </Route>
             <Route path="/auth" exact={true} >

@@ -170,7 +170,7 @@ export const Classes: React.FC = () => {
 
           {classe.groups?.map(group => {
             return (<IonItem slot="content" key={group.group_id}   >
-              <IonText style={{ cursor: 'pointer' }} onClick={() => { setSelectedGroup(group.group_id) }} color={'primary'} >
+              <IonText id={"open-selected-group-modal" + group.group_id} style={{ cursor: 'pointer' }} onClick={() => { setSelectedGroup(group.group_id) }} color={'primary'} >
 
                 group {group.group_number} / {group.group_type}
 

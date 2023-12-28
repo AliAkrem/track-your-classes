@@ -105,6 +105,21 @@ export default function CreateGroupModal({ isOpen, setToClose, selectedClassIDTo
 
 
 
+  const StudentList = student_list ? student_list?.map((student =>
+
+    <IonItem key={nanoid()}  >
+      <IonAvatar slot="start">
+        <IonIcon size="large" icon={person} ></IonIcon>
+      </IonAvatar>
+      <IonLabel class="ion-text-wrap" >
+        <h2 >{student.student_code} - {(student.first_name).toLowerCase()} {" "} {(student.last_name).toLowerCase()}</h2>
+      </IonLabel>
+    </IonItem>
+
+
+  )) : null
+
+
 
   return (
     <IonModal ref={create_class_modal_create_group} isOpen={isOpen}     >
@@ -169,20 +184,7 @@ export default function CreateGroupModal({ isOpen, setToClose, selectedClassIDTo
 
 
 
-        {student_list ? student_list?.map((student =>
-
-          <IonItem key={nanoid()}  >
-            <IonAvatar slot="start">
-              <IonIcon size="large" icon={person} ></IonIcon>
-            </IonAvatar>
-            <IonLabel class="ion-text-wrap" >
-              <h2 >{student.student_code} - {(student.first_name).toLowerCase()} {" "} {(student.last_name).toLowerCase()}</h2>
-            </IonLabel>
-          </IonItem>
-
-
-        )) : null
-        }
+        {StudentList}
       </IonContent>
     </IonModal>
   )

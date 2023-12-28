@@ -73,9 +73,12 @@ export const Group: React.FC<Props> = ({ group_id, setSelectedGroup }: Props) =>
             SELECT_STUDENTS_IN_GROUP(group_id);
     }, [group_id, initialized, revalidateGroup]);
 
-    const SELECT_STUDENTS_IN_GROUP = async (group_id: number) => {
+
+
+
+    const SELECT_STUDENTS_IN_GROUP = (group_id: number) => {
         try {
-            await performSQLAction(async (db: SQLiteDBConnection | undefined) => {
+            performSQLAction(async (db: SQLiteDBConnection | undefined) => {
                 await db?.query(`
               SELECT
                 student.student_id,
@@ -249,6 +252,7 @@ export const Group: React.FC<Props> = ({ group_id, setSelectedGroup }: Props) =>
 
         }, 2000);
         setRevalidate(Math.random());
+        setRevalidateGroup(Math.random())
 
 
     }
@@ -256,9 +260,11 @@ export const Group: React.FC<Props> = ({ group_id, setSelectedGroup }: Props) =>
 
     const listGroup = useRef(null)
 
+    
+
 
     return (
-        <IonModal isOpen={group_id ? true : false} canDismiss={group_id ? false : true}  >
+        <IonModal  trigger={"open-selected-group-modal" + group_id}  isOpen={group_id ? true : false} canDismiss={group_id ? false : true}  >
             <IonHeader>
                 <IonToolbar>
                     <IonButton fill="clear" slot="start" onClick={() => { setSelectedGroup(undefined) }}   >
@@ -293,7 +299,10 @@ export const Group: React.FC<Props> = ({ group_id, setSelectedGroup }: Props) =>
                     </IonLabel>
                 </IonItem>
                 <IonItemGroup style={{ padding: '10px' }} >
-                    {DisplayListStudent}
+
+                    {list_student && list_student?.length > 0 ? DisplayListStudent : null}
+
+
                 </IonItemGroup>
 
                 <IonActionSheet
