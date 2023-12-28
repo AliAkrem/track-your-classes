@@ -5,8 +5,10 @@ const config: CapacitorConfig = {
   appName: 'Track Your Classes',
   webDir: 'dist',
   server: {
-    androidScheme: 'https'
+    hostname: "io.ionic.starter",
+    androidScheme: 'http'
   },
+
   plugins: {
     CapacitorSQLite: {
       iosDatabaseLocation: 'Library/CapacitorDatabase',
