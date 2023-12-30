@@ -19,16 +19,19 @@ import {
     IonSelectOption
 } from '@ionic/react';
 import { useEffect, useRef, useState } from 'react';
-import { supabase } from '../../../supabaseClient';
+import { supabase, useSupabaseNative } from '../../../supabaseClient';
 import { Session } from '@supabase/supabase-js';
 import { ellipsisVertical, logOut } from 'ionicons/icons';
 import Cookies from 'js-cookie';
-import { getRefreshToken, getUserData, setAccessToken, setRefreshToken, setUserData } from '.';
+import { getAccessToken, getRefreshToken, getUserData, setAccessToken, setRefreshToken, setUserData } from '.';
 import { Capacitor } from '@capacitor/core';
 import ListOfCommitsModal from '../../components/listOfCommits';
+import useSQLiteDB from '../../composables/useSQLiteDB'
 
 export function AccountPage() {
 
+
+    const { exportDB } = useSQLiteDB()
 
     const [showLoading, hideLoading] = useIonLoading();
     const [showToast] = useIonToast();
@@ -181,15 +184,105 @@ export function AccountPage() {
 
     const [openCommitsListModal, setOpenCommitsListModal] = useState(false)
 
-    const handleUserOption = (e: any) => {
+    const handleUserOption = async (e: any) => {
         if (e.detail.value === "commit") {
 
-            console.log('commit Action')
 
-            
+            const res = await exportDB()
+
+
+            console.log(res?.export)
+
+
+
+
+
+
+            const platform = Capacitor.getPlatform();
+
+
+            if (platform === 'android') {
+
+
+
+
+                await exportDB().then(async (res) => {
+
+                    await getUserData().then(async (user_data) => {
+
+                        await getAccessToken().then(async (access_token) => {
+
+
+                            if (access_token && user_data) {
+
+                                const { error } = await useSupabaseNative(access_token, user_data.id)
+                                    .from('users_commits')
+                                    .insert([
+                                        { user_id: user_data?.id, db_snapshot: res?.export },
+                                    ])
+
+                                if (error) {
+                                    if (error.code === "23505") {
+                                        alert('you have been already committed changes');
+                                    } else {
+                                        alert('operation failed try again 1');
+                                    }
+                                } else {
+                                    alert('operation succeed');
+                                }
+
+
+
+                            } else {
+                                alert('operation failed try again 2');
+
+                            }
+
+                        })
+
+                    })
+                })
+
+
+
+
+            } else if (platform === 'web') {
+                const { data: { user } } = await supabase.auth.getUser()
+
+
+                const { error } = await supabase
+                    .from('users_commits')
+                    .insert([
+                        { user_id: user?.id, db_snapshot: res?.export },
+                    ])
+
+
+
+                if (error) {
+                    if (error.code === "23505") {
+                        alert('you have been already committed changes');
+                    } else {
+                        alert('operation failed try again');
+                    }
+                } else {
+                    alert('operation succeed');
+                }
+
+
+            }
+
+
+
+
+
+
+
+
+
+
         } else if (e.detail.value === "pull") {
 
-            
+
             setOpenCommitsListModal(true)
 
             console.log('pull Action')

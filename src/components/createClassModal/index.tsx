@@ -272,6 +272,7 @@ export function CreateClassModal({ isOpen, close }: CreateClassModalProps) {
                         labelPlacement="start"
                         placeholder='yyyy/yyyy'
                         // ref={collage_year}
+                        maxlength={4}
                         value={collage_year_input_state}
                         onIonChange={handleYearScholarChanged}
                         type="text"

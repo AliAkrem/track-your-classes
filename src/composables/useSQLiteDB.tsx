@@ -7,6 +7,8 @@ import {
 } from "@capacitor-community/sqlite";
 import { Capacitor } from "@capacitor/core";
 
+import {  dataToImport265 } from '../../json-object-examples'
+
 
 const useSQLiteDB = () => {
 
@@ -56,6 +58,110 @@ const useSQLiteDB = () => {
 
 
 
+
+  const exportDB = async () => {
+
+
+
+
+    return await db.current?.open().then(async () => {
+
+      return await db.current?.exportToJson('full', false).then((res) => {
+
+
+        return res
+
+
+      })
+
+      // const res2 = await sqlite.current?.isJsonValid(JSON.stringify(res?.export))
+
+
+      // console.log(res2?.result)
+
+
+
+
+
+
+
+    })
+
+
+
+  }
+
+
+  const importDBfromJson = async (jsonString: string) => {
+
+    const platform = Capacitor.getPlatform()
+
+
+    return await db.current?.open().then(async () => {
+
+      const res = await sqlite.current?.isJsonValid(JSON.stringify(jsonString))
+
+
+      if (!res?.result) {
+        const msg = `Error: Json Object dataToImport not valid"\n`;
+        console.log(msg)
+        return
+      } else {
+
+
+        await db.current?.delete().then(async () => {
+
+          const res = await sqlite.current?.importFromJson(JSON.stringify(jsonString));
+
+          if (res?.changes?.changes === -1) {
+            const msg = `Error: ImportFromJson dataToImport changes < 0"\n`;
+            console.log(msg)
+          } else {
+
+
+            await initializeDB().then(async () => {
+              await initializeTables();
+              setInitialized(true);
+
+              location.reload();
+
+            })
+
+            if (platform === 'web') {
+              // save the db to store
+              await sqlite.current?.saveToStore('db_vite');
+            }
+
+          }
+
+
+        })
+
+      }
+
+
+
+
+
+      // const res = await sqlite.current?.isJsonValid(JSON.stringify(jsonString))
+
+      // const res = await sqlite.current?.importFromJson(JSON.stringify({export : jsonString}))
+
+
+
+
+
+
+    })
+
+
+  }
+
+
+
+
+
+
   const performSQLAction = async (
     action: (db: SQLiteDBConnection | undefined) => Promise<void>,
     cleanup?: () => Promise<void>
@@ -65,12 +171,20 @@ const useSQLiteDB = () => {
         then(async () => await action(db.current))
 
     } catch (error) {
-      alert((error as Error).message);
+      // alert((error as Error).message);
     } finally {
       try {
         const platform = Capacitor.getPlatform();
-        if (platform === 'web')
-          (await db.current?.isDBOpen())?.result && (await db.current?.close());
+        // if (platform === 'web')
+
+
+        await db.current?.isDBOpen().then(async (res) => {
+
+          if (res)
+            await db.current?.close()
+
+
+        })
 
 
         cleanup && (await cleanup());
@@ -94,7 +208,7 @@ const useSQLiteDB = () => {
     const createClassTable = ` CREATE TABLE IF NOT EXISTS class( class_id INTEGER PRIMARY KEY NOT NULL,  module_name varchar(30) NOT NULL, specialty_name VARCHAR(30) NOT NULL , specialty_level VARCHAR(1) CHECK (specialty_level IN ('L', 'M', 'E')), level_year INTEGER, collage_year VARCHAR(9) NOT NULL CHECK(collage_year LIKE '____/____') );`
 
 
-    const createStudentGroupTable = `CREATE TABLE IF NOT EXISTS  group_student (group_id INTEGER,student_id  INTEGER,FOREIGN KEY (group_id) REFERENCES Groupp(group_id) ON DELETE  CASCADE ,FOREIGN KEY (student_id) REFERENCES student(student_id) ON DELETE  CASCADE,UNIQUE (group_id, student_id)); `;
+    const createStudentGroupTable = `CREATE TABLE IF NOT EXISTS  group_student (group_id INTEGER,student_id  INTEGER,FOREIGN KEY (group_id) REFERENCES Groupp(group_id) ON DELETE  CASCADE ,FOREIGN KEY (student_id) REFERENCES student(student_id) ON DELETE  CASCADE ); `;
 
 
     const createStudentTable = `CREATE TABLE IF NOT EXISTS student( student_id INTEGER PRIMARY KEY NOT NULL, student_code varchar(30) NOT NULL, first_name varchar(30) NOT NULL , last_name varchar(30) NOT NULL );
@@ -104,7 +218,7 @@ const useSQLiteDB = () => {
     const keyValue = `CREATE TABLE IF NOT EXISTS keys ( selected_year VARCHAR(9) NOT NULL UNIQUE CHECK(selected_year LIKE '____/____')); `
 
 
-    const createGroupTable = `CREATE TABLE IF NOT EXISTS Groupp(group_id INTEGER PRIMARY KEY NOT NULL , class_id INTEGER NOT NULL,group_type VARCHAR(2) CHECK (group_type IN ('TD', 'TP')), group_number  INTEGER NOT NULL,FOREIGN KEY (class_id) REFERENCES class(class_id) ON DELETE NO ACTION,UNIQUE (class_id, group_number, group_type ) );`;
+    const createGroupTable = `CREATE TABLE IF NOT EXISTS Groupp(group_id INTEGER PRIMARY KEY NOT NULL , class_id INTEGER NOT NULL,group_type VARCHAR(2) CHECK (group_type IN ('TD', 'TP')), group_number  INTEGER NOT NULL,FOREIGN KEY (class_id) REFERENCES class(class_id) ON DELETE NO ACTION );`;
 
 
 
@@ -130,7 +244,7 @@ const useSQLiteDB = () => {
   };
 
 
-  return { performSQLAction, initialized, initializeDB };
+  return { performSQLAction, initialized, initializeDB, exportDB, importDBfromJson };
 };
 
 export default useSQLiteDB;

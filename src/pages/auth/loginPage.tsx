@@ -17,7 +17,7 @@ import {
 import { Browser } from '@capacitor/browser';
 
 import { supabase } from '../../../supabaseClient'
-import { logoGoogle } from 'ionicons/icons';
+import { cloud, cloudCircleOutline, cloudSharp, cloudyOutline, logoGoogle } from 'ionicons/icons';
 
 import { App } from '@capacitor/app';
 
@@ -130,6 +130,9 @@ export function LoginPage({ setSession }: Props) {
 
                 await signInWithProvider()
 
+            } else {
+                await signInWithProvider()
+                
             }
 
 
@@ -155,7 +158,7 @@ export function LoginPage({ setSession }: Props) {
             <IonContent>
                 <div className="ion-padding">
                     <h1>Login with your Google Account</h1>
-                    <p>So you can store your Data in the Cloud for Free</p>
+                    <p>Store your data in the Cloud <IonIcon   icon={cloudyOutline} ></IonIcon>{" "}for Free</p>
                 </div >
 
                 <div className="ion-margin" style={{ border: "1px solid" }} >

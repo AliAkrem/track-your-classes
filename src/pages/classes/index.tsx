@@ -35,7 +35,7 @@ import { SQLClass, useGlobalContext } from "../../context/globalContext";
 import { CreateClassModal } from "../../components/createClassModal";
 import CreateGroupModal from "../../components/createGroupModal";
 import { nanoid } from "nanoid";
-import { Group } from "../groups";
+import Group  from "../groups";
 import { UpdateClass } from "../../components/updateClassModal";
 
 import ConfirmDeleteClass from '../classes/confirmDeleteClass'
@@ -75,7 +75,6 @@ export const Classes: React.FC = () => {
   // hook for sqlite db
   const { performSQLAction, initialized } = useSQLiteDB();
 
-  // hook for confirmation dialogperformSQLAction
   const { showConfirmationAlert, ConfirmationAlert } = useConfirmationAlert();
 
 
@@ -143,8 +142,8 @@ export const Classes: React.FC = () => {
 
 
 
-  const [selectedGroup, setSelectedGroup] = useState<number | undefined>()
-
+  const [selectedGroup, setSelectedGroup] = useState<number | undefined>(undefined)
+  const [isGroupModalOpened, setIsGroupModalOpened] = useState(false)
 
 
 
@@ -170,7 +169,7 @@ export const Classes: React.FC = () => {
 
           {classe.groups?.map(group => {
             return (<IonItem slot="content" key={group.group_id}   >
-              <IonText id={"open-selected-group-modal" + group.group_id} style={{ cursor: 'pointer' }} onClick={() => { setSelectedGroup(group.group_id) }} color={'primary'} >
+              <IonText id={"open-selected-group-modal" + group.group_id} style={{ cursor: 'pointer' }} onClick={() => { setSelectedGroup(group.group_id); setIsGroupModalOpened(true) }} color={'primary'} >
 
                 group {group.group_number} / {group.group_type}
 
@@ -257,11 +256,14 @@ export const Classes: React.FC = () => {
               <IonMenuButton />
             </IonButtons>
             <IonTitle size="small" >
-              <IonChip color={"success"} >
-                <IonIcon icon={calendar}></IonIcon>
-                <IonLabel>{String(year)}</IonLabel>
-              </IonChip>
+              {year &&
+                <IonChip color={"success"} >
 
+                  <IonIcon icon={calendar}></IonIcon>
+                  <IonLabel>{String(year)}</IonLabel>
+
+                </IonChip>
+              }
             </IonTitle>
 
 
@@ -298,9 +300,6 @@ export const Classes: React.FC = () => {
 
           }
 
-          <pre>
-            {JSON.stringify(classesList!, null, 2)}
-          </pre>
 
 
           {openedCreateClassModel == true ? <CreateClassModal isOpen={openedCreateClassModel} close={setopenedCreateClassModel} /> : null}
@@ -314,7 +313,7 @@ export const Classes: React.FC = () => {
 
 
 
-          {selectedGroup ? <Group group_id={selectedGroup} setSelectedGroup={setSelectedGroup} /> : null}
+          {selectedGroup != undefined && isGroupModalOpened == true ? <Group isOpen={isGroupModalOpened} close={setIsGroupModalOpened} group_id={selectedGroup} setSelectedGroup={setSelectedGroup} /> : null}
 
 
           {confirmDeleteOpened == true && selectedClass ? <ConfirmDeleteClass selectedClass_id={selectedClass?.class_id} close={setConfirmDeleteOpened} isOpen={confirmDeleteOpened} message="Are You Sure You Want To Delete this class? the information related to this class will deleted also!" /> : null}

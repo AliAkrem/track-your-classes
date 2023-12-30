@@ -180,9 +180,9 @@ export const CreateStudentModal: React.FC<Props> = ({ isOpen, close, group_id, s
                     </IonButtons>
                 </IonToolbar>
             </IonHeader>
-            <IonContent>
-                <IonList inset>
-                    <IonInput
+            <IonContent  >
+                <IonList className='ion-padding' >
+                    <IonInput 
                         className={`${isValidFirstName && 'ion-valid'} ${isValidFirstName === false && 'ion-invalid'} ${isTouched && 'ion-touched'}`}
                         label="First Name"
                         labelPlacement="start"

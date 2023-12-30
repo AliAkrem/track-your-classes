@@ -1,6 +1,5 @@
 import {
     IonHeader,
-    IonPage,
     IonTitle,
     IonToolbar,
     IonContent,
@@ -18,8 +17,6 @@ import {
     IonItemSliding,
     IonItemOptions,
     IonItemOption,
-    useIonViewDidEnter,
-
 } from "@ionic/react";
 import React, { useEffect, useRef, useState } from "react";
 import { SQLiteDBConnection } from "@capacitor-community/sqlite";
@@ -39,17 +36,19 @@ import { CreateStudentModal } from "../../components/createStudentModal";
 type Props = {
     group_id: number | undefined,
     setSelectedGroup: React.Dispatch<React.SetStateAction<number | undefined>>
+    close: React.Dispatch<React.SetStateAction<boolean>>
+    isOpen: boolean
 }
 
 
-export const Group: React.FC<Props> = ({ group_id, setSelectedGroup }: Props) => {
+export default function Group({ group_id, setSelectedGroup, isOpen, close }: Props) {
 
 
 
     const { performSQLAction, initialized } = useSQLiteDB();
 
 
-    const { setRevalidate, isLoading } = useGlobalContext()
+    const { setRevalidate } = useGlobalContext()
 
 
 
@@ -60,7 +59,7 @@ export const Group: React.FC<Props> = ({ group_id, setSelectedGroup }: Props) =>
 
     const [addStudentModalOpened, setOpenAddStudentModal] = useState(false)
 
-    const [list_student, setList_student] = useState<Students[]>()
+    const [list_student, setList_student] = useState<Students[]| []>([])
 
     const [groupInfo, setGroupInfo] = useState<GroupSQL>()
     // const params = useParams<{id : string } >();
@@ -69,9 +68,21 @@ export const Group: React.FC<Props> = ({ group_id, setSelectedGroup }: Props) =>
 
 
     useEffect(() => {
-        if (group_id)
+
+
+        if(list_student?.length == 0 ) { 
+            setRevalidateGroup(Math.random())
+            console.log('called')
+        }
+        if (group_id != undefined )
             SELECT_STUDENTS_IN_GROUP(group_id);
-    }, [group_id, initialized, revalidateGroup]);
+
+
+
+    }, [revalidateGroup, isOpen]);
+
+
+
 
 
 
@@ -139,7 +150,7 @@ export const Group: React.FC<Props> = ({ group_id, setSelectedGroup }: Props) =>
                     DELETE_GROUP(groupInfo?.group_id)
                 }
 
-
+                close(false)
 
             })
 
@@ -260,14 +271,14 @@ export const Group: React.FC<Props> = ({ group_id, setSelectedGroup }: Props) =>
 
     const listGroup = useRef(null)
 
-    
+
 
 
     return (
-        <IonModal  trigger={"open-selected-group-modal" + group_id}  isOpen={group_id ? true : false} canDismiss={group_id ? false : true}  >
+        <IonModal trigger={"open-selected-group-modal" + group_id} isOpen={isOpen} canDismiss={group_id ? false : true} >
             <IonHeader>
                 <IonToolbar>
-                    <IonButton fill="clear" slot="start" onClick={() => { setSelectedGroup(undefined) }}   >
+                    <IonButton fill="clear" slot="start" onClick={() => { close(false); setSelectedGroup(undefined) }}   >
                         <IonIcon size="small" icon={chevronBack}></IonIcon>
                     </IonButton>
 

@@ -1,9 +1,9 @@
-import { IonAccordion, IonAccordionGroup, IonActionSheet, IonButton, IonButtons, IonContent, IonHeader, IonIcon, IonItem, IonLabel, IonList, IonModal, IonText, IonTitle, IonToolbar } from '@ionic/react'
+import { IonAccordion, IonAccordionGroup, IonActionSheet, IonButton, IonButtons, IonCard, IonCardContent, IonContent, IonHeader, IonIcon, IonItem, IonLabel, IonList, IonModal, IonText, IonTitle, IonToolbar } from '@ionic/react'
 import { ellipsisVertical } from 'ionicons/icons'
 import { nanoid } from 'nanoid'
 import React, { useEffect, useRef, useState } from 'react'
 import { useGlobalContext } from '../../context/globalContext'
-import { ClassGroup } from 'src/pages/calendar'
+import { ClassGroup } from 'src/pages/sessions'
 
 
 
@@ -33,7 +33,6 @@ export default function ClassesListModal({ isOpen, close, setSelectedClassGroup 
 
 
     const ListClasses = classesList?.map((classe) => {
-        const trigger = nanoid()
 
 
         return (
@@ -91,9 +90,17 @@ export default function ClassesListModal({ isOpen, close, setSelectedClassGroup 
                 </IonHeader>
                 <IonContent className="ion-padding">
                     <IonList>
-                        <IonAccordionGroup multiple={false} >
+
+
+                        {classesList.length > 0 ? <IonAccordionGroup multiple={false} >
                             {ListClasses}
-                        </IonAccordionGroup  >
+                        </IonAccordionGroup  > :
+
+                            <div style={{ display: 'flex', alignItems: 'center', height: "80vh", justifyContent: 'center' }}  >
+                                <IonCard >
+                                    <IonCardContent  >no classes here yet!. Click (+) to add one </IonCardContent>
+                                </IonCard>
+                            </div>}
 
                     </IonList>
                 </IonContent>

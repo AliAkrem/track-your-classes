@@ -24,11 +24,9 @@ import "@ionic/react/css/display.css";
 import "./theme/variables.css";
 
 import { Classes } from "./pages/classes";
-import { GlobalContextProvider, useGlobalContext } from "./context/globalContext";
+import { useGlobalContext } from "./context/globalContext";
 import { Menu } from "./components/Menu";
-import { Calender } from "./pages/calendar";
-import { LoginPage } from "./pages/auth/loginPage";
-import { AccountPage } from "./pages/auth/account";
+import { Session } from "./pages/sessions";
 import Auth from "./pages/auth";
 
 
@@ -48,7 +46,7 @@ const App: React.FC = () => {
 
 
   if (isloadingContext) return <>
-    <IonLoading className="custom-loading" isOpen={true} spinner={'bubbles'} message="Loading"   duration={2000}/>
+    <IonLoading className="custom-loading" isOpen={true} spinner={'bubbles'} message="Loading" duration={2000} />
   </>
 
   return (
@@ -58,10 +56,10 @@ const App: React.FC = () => {
           <Menu />
           <IonRouterOutlet id="main"  >
             <Route path="/" exact={true} >
-                <Classes />
+              <Classes />
             </Route>
             <Route path="/sessions" exact={true} >
-              <Calender />
+              <Session />
             </Route>
             <Route path="/auth" exact={true} >
               <Auth />
