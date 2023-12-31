@@ -59,7 +59,7 @@ export default function Group({ group_id, setSelectedGroup, isOpen, close }: Pro
 
     const [addStudentModalOpened, setOpenAddStudentModal] = useState(false)
 
-    const [list_student, setList_student] = useState<Students[]| []>([])
+    const [list_student, setList_student] = useState<Students[] | []>([])
 
     const [groupInfo, setGroupInfo] = useState<GroupSQL>()
     // const params = useParams<{id : string } >();
@@ -70,11 +70,12 @@ export default function Group({ group_id, setSelectedGroup, isOpen, close }: Pro
     useEffect(() => {
 
 
-        if(list_student?.length == 0 ) { 
-            setRevalidateGroup(Math.random())
-            console.log('called')
+        if (list_student?.length == 0) {
+            // if (revalidateGroup == 0) {
+                setRevalidateGroup(Math.random())
+            // }
         }
-        if (group_id != undefined )
+        if (group_id != undefined)
             SELECT_STUDENTS_IN_GROUP(group_id);
 
 

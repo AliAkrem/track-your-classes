@@ -33,6 +33,12 @@ export type Scholar_years = {
     collage_year: string
 }
 
+export type Session_date = {
+
+    session_date: string
+
+}
+
 
 // END define the types ----------------------------------------
 
@@ -50,10 +56,14 @@ export interface GlobalState {
     setCounter: React.Dispatch<React.SetStateAction<number>>
     years: Scholar_years[]
     setYears: React.Dispatch<React.SetStateAction<Scholar_years[]>>
-    classesList: SQLClass[] | [] , 
+    classesList: SQLClass[] | [],
     setClassesList: React.Dispatch<React.SetStateAction<[] | SQLClass[]>>
     DBOpened: boolean
     setDBOpened: React.Dispatch<React.SetStateAction<boolean>>
+
+    session_dates: [] | Session_date[]
+    setSession_dates: React.Dispatch<React.SetStateAction<[] | Session_date[]>>
+
 }
 // END  Global state --------------------------------
 
@@ -87,13 +97,49 @@ export const GlobalContextProvider = ({ children }: { children: React.ReactNode 
     const [DBOpened, setDBOpened] = useState<boolean>(initialized)
 
 
+
+    const [session_dates, setSession_dates] = useState<Session_date[] | []>([])
+
+
+
+
     const loadData = async () => {
         try {
             await performSQLAction(async (db: SQLiteDBConnection | undefined) => {
 
                 await db?.query(`SELECT DISTINCT collage_year FROM class`).then((res) => {
                     setYears(res?.values as Scholar_years[])
+                }).then(async () => {
+
+
+
+
+                    await db?.query(` SELECT Distinct session_date FROM session_presence ; `).then((res) => {
+                        if (res)
+                            setSession_dates(res.values as Session_date[])
+
+                    })
+
+                }).then(async () => {
+
+
+
+          
+
+                    // Process the result (assuming 'result' is an array of rows)
+
+                }).catch(err=>{
+                    console.log(err)
                 })
+
+
+
+
+
+
+
+
+
 
                 await db?.query(`SELECT * FROM keys`).then(async (res) => {
 
@@ -148,7 +194,7 @@ export const GlobalContextProvider = ({ children }: { children: React.ReactNode 
                         return result;
                     }, {});
 
-                    
+
                     const classes_formatted = Object.values(classesWithGroups);
                     setClassesList(classes_formatted as SQLClass[]);
 
@@ -190,7 +236,8 @@ export const GlobalContextProvider = ({ children }: { children: React.ReactNode 
         counter, setCounter,
         years, setYears,
         classesList, setClassesList,
-        DBOpened, setDBOpened
+        DBOpened, setDBOpened,
+        session_dates, setSession_dates
     };
 
 

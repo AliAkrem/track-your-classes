@@ -185,6 +185,10 @@ export function AccountPage() {
     const [openCommitsListModal, setOpenCommitsListModal] = useState(false)
 
     const handleUserOption = async (e: any) => {
+
+
+        e.preventDefault()
+
         if (e.detail.value === "commit") {
 
 

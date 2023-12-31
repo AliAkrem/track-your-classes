@@ -28,14 +28,15 @@ export const CreateStudentModal: React.FC<Props> = ({ isOpen, close, group_id, s
 
     const first_name = useRef<HTMLIonInputElement>(null);
     const last_name = useRef<HTMLIonInputElement>(null);
+
     // const student_code = useRef<HTMLIonInputElement>(null);
 
 
 
     //  end credentials of class 
 
+    
     const create_student_modal = useRef<HTMLIonModalElement | null>(null)
-
 
     const { setRevalidate, year, setYear } = useGlobalContext()
 

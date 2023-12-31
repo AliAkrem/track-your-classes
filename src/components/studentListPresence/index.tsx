@@ -18,7 +18,7 @@ type Props = {
 export type AttendanceResult = {
 
     student: Students,
-    state: 'P' | 'Ab' | undefined
+    state: 'P' | 'AB' | undefined
 
 
 }
@@ -116,7 +116,7 @@ export default function StudentListPresence({ group_id , attendanceResult, setAt
     }, [list_student]);
 
 
-    const handleAttendanceChange = (e: CustomEvent, studentId: number, newState: 'P' | 'Ab') => {
+    const handleAttendanceChange = (e: CustomEvent, studentId: number, newState: 'P' | 'AB') => {
         // Update the state in the attendanceResult array
         e.preventDefault();
         setAttendanceResult((prevAttendance) =>
@@ -146,7 +146,7 @@ export default function StudentListPresence({ group_id , attendanceResult, setAt
 
                 >
                     <IonRadio color={'success'} labelPlacement='start' value="P">P</IonRadio>
-                    <IonRadio color={'danger'} labelPlacement='start' value="Ab">Ab</IonRadio>
+                    <IonRadio color={'danger'} labelPlacement='start' value="AB">Ab</IonRadio>
                 </IonRadioGroup>
             </IonItem>
         )

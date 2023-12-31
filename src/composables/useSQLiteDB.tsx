@@ -7,7 +7,7 @@ import {
 } from "@capacitor-community/sqlite";
 import { Capacitor } from "@capacitor/core";
 
-import {  dataToImport265 } from '../../json-object-examples'
+import { dataToImport265 } from '../../json-object-examples'
 
 
 const useSQLiteDB = () => {
@@ -221,6 +221,14 @@ const useSQLiteDB = () => {
     const createGroupTable = `CREATE TABLE IF NOT EXISTS Groupp(group_id INTEGER PRIMARY KEY NOT NULL , class_id INTEGER NOT NULL,group_type VARCHAR(2) CHECK (group_type IN ('TD', 'TP')), group_number  INTEGER NOT NULL,FOREIGN KEY (class_id) REFERENCES class(class_id) ON DELETE NO ACTION );`;
 
 
+    const createSessionTable = `
+    CREATE TABLE IF NOT EXISTS  session_presence(session_id INTEGER PRIMARY KEY NOT NULL, group_id INTEGER , session_date DATETIME);
+    `
+
+    const createStudentSessionTable = ` 
+    CREATE TABLE IF NOT EXISTS  attendance( session_id INTEGER, student_id INTEGER, state varchar(3) CHECK (state IN ('P', 'AB', 'ABJ')), FOREIGN KEY (session_id) REFERENCES session_presence(session_id) ON DELETE CASCADE FOREIGN KEY (student_id) REFERENCES student(student_id) ON DELETE NO ACTION );
+    `
+
 
 
 
@@ -232,13 +240,13 @@ const useSQLiteDB = () => {
 
       await db?.execute(keyValue);
 
-
       await db?.execute(createGroupTable); // GROUP 
 
       await db?.execute(createStudentGroupTable); // ASSIGN STUDENT TO CLASSES
 
+      await db?.execute(createSessionTable); // SESSION
 
-
+      await db?.execute(createStudentSessionTable); // STUDENT ASSIGNED TO  SESSION
 
     });
   };

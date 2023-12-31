@@ -3,10 +3,8 @@ import { add, arrowBack, calendar, closeCircle } from 'ionicons/icons'
 import { GroupSQL, SQLClass, Students, useGlobalContext } from '../../context/globalContext'
 import { useRef, useState } from 'react'
 import ClassesListModal from '../classesListModal'
-import StudentListPresence, { AttendanceResult } from '../../components/studentListPresence'
+import StudentListPresence, { AttendanceResult } from '../studentListPresence'
 import useConfirmationAlert from '../../composables/useConfirmationAlert'
-import { SQLiteDBConnection } from '@capacitor-community/sqlite'
-import useSQLiteDB from '../../composables/useSQLiteDB'
 
 
 export type ClassGroup = {
@@ -31,16 +29,12 @@ type Props = {
 export const CreateSession = ({ isOpen, close }: Props) => {
 
 
-    const { performSQLAction, initializeDB } = useSQLiteDB()
-    const { setRevalidate } = useGlobalContext()
-
-
     const dateSession = useRef<HTMLIonDatetimeElement>(null)
 
     const [date_Session, setDate_Session] = useState(() => {
 
         const currentDate = new Date();
-        return currentDate.toISOString().slice(0, 19);
+        return currentDate.toISOString().slice(0, 19).replace("T", " ");
 
     })
 
@@ -84,81 +78,9 @@ export const CreateSession = ({ isOpen, close }: Props) => {
 
 
 
-    const insert_session = async (sessionDatetime: string, group_id: number, attendance: AttendanceResult[]) => {
-        try {
-            performSQLAction(async (db: SQLiteDBConnection | undefined) => {
-                await db?.query(
-                    'INSERT INTO session_presence ( group_id , session_date) VALUES (?, ?)',
-                    [group_id, sessionDatetime]
-                ).then(async () => {
-
-                    const resSessionId: any = await db?.query(`
-                    SELECT session_id as id FROM session_presence WHERE session_id IN (SELECT max(session_id) FROM session_presence) AND group_id = ?  ;`
-                        , [group_id]);
-
-                    const session_id = resSessionId?.values[0]?.id
-
-                    await Promise.all(attendance.map(async (student) => {
-
-                        console.log('celled v')
-                        await db?.query(
-                            'INSERT INTO attendance (session_id, student_id, state) VALUES (?, ?, ?);',
-                            [session_id, student.student.student_id, student.state]
-                        );
-
-                    }))
 
 
-
-
-
-                })
-            }, async () => {
-                close(false)
-                setRevalidate(Math.random())
-            })
-
-
-
-
-
-
-        } catch (error) {
-            alert((error as Error).message);
-        }
-    };
-
-
-
-
-
- 
-
-    const update_session = async (sessionId: number, newSessionDatetime: string) => {
-        try {
-            performSQLAction(async (db: SQLiteDBConnection | undefined) => {
-                await db?.query(
-                    'UPDATE session_presence SET session_datetime = ? WHERE id = ?',
-                    [newSessionDatetime, sessionId]
-                );
-            });
-        } catch (error) {
-            alert((error as Error).message);
-        }
-    };
-
-
-
-
-    const handle_insert_session = (attendance: AttendanceResult[], group_id: number, date_Session: string) => {
-
-
-
-
-    }
-
-
-    const onSubmit = async () => {
+    const onSubmit = () => {
 
         if (attendanceResult.some((attendance) => attendance.state === undefined) || attendanceResult.length == 0) {
             return
@@ -166,21 +88,11 @@ export const CreateSession = ({ isOpen, close }: Props) => {
 
 
 
-
-        if (selectedClassGroup?.group) {
-
-
-            await insert_session(date_Session, selectedClassGroup?.group.group_id, attendanceResult)
-
-
-        }
-        // alert('session saved successfully')
+        alert('session saved successfully')
 
 
 
     }
-
-
 
 
 

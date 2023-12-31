@@ -54,7 +54,7 @@ export default function CreateGroupModal({ isOpen, setToClose, selectedClassIDTo
 
         await Promise.all(student_list.map(async (student) => {
           await db?.query(`INSERT OR IGNORE INTO student( first_name, last_name, student_code) VALUES (?, ?, ?)`, [student.first_name, student.last_name, student.student_code]);
-          const resStudent_id: any = await db?.query(`SELECT student_id as id FROM student WHERE  student_code = ? `, [student.student_code]);
+          const resStudent_id: any = await db?.query(`SELECT max(student_id) as id FROM student WHERE  student_code = ? `, [student.student_code]);
           const student_id = resStudent_id?.values[0]?.id
           await db?.query(`INSERT OR IGNORE INTO group_student( group_id, student_id) VALUES (?, ?)`, [group_id, student_id]);
 

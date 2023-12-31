@@ -59,29 +59,6 @@ export function CreateClassModal({ isOpen, close }: CreateClassModalProps) {
 
 
 
-    // const loadData = async () => {
-
-    //     try {
-    //         await performSQLAction(async (db: SQLiteDBConnection | undefined) => {
-
-
-    //             await db?.query(`SELECT DISTINCT collage_year FROM class`).then(()=>{ 
-
-    //                 console.log('fetched')
-    //             })
-
-
-
-
-
-
-    //         });
-
-    //     } catch (error) {
-    //         alert((error as Error).message);
-    //     }
-    // };
-
 
     const insert_new_class = async (module_name: string, specialty_name: string, specialty_level: string, level_year: number, collage_year: string) => {
 
@@ -104,8 +81,6 @@ export function CreateClassModal({ isOpen, close }: CreateClassModalProps) {
 
 
             })
-
-
 
         } catch (error) {
             alert((error as Error).message);
