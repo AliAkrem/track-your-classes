@@ -317,7 +317,11 @@ export default function Group({ group_id, setSelectedGroup, isOpen, close }: Pro
 
 
     return (
-        <IonModal trigger={"open-selected-group-modal" + group_id} isOpen={isOpen} canDismiss={group_id ? false : true} >
+        <IonModal trigger={"open-selected-group-modal" + group_id} isOpen={isOpen} canDismiss={group_id ? false : true} 
+
+        onIonModalDidDismiss={() => { close(false); setSelectedGroup(undefined) }} 
+
+        >
             <IonHeader>
                 <IonToolbar>
                     <IonButton fill="clear" slot="start" onClick={() => { close(false); setSelectedGroup(undefined) }}   >

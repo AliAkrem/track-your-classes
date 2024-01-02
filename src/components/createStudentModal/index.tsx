@@ -172,7 +172,9 @@ export const CreateStudentModal: React.FC<Props> = ({ isOpen, close, group_id, s
 
     return (
 
-        <IonModal ref={create_student_modal} isOpen={isOpen} >
+        <IonModal ref={create_student_modal} isOpen={isOpen} 
+            onIonModalDidDismiss={() => close(false)}
+        >
             <IonHeader>
                 <IonToolbar>
                     <IonTitle >add student</IonTitle>

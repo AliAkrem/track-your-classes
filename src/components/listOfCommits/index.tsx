@@ -255,7 +255,9 @@ export default function ListOfCommitsModal({ isOpen, close }: Props) {
 
     return (
         <>
-            <IonModal isOpen={isOpen} >
+            <IonModal isOpen={isOpen} 
+                onIonModalDidDismiss={() => close(false)}
+            >
                 <IonHeader>
                     <IonToolbar>
                         <IonTitle >Commits</IonTitle>

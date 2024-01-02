@@ -211,6 +211,8 @@ export default function UpdateClass({ isOpen, close, classe, setSelectedClass }:
 
         <IonModal ref={create_class_modal} trigger={'update-class-modal' + classe.class_id}
             isOpen={isOpen}
+
+            onIonModalDidDismiss={()=>{setSelectedClass(undefined); create_class_modal?.current?.dismiss(); close(false) }}
         >
             <IonHeader>
                 <IonToolbar>

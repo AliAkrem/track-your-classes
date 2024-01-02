@@ -79,6 +79,7 @@ export default function ClassesListModal({ isOpen, close, setSelectedClassGroup 
         <>
             <IonModal ref={modal}
                 isOpen={isOpen}
+                onIonModalDidDismiss={()=>{close(false)}}
                 trigger="open-modal-classesList"
                 presentingElement={presentingElement!} >
                 <IonHeader>

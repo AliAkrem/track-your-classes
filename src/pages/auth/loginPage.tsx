@@ -15,7 +15,7 @@ import {
 import { Browser } from '@capacitor/browser';
 
 import { supabase } from '../../../supabaseClient'
-import {  cloudyOutline, logoGoogle } from 'ionicons/icons';
+import {  cloudyOutline } from 'ionicons/icons';
 
 import { App } from '@capacitor/app';
 
@@ -103,7 +103,7 @@ export function LoginPage({ setSession }: Props) {
 
 
     const signInWithProvider = async () => {
-        const redirectTo = 'https://track-your-classes.vercel.app/';
+        const redirectTo = 'https://track-your-classes.vercel.app/auth';
         const { error } = await supabase.auth.signInWithOAuth({
             provider: 'google',
             options: { redirectTo },

@@ -166,7 +166,9 @@ export default function CreateSession({ isOpen, close, setRevalidateSessionsList
 
     return (
 
-        <IonModal isOpen={isOpen}   >
+        <IonModal isOpen={isOpen}  
+            onIonModalDidDismiss={() => close(false)}
+        >
             <IonHeader>
                 <IonToolbar>
                     <IonButton onClick={() => close(false)} size='default' fill='clear' slot="start"   >

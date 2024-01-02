@@ -180,6 +180,7 @@ export default function CreateClassModal({ isOpen, close }: CreateClassModalProp
         <IonModal ref={create_class_modal}
             isOpen={isOpen}
             trigger="create-class-modal"
+            onIonModalDidDismiss={()=>{close(false)}}
         >
             <IonHeader>
                 <IonToolbar>

@@ -243,7 +243,7 @@ export const UpdateSession = ({ isOpen, close, session_id, selectedDate,setReval
 
     return (
 
-        <IonModal isOpen={isOpen}      >
+        <IonModal isOpen={isOpen}   onIonModalDidDismiss={()=>{close(false)}}   >
             <IonHeader>
                 <IonToolbar>
                     <IonButton onClick={() => close(false)} size='default' fill='clear' slot="start"   >

@@ -116,7 +116,11 @@ export default function CreateGroupModal({ isOpen, setToClose, selectedClassIDTo
 
 
   return (
-    <IonModal ref={create_class_modal_create_group} isOpen={isOpen}     >
+    <IonModal ref={create_class_modal_create_group} isOpen={isOpen}    
+      onIonModalDidDismiss={
+        () => { create_class_modal_create_group?.current?.dismiss(); setSelectedClassIDToAddGroup(-1); setToClose(false) }
+      }
+     >
       <IonHeader>
         <IonToolbar>
           <IonTitle >create new group</IonTitle>
