@@ -152,7 +152,6 @@ export default function CreateSession({ isOpen, close, setRevalidateSessionsList
 
 
         }
-        // alert('session saved successfully')
 
 
 

@@ -4,7 +4,7 @@ import { Directory, Filesystem } from "@capacitor/filesystem";
 import * as XLSX from "xlsx";
 
 type SessionDataJson = {
-  student_code: string;
+  N : string;
   first_name: string;
   last_name: string;
   presence: String;

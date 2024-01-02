@@ -50,13 +50,12 @@ export default function SessionsList({ sessionData, setRevalidateSessionsList }:
 
 
 
-
-
-
     const { ConfirmationAlert, showConfirmationAlert } = useConfirmationAlert()
 
 
     const [selectedSessionDate, setSelectedSessionDate] = useState("")
+
+
 
     const handleOpenUpdateSessionModal = (session_id: number, session_date: string) => {
 
@@ -74,10 +73,6 @@ export default function SessionsList({ sessionData, setRevalidateSessionsList }:
         setViewSetSessionModalOpened(true)
         setSelectedSessionId(session_id)
     }
-
-
-
-
 
 
 
@@ -146,7 +141,7 @@ export default function SessionsList({ sessionData, setRevalidateSessionsList }:
 
                 await db?.query(`
                     SELECT
-                        s.student_code,
+                        s.student_code as N  ,
                         s.first_name,
                         s.last_name,
                         a.state
@@ -184,15 +179,6 @@ export default function SessionsList({ sessionData, setRevalidateSessionsList }:
             alert((error as Error).message);
         }
     };
-
-
-
-
-
-
-
-
-
 
 
 

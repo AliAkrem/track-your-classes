@@ -33,7 +33,7 @@ export default function StudentListPresence({ group_id , attendanceResult, setAt
 
 
 
-    const { performSQLAction, initialized } = useSQLiteDB()
+    const { performSQLAction } = useSQLiteDB()
 
     const [list_student, setList_student] = useState<Students[] | []>([])
 
