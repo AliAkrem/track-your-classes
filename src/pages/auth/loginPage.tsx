@@ -103,7 +103,7 @@ export function LoginPage({ setSession }: Props) {
 
 
     const signInWithProvider = async () => {
-        const redirectTo = 'http://localhost:8100/auth';
+        const redirectTo = 'https://track-your-classes.vercel.app/';
         const { error } = await supabase.auth.signInWithOAuth({
             provider: 'google',
             options: { redirectTo },
