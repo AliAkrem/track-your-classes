@@ -1,5 +1,5 @@
-import { IonButton, IonButtons, IonChip, IonContent, IonDatetime, IonDatetimeButton, IonHeader, IonIcon, IonInput, IonItem, IonLabel, IonList, IonMenuButton, IonModal, IonPage, IonTitle, IonToolbar } from '@ionic/react'
-import { add, arrowBack, calendar, closeCircle } from 'ionicons/icons'
+import { IonButton, IonChip, IonContent, IonDatetime, IonDatetimeButton, IonHeader, IonIcon, IonItem, IonLabel, IonList, IonModal, IonTitle, IonToolbar } from '@ionic/react'
+import { add, arrowBack, closeCircle } from 'ionicons/icons'
 import { GroupSQL, SQLClass, Students, useGlobalContext } from '../../context/globalContext'
 import { useRef, useState } from 'react'
 import ClassesListModal from '../classesListModal'
@@ -23,15 +23,15 @@ type Props = {
 
     isOpen: boolean
     close: React.Dispatch<React.SetStateAction<boolean>>
-
+    setRevalidateSessionsList: React.Dispatch<React.SetStateAction<number>>
 }
 
 
 
-export const CreateSession = ({ isOpen, close }: Props) => {
+export default function CreateSession({ isOpen, close, setRevalidateSessionsList }: Props) {
 
 
-    const { performSQLAction, initializeDB } = useSQLiteDB()
+    const { performSQLAction } = useSQLiteDB()
     const { setRevalidate } = useGlobalContext()
 
 
@@ -116,13 +116,14 @@ export const CreateSession = ({ isOpen, close }: Props) => {
             }, async () => {
                 close(false)
                 setRevalidate(Math.random())
+                setRevalidateSessionsList(Math.random())
+
+                
             })
 
 
 
 
-
-
         } catch (error) {
             alert((error as Error).message);
         }
@@ -132,30 +133,7 @@ export const CreateSession = ({ isOpen, close }: Props) => {
 
 
 
- 
 
-    const update_session = async (sessionId: number, newSessionDatetime: string) => {
-        try {
-            performSQLAction(async (db: SQLiteDBConnection | undefined) => {
-                await db?.query(
-                    'UPDATE session_presence SET session_datetime = ? WHERE id = ?',
-                    [newSessionDatetime, sessionId]
-                );
-            });
-        } catch (error) {
-            alert((error as Error).message);
-        }
-    };
-
-
-
-
-    const handle_insert_session = (attendance: AttendanceResult[], group_id: number, date_Session: string) => {
-
-
-
-
-    }
 
 
     const onSubmit = async () => {

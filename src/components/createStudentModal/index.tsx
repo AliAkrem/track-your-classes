@@ -1,6 +1,6 @@
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useRef, useState } from 'react'
 import { useGlobalContext } from '../../context/globalContext';
-import { IonButton, IonButtons, IonContent, IonHeader, IonInput, IonItem, IonLabel, IonList, IonModal, IonSelect, IonSelectOption, IonTitle, IonToolbar } from '@ionic/react';
+import { IonButton, IonButtons, IonContent, IonHeader, IonInput, IonItem, IonList, IonModal,  IonTitle, IonToolbar } from '@ionic/react';
 
 import useSQLiteDB from '../../composables/useSQLiteDB';
 import { SQLiteDBConnection } from '@capacitor-community/sqlite';
@@ -38,9 +38,9 @@ export const CreateStudentModal: React.FC<Props> = ({ isOpen, close, group_id, s
     
     const create_student_modal = useRef<HTMLIonModalElement | null>(null)
 
-    const { setRevalidate, year, setYear } = useGlobalContext()
+    const { setRevalidate } = useGlobalContext()
 
-    const { performSQLAction, initialized } = useSQLiteDB()
+    const { performSQLAction } = useSQLiteDB()
 
     const INSERT_NEW_STUDENT = async (first_name: string, last_name: string, code: number, group_id: number) => {
 

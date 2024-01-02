@@ -2,7 +2,6 @@ import {
     IonButton,
     IonContent,
     IonHeader,
-    IonInput,
     IonItem,
     IonLabel,
     IonPage,
@@ -332,7 +331,7 @@ export function AccountPage() {
                             ref={selectUserOptionRef}
                         >
                             <IonSelectOption value="commit">commit</IonSelectOption>
-                            <IonSelectOption value="pull">pull</IonSelectOption>
+                            <IonSelectOption value="pull">fetch</IonSelectOption>
                         </IonSelect>
                     </IonButton>
 

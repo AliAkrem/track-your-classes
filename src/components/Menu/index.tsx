@@ -1,5 +1,4 @@
 import {
-  IonButton,
   IonContent,
   IonIcon,
   IonItem,
@@ -12,7 +11,7 @@ import {
 
 } from '@ionic/react';
 
-import { add, calendar, calendarClear, eye, lockClosed, person, schoolOutline } from 'ionicons/icons';
+import {  calendar,  person, schoolOutline } from 'ionicons/icons';
 import './Menu.css';
 import { useRef, useState } from 'react';
 import useSQLiteDB from '../../composables/useSQLiteDB';
@@ -59,9 +58,8 @@ export const Menu: React.FC = () => {
 
 
 
-  const [page, setPage] = useState("")
 
-  const { counter, setCounter, year, years, setYear, setRevalidate, isLoading } = useGlobalContext()
+  const {  year, years, setYear, setRevalidate, isLoading } = useGlobalContext()
 
 
 

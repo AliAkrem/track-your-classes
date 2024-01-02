@@ -1,19 +1,18 @@
 import { IonDatetime } from "@ionic/react";
 import { useGlobalContext } from "../../context/globalContext";
-import { useEffect, useRef, useState } from "react";
+import { useRef  } from "react";
 
 
 type Props = {
-    selectedDate: string
     setSelectedDate: React.Dispatch<React.SetStateAction<string>>
 }
 
 
 
-export default function Calendar({ selectedDate, setSelectedDate }: Props) {
+export default function Calendar({  setSelectedDate }: Props) {
 
 
-    const { session_dates } = useGlobalContext()
+    const { session_dates , year } = useGlobalContext()
 
 
 
@@ -54,11 +53,11 @@ export default function Calendar({ selectedDate, setSelectedDate }: Props) {
             title={undefined}
             showDefaultTitle={true}
             showDefaultTimeLabel={true}
-            color={'dark'}
+            color={'primary'}
             highlightedDates={highlightedDates}
-
+            min={year.slice(0,4)+"-08-01"}
+            max={year.slice(5,9)+"-07-01"}
             ref={calendarRef}
-
             onIonChange={(e) => { setSelectedDate(String(calendarRef.current?.value)) }}
 
         > <span slot="title"></span></IonDatetime >

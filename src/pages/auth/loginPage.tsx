@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import {
     IonButton,
     IonContent,
@@ -7,7 +6,6 @@ import {
     IonPage,
     IonTitle,
     IonToolbar,
-    useIonToast,
     useIonLoading,
     IonIcon,
     IonButtons,
@@ -17,13 +15,14 @@ import {
 import { Browser } from '@capacitor/browser';
 
 import { supabase } from '../../../supabaseClient'
-import { cloud, cloudCircleOutline, cloudSharp, cloudyOutline, logoGoogle } from 'ionicons/icons';
+import {  cloudyOutline, logoGoogle } from 'ionicons/icons';
 
 import { App } from '@capacitor/app';
 
 import { setAccessToken, setRefreshToken, setUserData } from '.';
 import { Session } from '@supabase/supabase-js';
 import { Capacitor } from '@capacitor/core';
+import { GoogleIcon } from '../../theme/googleIcon';
 
 
 type Props = {
@@ -36,10 +35,8 @@ export function LoginPage({ setSession }: Props) {
 
 
 
-    const [email, setEmail] = useState('');
 
     const [showLoading, hideLoading] = useIonLoading();
-    const [showToast] = useIonToast();
 
 
 
@@ -104,6 +101,7 @@ export function LoginPage({ setSession }: Props) {
 
 
 
+
     const signInWithProvider = async () => {
         const redirectTo = 'http://localhost:8100/auth';
         const { error } = await supabase.auth.signInWithOAuth({
@@ -162,9 +160,11 @@ export function LoginPage({ setSession }: Props) {
                 </div >
 
                 <div className="ion-margin" style={{ border: "1px solid" }} >
-                    <IonButton className='ion-text-wrap' onSubmit={handleLogin} style={{ display: 'flex', justifyContent: "space-between", alignItem: "center", gap: '16px' }} fill='default' onClick={handleLogin}>
-                        <IonLabel  >Sign in with Google</IonLabel>
-                        <IonIcon size='large' style={{ marginLeft: "10px" }} icon={logoGoogle} />
+                    <IonButton className='ion-text-wrap' onSubmit={handleLogin} style={{ display: 'flex' , gap: '16px', justifyContent: "space-between", alignItem: "center" }} fill='default' onClick={handleLogin}>
+                        <IonLabel style={ { marginRight : '16px' }} >Sign in with Google</IonLabel>
+
+                        <GoogleIcon   />
+
                     </IonButton>
                 </div>
 

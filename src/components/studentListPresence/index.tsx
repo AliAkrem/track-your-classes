@@ -1,10 +1,13 @@
 import { SQLiteDBConnection } from '@capacitor-community/sqlite'
 import { IonItem, IonLabel, IonRadio, IonRadioGroup } from '@ionic/react'
-import React, { useCallback, useEffect, useState } from 'react'
+import React, {  useEffect, useState } from 'react'
 import useSQLiteDB from '../../composables/useSQLiteDB'
 import { Students } from '../../context/globalContext'
 
+
 import './studentListPresence.css'
+
+
 
 type Props = {
     group_id: number,

@@ -7,8 +7,6 @@ import {
 } from "@capacitor-community/sqlite";
 import { Capacitor } from "@capacitor/core";
 
-import { dataToImport265 } from '../../json-object-examples'
-
 
 const useSQLiteDB = () => {
 
@@ -180,8 +178,13 @@ const useSQLiteDB = () => {
 
         await db.current?.isDBOpen().then(async (res) => {
 
+
+
           if (res)
-            await db.current?.close()
+
+            if (platform === 'web') {
+              await db.current?.close()
+            }
 
 
         })

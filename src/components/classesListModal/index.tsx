@@ -1,9 +1,10 @@
-import { IonAccordion, IonAccordionGroup, IonActionSheet, IonButton, IonButtons, IonCard, IonCardContent, IonContent, IonHeader, IonIcon, IonItem, IonLabel, IonList, IonModal, IonText, IonTitle, IonToolbar } from '@ionic/react'
-import { ellipsisVertical } from 'ionicons/icons'
+import { IonAccordion, IonAccordionGroup,  IonButton, IonButtons, IonCard, IonCardContent, IonContent, IonHeader,  IonItem, IonLabel, IonList, IonModal, IonText, IonTitle, IonToolbar } from '@ionic/react'
 import { nanoid } from 'nanoid'
 import React, { useEffect, useRef, useState } from 'react'
 import { useGlobalContext } from '../../context/globalContext'
-import { ClassGroup } from 'src/pages/sessions'
+
+
+import { ClassGroup } from '../../pages/sessions'
 
 
 
@@ -84,7 +85,7 @@ export default function ClassesListModal({ isOpen, close, setSelectedClassGroup 
                     <IonToolbar>
                         <IonTitle>Select Class</IonTitle>
                         <IonButtons slot="end">
-                            <IonButton onClick={() => modal.current?.dismiss()}>Close</IonButton>
+                            <IonButton onClick={() => {modal.current?.dismiss() ;   close(false)  }}>Close</IonButton>
                         </IonButtons>
                     </IonToolbar>
                 </IonHeader>

@@ -1,4 +1,4 @@
-import { IonButton, IonChip, IonContent, IonHeader, IonIcon, IonItem, IonLabel, IonList, IonModal, IonRadio, IonRadioGroup, IonTitle, IonToolbar, useIonViewDidEnter } from '@ionic/react'
+import { IonButton, IonChip, IonContent, IonHeader, IonIcon, IonItem, IonLabel, IonList, IonLoading, IonModal, IonRadio, IonRadioGroup, IonSpinner, IonTitle, IonToolbar, useIonViewDidEnter } from '@ionic/react'
 import { arrowBack } from 'ionicons/icons'
 import { GroupSQL, SQLClass, Students } from '../../context/globalContext'
 import useSQLiteDB from '../../composables/useSQLiteDB'
@@ -77,7 +77,7 @@ export const ViewSession = ({ isOpen, close, session_id }: Props) => {
 
 
             // if (revalidateEffect == 0)
-                setRevalidateEffect(Math.random())
+            setRevalidateEffect(Math.random())
 
 
         }
@@ -191,13 +191,14 @@ export const ViewSession = ({ isOpen, close, session_id }: Props) => {
         )
 
 
-    })) : null
+    })) : <IonLoading className="custom-loading" isOpen={true} spinner={'bubbles'} message="Loading" duration={2000} />
+
 
 
 
     return (
 
-        <IonModal isOpen={isOpen}   >
+        <IonModal isOpen={isOpen} onIonModalDidDismiss={() => { close(false) }}  >
             <IonHeader>
                 <IonToolbar>
                     <IonButton onClick={() => close(false)} size='default' fill='clear' slot="start"   >
@@ -209,15 +210,17 @@ export const ViewSession = ({ isOpen, close, session_id }: Props) => {
                             alignItems: 'center'
                         }} >
 
+                            {sessionDetails ?
+                                <IonLabel className="ion-text-wrap" >
+                                    {sessionDetails?.module_name + " " + sessionDetails?.specialty_name + " " + sessionDetails?.specialty_level + sessionDetails?.level_year} group {sessionDetails?.group_number + " " + sessionDetails?.group_type}
+                                    <IonChip>
+                                        <IonLabel>
+                                            {sessionDetails && formatDateTime(sessionDetails.session_date)}
+                                        </IonLabel>
+                                    </IonChip>
 
-                            <IonLabel className="ion-text-wrap" >
-                                {sessionDetails?.module_name + " " + sessionDetails?.specialty_name + " " + sessionDetails?.specialty_level + sessionDetails?.level_year} group {sessionDetails?.group_number + " " + sessionDetails?.group_type}
-                                <IonChip>
-                                    <IonLabel>
-                                        {sessionDetails && formatDateTime(sessionDetails.session_date)}
-                                    </IonLabel>
-                                </IonChip>
-                            </IonLabel>
+                                </IonLabel> : <IonSpinner   ></IonSpinner>
+                            }
                         </div>
                     </IonTitle>
                 </IonToolbar>

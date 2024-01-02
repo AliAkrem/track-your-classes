@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { useGlobalContext } from '../../context/globalContext';
-import { IonButton, IonButtons, IonContent, IonHeader, IonInput, IonItem, IonLabel, IonList, IonModal, IonPage, IonSelect, IonSelectOption, IonTitle, IonToolbar, useIonViewWillEnter } from '@ionic/react';
+import { IonButton, IonButtons, IonContent, IonHeader, IonInput, IonItem,  IonList, IonModal,  IonSelect, IonSelectOption, IonTitle, IonToolbar } from '@ionic/react';
 
 import useSQLiteDB from '../../composables/useSQLiteDB';
 import { SQLiteDBConnection } from '@capacitor-community/sqlite';
@@ -29,12 +29,12 @@ const levels = [
 
 
 
-export function CreateClassModal({ isOpen, close }: CreateClassModalProps) {
+export default function CreateClassModal({ isOpen, close }: CreateClassModalProps) {
 
 
-    const { performSQLAction, initialized, initializeDB } = useSQLiteDB()
+    const { performSQLAction  } = useSQLiteDB()
 
-    const { setRevalidate, year, setYear, DBOpened } = useGlobalContext()
+    const { setRevalidate, year, setYear } = useGlobalContext()
 
     // credentials of class 
 

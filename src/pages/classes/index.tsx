@@ -24,21 +24,35 @@ import {
   IonChip,
 
 } from "@ionic/react";
-import React, { useEffect, useRef, useState } from "react";
+
+
+
+import React, { useRef, useState, Suspense, lazy } from "react";
+
 import "./classes.css";
-import { SQLiteDBConnection } from "@capacitor-community/sqlite";
-import useSQLiteDB from "../../composables/useSQLiteDB";
-import useConfirmationAlert from "../../composables/useConfirmationAlert";
+
 import { add, calendar, create, ellipsisVertical, trash, } from "ionicons/icons";
 import { OverlayEventDetail } from "@ionic/react/dist/types/components/react-component-lib/interfaces";
 import { SQLClass, useGlobalContext } from "../../context/globalContext";
-import { CreateClassModal } from "../../components/createClassModal";
-import CreateGroupModal from "../../components/createGroupModal";
 import { nanoid } from "nanoid";
-import Group  from "../groups";
-import { UpdateClass } from "../../components/updateClassModal";
 
-import ConfirmDeleteClass from '../classes/confirmDeleteClass'
+
+
+
+const CreateClassModal = lazy(() => import("../../components/createClassModal"));
+
+
+const CreateGroupModal = lazy(() => import("../../components/createGroupModal"))
+
+const Group = lazy(() => import('../groups'));
+
+
+const UpdateClass = lazy(() => import("../../components/updateClassModal"));
+
+
+const ConfirmDeleteClass = lazy(() => import('../classes/confirmDeleteClass'))
+
+
 
 export const Classes: React.FC = () => {
 
@@ -46,9 +60,7 @@ export const Classes: React.FC = () => {
     year,
     setRevalidate,
     isLoading,
-    counter,
     classesList,
-    setClassesList
 
   } = useGlobalContext()
 
@@ -72,10 +84,6 @@ export const Classes: React.FC = () => {
 
 
 
-  // hook for sqlite db
-  const { performSQLAction, initialized } = useSQLiteDB();
-
-  const { showConfirmationAlert, ConfirmationAlert } = useConfirmationAlert();
 
 
 
@@ -301,23 +309,36 @@ export const Classes: React.FC = () => {
           }
 
 
+          <Suspense>
 
-          {openedCreateClassModel == true ? <CreateClassModal isOpen={openedCreateClassModel} close={setopenedCreateClassModel} /> : null}
+            {openedCreateClassModel == true ? <CreateClassModal isOpen={openedCreateClassModel} close={setopenedCreateClassModel} /> : null}
 
+          </Suspense>
 
+          <Suspense>
 
-          {selectedClass && modalUpdateClassOpened ? <UpdateClass isOpen={modalUpdateClassOpened} classe={selectedClass} setSelectedClass={setSelectedClass} close={setModalUpdateClassOpened} /> : null}
+            {selectedClass && modalUpdateClassOpened ? <UpdateClass isOpen={modalUpdateClassOpened} classe={selectedClass} setSelectedClass={setSelectedClass} close={setModalUpdateClassOpened} /> : null}
+
+          </Suspense>
+
 
 
           {selectedClassIDToAddGroup && modalCreateGroupOpened ? <CreateGroupModal selectedClassIDToAddGroup={selectedClassIDToAddGroup} setSelectedClassIDToAddGroup={setSelectedClassIDToAddGroup} isOpen={modalCreateGroupOpened} setToClose={setModalCreateGroupOpened} /> : null}
 
 
 
-          {selectedGroup != undefined && isGroupModalOpened == true ? <Group isOpen={isGroupModalOpened} close={setIsGroupModalOpened} group_id={selectedGroup} setSelectedGroup={setSelectedGroup} /> : null}
 
 
-          {confirmDeleteOpened == true && selectedClass ? <ConfirmDeleteClass selectedClass_id={selectedClass?.class_id} close={setConfirmDeleteOpened} isOpen={confirmDeleteOpened} message="Are You Sure You Want To Delete this class? the information related to this class will deleted also!" /> : null}
+          <Suspense>
+            {selectedGroup != undefined && isGroupModalOpened == true ? <Group isOpen={isGroupModalOpened} close={setIsGroupModalOpened} group_id={selectedGroup} setSelectedGroup={setSelectedGroup} /> : null}
+          </Suspense>
 
+
+
+
+          <Suspense>
+            {confirmDeleteOpened == true && selectedClass ? <ConfirmDeleteClass selectedClass_id={selectedClass?.class_id} close={setConfirmDeleteOpened} isOpen={confirmDeleteOpened} message="Are You Sure You Want To Delete this class? the information related to this class will deleted also!" /> : null}
+          </Suspense>
 
 
 

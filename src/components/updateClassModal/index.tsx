@@ -32,7 +32,7 @@ const levels = [
 
 
 
-export const UpdateClass: React.FC<Props> = ({ isOpen, close, classe, setSelectedClass }: Props) => {
+export default function UpdateClass({ isOpen, close, classe, setSelectedClass }: Props) {
 
 
     // credentials of class 
@@ -180,7 +180,7 @@ export const UpdateClass: React.FC<Props> = ({ isOpen, close, classe, setSelecte
         }
     }
 
-    
+
     useEffect(() => {
         // Update years options when selectedLevel changes
         if (selectedLevel) {
@@ -209,9 +209,9 @@ export const UpdateClass: React.FC<Props> = ({ isOpen, close, classe, setSelecte
 
     return (
 
-        <IonModal ref={create_class_modal} trigger={'update-class-modal' + classe.class_id} 
-         isOpen={isOpen} 
-         >
+        <IonModal ref={create_class_modal} trigger={'update-class-modal' + classe.class_id}
+            isOpen={isOpen}
+        >
             <IonHeader>
                 <IonToolbar>
                     <IonTitle >update class {classe.module_name}  {classe.specialty_name}/ {classe.specialty_level} / {classe.level_year} </IonTitle>

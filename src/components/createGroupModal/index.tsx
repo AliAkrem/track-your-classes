@@ -1,4 +1,4 @@
-import { IonAvatar, IonButton, IonButtons, IonContent, IonHeader, IonIcon, IonInput, IonItem, IonLabel, IonModal, IonSelect, IonSelectOption, IonText, IonTitle, IonToolbar } from '@ionic/react';
+import { IonAvatar, IonButton, IonButtons, IonContent, IonHeader, IonIcon, IonInput, IonItem, IonLabel, IonModal, IonSelect, IonSelectOption, IonTitle, IonToolbar } from '@ionic/react';
 import React, { useRef, useState } from 'react'
 import DragDropFile from '../dropExcelFile';
 import { Students, useGlobalContext } from '../../context/globalContext';
@@ -34,12 +34,6 @@ export default function CreateGroupModal({ isOpen, setToClose, selectedClassIDTo
   const { performSQLAction } = useSQLiteDB()
 
   const CREATE_GROUP = async (group_number: number, group_type: string, student_list: Students[]) => {
-
-
-    console.log({ group_number, group_type, student_list })
-
-
-
 
     try {
       // tayeb insert  student

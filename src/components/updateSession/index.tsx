@@ -1,4 +1,4 @@
-import { IonButton, IonContent, IonDatetime, IonDatetimeButton, IonHeader, IonIcon, IonItem, IonLabel, IonList, IonModal, IonRadio, IonRadioGroup, IonTitle, IonToolbar } from '@ionic/react'
+import { IonButton, IonContent, IonDatetime, IonDatetimeButton, IonHeader, IonIcon, IonItem, IonLabel, IonList, IonLoading, IonModal, IonRadio, IonRadioGroup, IonTitle, IonToolbar } from '@ionic/react'
 import { arrowBack, } from 'ionicons/icons'
 import { GroupSQL, SQLClass, useGlobalContext } from '../../context/globalContext'
 import { useEffect, useRef, useState } from 'react'
@@ -45,11 +45,12 @@ type Props = {
 
     session_id: number | undefined
     selectedDate: string
+    setRevalidateSessionsList: React.Dispatch<React.SetStateAction<number>>
 }
 
 
 
-export const UpdateSession = ({ isOpen, close, session_id, selectedDate }: Props) => {
+export const UpdateSession = ({ isOpen, close, session_id, selectedDate,setRevalidateSessionsList }: Props) => {
 
 
     const dateSession = useRef<HTMLIonDatetimeElement>(null)
@@ -120,6 +121,7 @@ export const UpdateSession = ({ isOpen, close, session_id, selectedDate }: Props
             }, async () => {
                 close(false)
                 setRevalidate(Math.random())
+                setRevalidateSessionsList(Math.random())
             })
 
 
@@ -233,7 +235,7 @@ export const UpdateSession = ({ isOpen, close, session_id, selectedDate }: Props
         )
 
 
-    })) : null
+    })) : <IonLoading className="custom-loading" isOpen={!attendanceResult}  message="Loading" duration={200} />
 
 
 

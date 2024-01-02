@@ -1,4 +1,4 @@
-import { IonChip, IonIcon, IonItem, IonLabel, IonSelect, IonSelectOption } from "@ionic/react";
+import { IonChip, IonIcon, IonItem, IonLabel, IonLoading, IonSelect, IonSelectOption, IonSpinner } from "@ionic/react";
 import { ellipsisVertical } from "ionicons/icons";
 import { UpdateSession } from "../updateSession";
 import { useRef, useState } from "react";
@@ -9,11 +9,12 @@ import useSQLiteDB from "../../composables/useSQLiteDB";
 import { SessionData } from "src/pages/sessions";
 import { nanoid } from "nanoid";
 import { useGlobalContext } from "../../context/globalContext";
+import { exportJsonToXlsx } from "../../composables/exportSessionDataXSLX";
 
 
 type Props = {
-    selectedDate: string
     sessionData: SessionData[]
+    setRevalidateSessionsList: React.Dispatch<React.SetStateAction<number>>
 }
 
 
@@ -34,7 +35,7 @@ export const formatDateTime = (dateTime: string): string => {
 
 
 
-export default function SessionsList({ selectedDate, sessionData }: Props) {
+export default function SessionsList({ sessionData, setRevalidateSessionsList }: Props) {
 
 
     const [updateSessionModalOpened, setUpdateSetSessionModalOpened] = useState(false)
@@ -69,7 +70,6 @@ export default function SessionsList({ selectedDate, sessionData }: Props) {
 
     }
 
-
     const handleOpenViewSessionModal = (session_id: number,) => {
         setViewSetSessionModalOpened(true)
         setSelectedSessionId(session_id)
@@ -79,24 +79,34 @@ export default function SessionsList({ selectedDate, sessionData }: Props) {
 
 
 
-    const handleSessionOption = async (e: any, session_id: number, session_date: string) => {
+
+
+    const handleSessionOption = async (e: any, session: SessionData) => {
 
         e.preventDefault()
 
         if (e.detail.value === "edit") {
 
-            handleOpenUpdateSessionModal(session_id, session_date)
+            handleOpenUpdateSessionModal(session.session_id, session.session_date)
 
 
         }
         else if (e.detail.value === "delete") {
 
-
             showConfirmationAlert("are you sure you want to delete this session!", () => {
 
-                delete_session(session_id)
+                delete_session(session.session_id)
 
             })
+
+        } else if (e.detail.value === "exportToXLSX") {
+
+            console.log('exportToXLSX')
+
+            await export_session(session)
+
+
+
 
         }
 
@@ -116,44 +126,59 @@ export default function SessionsList({ selectedDate, sessionData }: Props) {
                 await db?.query(
                     'DELETE FROM session_presence WHERE session_id = ?',
                     [sessionId]
-
                 ).catch((err) => {
-
                     console.log(err)
-
                 })
                     ;
-            }, async () => { setRevalidate(Math.random()) });
+            }, async () => {
+                setRevalidate(Math.random())
+                setRevalidateSessionsList(Math.random())
+            });
         } catch (error) {
             alert((error as Error).message);
         }
     };
 
 
-
-    const fetchSessionDetails = async () => {
+    const export_session = async (session: SessionData) => {
         try {
-            await performSQLAction(async (db: SQLiteDBConnection | undefined) => {
-                const result = await db?.query(`
-                    SELECT 
-                        sp.session_id,
-                        sp.session_date,
-                        g.group_number,
-                        g.group_type,
-                        c.class_name,
-                        c.specialty_name,
-                        c.specialty_level,
-                        c.level_year
-                    FROM 
-                        session_presence sp
-                    JOIN 
-                        group_table g ON sp.group_id = g.group_id
-                    JOIN 
-                        class_table c ON g.class_id = c.class_id;
-                `);
+            performSQLAction(async (db: SQLiteDBConnection | undefined) => {
 
-                // Process the result (assuming 'result' is an array of rows)
-                console.log(result);
+                await db?.query(`
+                    SELECT
+                        s.student_code,
+                        s.first_name,
+                        s.last_name,
+                        a.state
+                    FROM
+                        attendance a
+                    JOIN
+                        student s ON a.student_id = s.student_id
+                    WHERE
+                        a.session_id = ?;
+        ` , [session.session_id]).then(async ({ values: sessionPresence }) => {
+
+                    if (sessionPresence) {
+                        console.log(sessionPresence)
+
+                       await exportJsonToXlsx(sessionPresence, [{
+                            class_name: session.module_name,
+                            specialty: session.specialty_name,
+                            specialty_level: session.specialty_level,
+                            specialty_level_year: session.level_year,
+                            group_type: session.group_type,
+                            group_number: session.group_number,
+                        }])
+
+
+                    }
+                }).catch(err => {
+                    console.log(err)
+                });
+
+
+
+
             });
         } catch (error) {
             alert((error as Error).message);
@@ -171,13 +196,7 @@ export default function SessionsList({ selectedDate, sessionData }: Props) {
 
 
 
-
-
-
-
-
-
-    const displaySessions = sessionData.map(session => {
+    const displaySessions =  sessionData  ?  sessionData.map(session => {
 
         const timePart = formatDateTime(session.session_date)
 
@@ -204,16 +223,18 @@ export default function SessionsList({ selectedDate, sessionData }: Props) {
                                 </IonLabel>
                             </div>
 
-                            <div style={{ display: 'flex', justifyContent: 'end', padding: '0px 10px' }}   >
+                            <div style={{ display: 'flex', justifyContent: 'end', margin: '0', padding: '0px 0px' }}   >
                                 <IonChip >
                                     <IonSelect
                                         style={{ border: '', width: '0', height: '0', padding: '0', margin: '0' }}
                                         // toggleIcon={ellipsisVertical}
                                         ref={sessionOptionRef}
                                         interface="popover"
-                                        // aria-label="session-option"
-                                        onIonChange={(e) => { handleSessionOption(e, session.session_id, session.session_date) }}
+                                        // aria-label=""
+                                        onIonChange={(e) => { handleSessionOption(e, session) }}
+
                                     >
+                                        <IonSelectOption value="exportToXLSX">export to .xlsx</IonSelectOption>
                                         <IonSelectOption value="edit">edit</IonSelectOption>
                                         <IonSelectOption value="delete">delete</IonSelectOption>
                                     </IonSelect>
@@ -233,10 +254,7 @@ export default function SessionsList({ selectedDate, sessionData }: Props) {
 
         )
 
-    })
-
-
-
+    }) :    <IonSpinner   duration={2000} /> 
 
 
 
@@ -250,10 +268,12 @@ export default function SessionsList({ selectedDate, sessionData }: Props) {
 
             {displaySessions}
 
-            <UpdateSession isOpen={updateSessionModalOpened} close={setUpdateSetSessionModalOpened} session_id={selectedSessionId}
+            <UpdateSession setRevalidateSessionsList={setRevalidateSessionsList} isOpen={updateSessionModalOpened} close={setUpdateSetSessionModalOpened} session_id={selectedSessionId}
                 selectedDate={selectedSessionDate}
 
             />
+
+
 
             {selectedSessionId != undefined && viewSessionModalOpened == true ? <ViewSession
 
@@ -264,7 +284,7 @@ export default function SessionsList({ selectedDate, sessionData }: Props) {
                 close={setViewSetSessionModalOpened}
 
 
-            /> : null}
+            /> : null  }
 
             {ConfirmationAlert}
         </>

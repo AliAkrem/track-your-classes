@@ -1,12 +1,28 @@
-import { IonButtons, IonChip, IonContent, IonDatetime, IonDatetimeButton, IonFab, IonFabButton, IonHeader, IonIcon, IonInput, IonItem, IonLabel, IonList, IonMenuButton, IonModal, IonPage, IonTitle, IonToolbar } from '@ionic/react'
-import { add, calendar, closeCircle } from 'ionicons/icons'
-import { GroupSQL, SQLClass, Students, useGlobalContext } from '../../context/globalContext'
-import { useEffect, useState } from 'react'
-import { CreateSession } from '../../components/createSession'
-import Calendar from '../../components/calendar'
-import SessionsList from '../../components/sessionsList'
-import useSQLiteDB from '../../composables/useSQLiteDB'
+import { IonButtons, IonChip, IonContent, IonFab, IonFabButton, IonHeader, IonIcon, IonLabel, IonLoading, IonMenuButton, IonPage, IonSpinner, IonTitle, IonToolbar } from '@ionic/react'
+import { add, calendar } from 'ionicons/icons'
+import { GroupSQL, SQLClass, useGlobalContext } from '../../context/globalContext'
+import { Suspense, lazy, useEffect, useState } from 'react'
+
+
+
+
+const CreateSession = lazy(() => import('../../components/createSession'))
+
+
+const Calendar = lazy(() => import('../../components/calendar'))
+
+const SessionsList = lazy(() => import('../../components/sessionsList'))
+
+
+
 import { SQLiteDBConnection } from '@capacitor-community/sqlite'
+
+import useSQLiteDB from '../../composables/useSQLiteDB'
+
+
+
+
+
 
 
 export type ClassGroup = {
@@ -53,25 +69,6 @@ export const Session = () => {
     const [openCreateSessionModal, setOpenCreateSessionModal] = useState(false)
 
 
-    const fetchDistinctSessionDates = async () => {
-
-        try {
-            await performSQLAction(async (db: SQLiteDBConnection | undefined) => {
-                const result = await db?.query(`
-                    SELECT *
-                    FROM attendance;
-                `);
-
-                console.log(result?.values)
-
-                // Process the result (assuming 'result' is an array of rows)
-                console.log(result);
-            });
-        } catch (error) {
-            alert(error);
-        }
-    };
-
 
 
     const [sessionsData, setSessionsData] = useState<SessionData[] | []>([])
@@ -81,17 +78,16 @@ export const Session = () => {
 
 
 
+    const [revalidateSessionsList, setRevalidateSessionsList] = useState(0)
 
 
     useEffect(() => {
-        // fetchDistinctSessionDates()
+
+            fetchSessionsByDate(selectedDate)
 
 
-        fetchSessionsByDate(selectedDate)
 
-        
-
-    }, [selectedDate, initialized])
+    }, [selectedDate, initialized, revalidateSessionsList])
 
 
 
@@ -187,16 +183,24 @@ export const Session = () => {
 
 
 
+                <Suspense >
+                    <Calendar setSelectedDate={setSelectedDate} />
+                </Suspense>
 
-                <Calendar selectedDate={selectedDate} setSelectedDate={setSelectedDate} />
+
+                <Suspense >
+                    {selectedDate !== "" && sessionsData.length > 0 ? <SessionsList setRevalidateSessionsList={setRevalidateSessionsList}  sessionData={sessionsData} /> 
+                    :  null
+                    }
+                </Suspense>
 
 
-
-                {selectedDate !== "" && sessionsData.length > 0 ? <SessionsList sessionData={sessionsData} selectedDate={selectedDate} /> : null}
-
-                {openCreateSessionModal ? <CreateSession isOpen={openCreateSessionModal} close={setOpenCreateSessionModal} /> : null}
-
+                <Suspense >
+                    {openCreateSessionModal ? <CreateSession setRevalidateSessionsList={setRevalidateSessionsList} isOpen={openCreateSessionModal} close={setOpenCreateSessionModal} /> : null}
+                </Suspense>
             </IonContent>
+
+
             <IonFab vertical="top" horizontal="end">
                 <IonFabButton id="create-class-modal" onClick={() => { setOpenCreateSessionModal(!openCreateSessionModal) }}  >
                     <IonIcon icon={add}></IonIcon>

@@ -1,5 +1,5 @@
 import { IonButton, IonButtons, IonCard, IonCardContent, IonContent, IonHeader, IonIcon, IonItem, IonLabel, IonList, IonModal, IonTitle, IonToolbar } from "@ionic/react";
-import { download, gitBranch, gitCommit, gitCompare, gitNetwork } from "ionicons/icons";
+import { download, gitCommit } from "ionicons/icons";
 import { nanoid } from "nanoid";
 import { useEffect, useRef, useState } from "react";
 import { supabase, useSupabaseNative } from "../../../supabaseClient";
