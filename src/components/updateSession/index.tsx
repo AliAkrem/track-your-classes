@@ -1,5 +1,5 @@
-import { IonButton, IonContent, IonDatetime, IonDatetimeButton, IonHeader, IonIcon, IonItem, IonLabel, IonList, IonLoading, IonModal, IonRadio, IonRadioGroup, IonTitle, IonToolbar } from '@ionic/react'
-import { arrowBack, } from 'ionicons/icons'
+import { IonButton, IonContent, IonDatetime, IonDatetimeButton, IonHeader, IonIcon, IonItem, IonItemOption, IonItemOptions, IonItemSliding, IonLabel, IonList, IonLoading, IonModal, IonRadio, IonRadioGroup, IonText, IonTextarea, IonTitle, IonToolbar } from '@ionic/react'
+import { arrowBack, pencil, } from 'ionicons/icons'
 import { GroupSQL, SQLClass, useGlobalContext } from '../../context/globalContext'
 import { useEffect, useRef, useState } from 'react'
 
@@ -32,8 +32,10 @@ type AttendanceResult = {
 
     state: 'P' | 'AB' | 'ABJ'
 
+    comment: string,
+
     student_code: string
-}[]
+}
 
 
 
@@ -50,7 +52,7 @@ type Props = {
 
 
 
-export const UpdateSession = ({ isOpen, close, session_id, selectedDate,setRevalidateSessionsList }: Props) => {
+export const UpdateSession = ({ isOpen, close, session_id, selectedDate, setRevalidateSessionsList }: Props) => {
 
 
     const dateSession = useRef<HTMLIonDatetimeElement>(null)
@@ -69,7 +71,7 @@ export const UpdateSession = ({ isOpen, close, session_id, selectedDate,setReval
 
 
 
-    const [attendanceResult, setAttendanceResult] = useState<AttendanceResult>()
+    const [attendanceResult, setAttendanceResult] = useState<AttendanceResult[]>()
 
     // const [date, setdate] = useState(second)
 
@@ -93,7 +95,7 @@ export const UpdateSession = ({ isOpen, close, session_id, selectedDate,setReval
     }
 
 
-    const updateSession = async (sessionDatetime: string, session_id: number, attendance: AttendanceResult) => {
+    const updateSession = async (sessionDatetime: string, session_id: number, attendance: AttendanceResult[]) => {
         try {
             performSQLAction(async (db: SQLiteDBConnection | undefined) => {
 
@@ -105,11 +107,11 @@ export const UpdateSession = ({ isOpen, close, session_id, selectedDate,setReval
                 )
 
 
-                await Promise.all(attendance.map(async (student) => {
 
+                await Promise.all(attendance.map(async (student) => {
                     await db?.query(
-                        'UPDATE  attendance SET  state = ? WHERE session_id = ? AND student_id = ?    ;',
-                        [student.state, session_id, student.student_id]
+                        'UPDATE  attendance SET  state = ? , comment = ?  WHERE session_id = ? AND student_id = ?    ;',
+                        [student.state,student.comment , session_id, student.student_id]
                     );
 
                 }))
@@ -133,6 +135,7 @@ export const UpdateSession = ({ isOpen, close, session_id, selectedDate,setReval
             alert((error as Error).message);
         }
     };
+
 
 
     const [revalidateEffect, setRevalidateEffect] = useState(0)
@@ -161,7 +164,6 @@ export const UpdateSession = ({ isOpen, close, session_id, selectedDate,setReval
 
 
     const handleAttendanceChange = (e: CustomEvent, studentId: number, newState: 'P' | 'AB' | 'ABJ') => {
-        // Update the state in the attendanceResult array
         e.preventDefault();
 
         setAttendanceResult((prevAttendance) =>
@@ -170,8 +172,22 @@ export const UpdateSession = ({ isOpen, close, session_id, selectedDate,setReval
             )
         );
 
+    };
+
+    const handleCommentChange = (e: CustomEvent, studentId: number, newComment: string) => {
+        e.preventDefault();
+
+        setAttendanceResult((prevAttendance) =>
+            prevAttendance?.map((ar) =>
+                ar.student_id === studentId ? { ...ar, comment: newComment } : ar
+            )
+        );
+
 
     };
+
+
+
 
 
     const fetchAttendanceBySession = async (sessionId: number) => {
@@ -183,7 +199,8 @@ export const UpdateSession = ({ isOpen, close, session_id, selectedDate,setReval
                         s.first_name,
                         s.last_name,
                         s.student_code,
-                        a.state
+                        a.state, 
+                        a.comment
                     FROM
                         attendance a
                     JOIN
@@ -195,7 +212,7 @@ export const UpdateSession = ({ isOpen, close, session_id, selectedDate,setReval
                     .then(res => {
 
 
-                        setAttendanceResult(res.values as AttendanceResult)
+                        setAttendanceResult(res.values as AttendanceResult[])
 
 
                     })
@@ -216,26 +233,66 @@ export const UpdateSession = ({ isOpen, close, session_id, selectedDate,setReval
     const StudentList = attendanceResult ? attendanceResult?.map(((student, idx) => {
 
         return (
-            <IonItem key={student.student_code}>
-                <IonLabel class="ion-text-wrap" >
-                    <h2 >{idx + 1} - {(student.first_name).toLowerCase()} {" "} {(student.last_name).toLowerCase()}</h2>
-                </IonLabel>
-                <IonRadioGroup
 
-                    style={{ display: 'flex', gap: '20px', marginLeft: '8px', padding: '10px' }}
-                    onIonChange={(e) => handleAttendanceChange(e, student.student_id, e.detail.value)}
+            <IonItemSliding key={student.student_code} >
+                <IonItemOptions side="start">
+                    <IonItemOption color="success" onClick={() => {
 
-                    value={student.state}
-                >
-                    <IonRadio color={'success'} labelPlacement='stacked' value="P">P</IonRadio>
-                    <IonRadio color={'danger'} labelPlacement='stacked' value="AB">Ab</IonRadio>
-                    <IonRadio color={'success'} labelPlacement='stacked' value="ABJ">Ab J</IonRadio>
-                </IonRadioGroup>
-            </IonItem>
+                        setCommentModalIsOpened(true);
+                        setSelectedStudent({
+                            student_id: student.student_id,
+                            first_name: student.first_name,
+                            last_name: student.last_name,
+                            student_code: student.student_code,
+                            comment: student.comment,
+                            state: student.state,
+                        });
+
+
+                    }}  >
+
+                        <IonIcon slot="icon-only" icon={pencil}></IonIcon>
+
+                    </IonItemOption>
+                </IonItemOptions>
+
+                <IonItem key={student.student_code}>
+                    <IonLabel class="ion-text-wrap" >
+                        <h2 >{idx + 1} - {(student.first_name).toLowerCase()} {" "} {(student.last_name).toLowerCase()}</h2>
+                    </IonLabel>
+                    <IonRadioGroup
+
+                        style={{ display: 'flex', gap: '20px', marginLeft: '8px', padding: '10px' }}
+                        onIonChange={(e) => handleAttendanceChange(e, student.student_id, e.detail.value)}
+
+                        value={student.state}
+                    >
+                        <IonRadio color={'success'} labelPlacement='stacked' value="P">P</IonRadio>
+                        <IonRadio color={'danger'} labelPlacement='stacked' value="AB">Ab</IonRadio>
+                        <IonRadio color={'success'} labelPlacement='stacked' value="ABJ">Ab J</IonRadio>
+                    </IonRadioGroup>
+                </IonItem>
+            </IonItemSliding>
         )
 
 
-    })) : <IonLoading className="custom-loading" isOpen={!attendanceResult}  message="Loading" duration={200} />
+    })) : <IonLoading className="custom-loading" isOpen={!attendanceResult} message="Loading" duration={200} />
+
+
+
+
+
+
+    const commentInputRef = useRef<HTMLIonTextareaElement | null>(null)
+
+
+
+    const [commentModalIsOpened, setCommentModalIsOpened] = useState(false);
+    const [selectedStudent, setSelectedStudent] = useState<AttendanceResult | undefined>()
+
+    const commentModal = useRef<HTMLIonModalElement | null>(null)
+
+
 
 
 
@@ -243,7 +300,7 @@ export const UpdateSession = ({ isOpen, close, session_id, selectedDate,setReval
 
     return (
 
-        <IonModal isOpen={isOpen}   onIonModalDidDismiss={()=>{close(false)}}   >
+        <IonModal isOpen={isOpen} onIonModalDidDismiss={() => { close(false) }}   >
             <IonHeader>
                 <IonToolbar>
                     <IonButton onClick={() => close(false)} size='default' fill='clear' slot="start"   >
@@ -292,6 +349,57 @@ export const UpdateSession = ({ isOpen, close, session_id, selectedDate,setReval
 
 
                 {StudentList}
+
+
+                {selectedStudent != undefined ?
+                    <IonModal
+                        ref={commentModal}
+                        onIonModalDidDismiss={() => {
+
+                            setSelectedStudent(undefined);
+                            setCommentModalIsOpened(false);
+
+                            if (commentInputRef.current) {
+                                commentInputRef.current.value = ''
+                            }
+
+
+
+                        }}
+                        onIonModalWillDismiss={
+                            (e) => {
+                                handleCommentChange(e, selectedStudent.student_id, (commentInputRef.current?.value || "") as string)
+                            }
+                        }
+
+                        isOpen={commentModalIsOpened && selectedStudent != undefined}
+                        initialBreakpoint={0.5}
+                        breakpoints={[0, 0.25, 0.5, 0.75]}>
+                        <IonContent className="ion-padding">
+
+                            <IonList inset>
+
+                                <IonLabel className='ion-padding' >
+                                    <IonText>
+                                        {selectedStudent.first_name.toLowerCase()} {selectedStudent.last_name.toLowerCase()}
+                                    </IonText>
+                                </IonLabel>
+                                <IonTextarea
+                                    ref={commentInputRef}
+                                    className='ion-padding'
+
+                                    value={selectedStudent.comment}
+                                    label="comment"
+                                    labelPlacement="start"
+                                    errorText="Invalid name"
+                                />
+
+                            </IonList>
+                        </IonContent>
+                    </IonModal> : null
+                }
+
+
 
 
 

@@ -114,21 +114,18 @@ export const GlobalContextProvider = ({ children }: { children: React.ReactNode 
 
 
 
-                    await db?.query(` SELECT Distinct session_date FROM session_presence ; `).then((res) => {
-                        if (res)
-                            setSession_dates(res.values as Session_date[])
 
-                    })
+
 
                 }).then(async () => {
 
 
 
-          
+
 
                     // Process the result (assuming 'result' is an array of rows)
 
-                }).catch(err=>{
+                }).catch(err => {
                     console.log(err)
                 })
 
@@ -203,6 +200,14 @@ export const GlobalContextProvider = ({ children }: { children: React.ReactNode 
 
 
 
+                await db?.query(`SELECT DISTINCT session_date FROM session_presence`).then((res) => {
+                    if (res) {
+                        setSession_dates(res.values as Session_date[])
+                    }
+
+                })
+
+
 
             });
 
@@ -239,6 +244,8 @@ export const GlobalContextProvider = ({ children }: { children: React.ReactNode 
         DBOpened, setDBOpened,
         session_dates, setSession_dates
     };
+
+
 
 
     return <GlobalContext.Provider value={value}>{children} </GlobalContext.Provider>;

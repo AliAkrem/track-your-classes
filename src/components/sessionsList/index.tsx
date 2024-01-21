@@ -15,6 +15,8 @@ import { exportJsonToXlsx } from "../../composables/exportSessionDataXSLX";
 type Props = {
     sessionData: SessionData[]
     setRevalidateSessionsList: React.Dispatch<React.SetStateAction<number>>
+    export_session: (session: SessionData) => Promise<void>
+    delete_session: (sessionId: number) => Promise<void>
 }
 
 
@@ -35,14 +37,14 @@ export const formatDateTime = (dateTime: string): string => {
 
 
 
-export default function SessionsList({ sessionData, setRevalidateSessionsList }: Props) {
+export default function SessionsList({ sessionData, setRevalidateSessionsList, export_session, delete_session }: Props) {
 
 
     const [updateSessionModalOpened, setUpdateSetSessionModalOpened] = useState(false)
 
     const [viewSessionModalOpened, setViewSetSessionModalOpened] = useState(false)
 
-    const { setRevalidate } = useGlobalContext()
+    const { setRevalidate, year } = useGlobalContext()
 
     const [selectedSessionId, setSelectedSessionId] = useState<number | undefined>(undefined)
 
@@ -78,7 +80,7 @@ export default function SessionsList({ sessionData, setRevalidateSessionsList }:
 
     const handleSessionOption = async (e: any, session: SessionData) => {
 
-        e.preventDefault()
+        // e.preventDefault()
 
         if (e.detail.value === "edit") {
 
@@ -96,10 +98,13 @@ export default function SessionsList({ sessionData, setRevalidateSessionsList }:
 
         } else if (e.detail.value === "exportToXLSX") {
 
-            console.log('exportToXLSX')
+            console.log('before called');
 
-            await export_session(session)
+            showConfirmationAlert("are you sure you want to export this session", () => {
 
+                export_session(session)
+
+            })
 
 
 
@@ -115,74 +120,9 @@ export default function SessionsList({ sessionData, setRevalidateSessionsList }:
     const { performSQLAction } = useSQLiteDB()
 
 
-    const delete_session = async (sessionId: number) => {
-        try {
-            performSQLAction(async (db: SQLiteDBConnection | undefined) => {
-                await db?.query(
-                    'DELETE FROM session_presence WHERE session_id = ?',
-                    [sessionId]
-                ).catch((err) => {
-                    console.log(err)
-                })
-                    ;
-            }, async () => {
-                setRevalidate(Math.random())
-                setRevalidateSessionsList(Math.random())
-            });
-        } catch (error) {
-            alert((error as Error).message);
-        }
-    };
 
 
-    const export_session = async (session: SessionData) => {
-        try {
-            performSQLAction(async (db: SQLiteDBConnection | undefined) => {
-
-                await db?.query(`
-                    SELECT
-                        s.student_code as N  ,
-                        s.first_name,
-                        s.last_name,
-                        a.state
-                    FROM
-                        attendance a
-                    JOIN
-                        student s ON a.student_id = s.student_id
-                    WHERE
-                        a.session_id = ?;
-        ` , [session.session_id]).then(async ({ values: sessionPresence }) => {
-
-                    if (sessionPresence) {
-                        console.log(sessionPresence)
-
-                       await exportJsonToXlsx(sessionPresence, [{
-                            class_name: session.module_name,
-                            specialty: session.specialty_name,
-                            specialty_level: session.specialty_level,
-                            specialty_level_year: session.level_year,
-                            group_type: session.group_type,
-                            group_number: session.group_number,
-                        }])
-
-
-                    }
-                }).catch(err => {
-                    console.log(err)
-                });
-
-
-
-
-            });
-        } catch (error) {
-            alert((error as Error).message);
-        }
-    };
-
-
-
-    const displaySessions =  sessionData  ?  sessionData.map(session => {
+    const displaySessions = sessionData ? sessionData.map(session => {
 
         const timePart = formatDateTime(session.session_date)
 
@@ -240,7 +180,7 @@ export default function SessionsList({ sessionData, setRevalidateSessionsList }:
 
         )
 
-    }) :    <IonSpinner   duration={2000} /> 
+    }) : <IonSpinner duration={2000} />
 
 
 
@@ -255,9 +195,7 @@ export default function SessionsList({ sessionData, setRevalidateSessionsList }:
             {displaySessions}
 
             <UpdateSession setRevalidateSessionsList={setRevalidateSessionsList} isOpen={updateSessionModalOpened} close={setUpdateSetSessionModalOpened} session_id={selectedSessionId}
-                selectedDate={selectedSessionDate}
-
-            />
+                selectedDate={selectedSessionDate} />
 
 
 
@@ -270,7 +208,7 @@ export default function SessionsList({ sessionData, setRevalidateSessionsList }:
                 close={setViewSetSessionModalOpened}
 
 
-            /> : null  }
+            /> : null}
 
             {ConfirmationAlert}
         </>

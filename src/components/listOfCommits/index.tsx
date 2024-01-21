@@ -1,4 +1,4 @@
-import { IonButton, IonButtons, IonCard, IonCardContent, IonContent, IonHeader, IonIcon, IonItem, IonLabel, IonList, IonModal, IonTitle, IonToolbar } from "@ionic/react";
+import { IonButton, IonButtons, IonCard, IonCardContent, IonContent, IonHeader, IonIcon, IonItem, IonLabel, IonList, IonModal, IonTitle, IonToolbar, useIonRouter } from "@ionic/react";
 import { download, gitCommit } from "ionicons/icons";
 import { nanoid } from "nanoid";
 import { useEffect, useRef, useState } from "react";
@@ -6,6 +6,7 @@ import { supabase, useSupabaseNative } from "../../../supabaseClient";
 import { getAccessToken, getUserData } from "../../pages/auth";
 import { Capacitor } from "@capacitor/core";
 import useSQLiteDB from "../../composables/useSQLiteDB";
+import { useGlobalContext } from "../../context/globalContext";
 
 
 type Props = {
@@ -31,7 +32,7 @@ export default function ListOfCommitsModal({ isOpen, close }: Props) {
 
     const [commitsList, setCommitList] = useState<Commit[] | []>([])
 
-
+    const { setRevalidate } = useGlobalContext();
 
 
 
@@ -159,6 +160,8 @@ export default function ListOfCommitsModal({ isOpen, close }: Props) {
 
 
 
+    const router = useIonRouter();
+
     const handleDownloadCommit = async (commit_id: string) => {
 
 
@@ -186,11 +189,21 @@ export default function ListOfCommitsModal({ isOpen, close }: Props) {
                 }
 
                 if (data) {
-                    const jsonDB: string  = data?.db_snapshot
+                    const jsonDB: string = data?.db_snapshot
 
-     
-    
+
+
                     importDBfromJson(jsonDB)
+                    
+                    setRevalidate(Math.random());
+
+                    
+
+
+                    router.push('/', 'root', 'replace');
+
+
+
 
                 }
 
@@ -217,9 +230,13 @@ export default function ListOfCommitsModal({ isOpen, close }: Props) {
             if (data) {
 
 
-                const jsonDB: string  = data?.db_snapshot
+                const jsonDB: string = data?.db_snapshot
 
                 importDBfromJson(jsonDB)
+
+                setRevalidate(Math.random());
+
+                router.push('/', 'forward', 'replace');
 
             }
 
@@ -255,7 +272,7 @@ export default function ListOfCommitsModal({ isOpen, close }: Props) {
 
     return (
         <>
-            <IonModal isOpen={isOpen} 
+            <IonModal isOpen={isOpen}
                 onIonModalDidDismiss={() => close(false)}
             >
                 <IonHeader>

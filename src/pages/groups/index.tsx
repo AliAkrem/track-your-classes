@@ -191,9 +191,7 @@ export default function Group({ group_id, setSelectedGroup, isOpen, close }: Pro
 
         await performSQLAction(async (db: SQLiteDBConnection | undefined) => {
 
-            await db?.query(`
-                DELETE FROM group_student WHERE student_id = ?  AND group_id = ? 
-                  `
+            await db?.query(`DELETE FROM group_student WHERE student_id = ?  AND group_id = ? `
                 , [student_id, group_id]).then(() => {
                     setRevalidateGroup(Math.random())
                 })
@@ -204,6 +202,8 @@ export default function Group({ group_id, setSelectedGroup, isOpen, close }: Pro
         })
 
     }
+
+
 
     const handleDeleteStudent = (student_id: number) => {
 
@@ -231,25 +231,43 @@ export default function Group({ group_id, setSelectedGroup, isOpen, close }: Pro
     const DisplayListStudent = list_student?.map((student) => {
 
         return (
+
             <IonItemSliding key={nanoid()}  >
-                <IonItem  >
+
+                <IonItem >
                     <IonAvatar slot="start">
-                        <IonIcon size="large" icon={person} ></IonIcon>
+                        <IonIcon size="large" icon={person} ></IonIcon>  {/*  icon  */}
                     </IonAvatar>
                     <IonLabel class="ion-text-wrap" >
                         <h2 > {(student.first_name).toLowerCase()} {" "} {(student.last_name).toLowerCase()}</h2>
                     </IonLabel>
+
                 </IonItem>
 
                 <IonItemOptions side="start" >
-                    <IonItemOption onClick={() => { setSelectedStudentIdToTransfer(student.student_id); setOpenedClassGroupToTransfer(true) }} >
+
+                    <IonItemOption onClick={() => {
+                        
+                        setSelectedStudentIdToTransfer(student.student_id);
+
+                        setOpenedClassGroupToTransfer(true);
+
+                    }} >
                         <IonIcon slot="icon-only" icon={share} >  </IonIcon>
                     </IonItemOption>
+
+                    {/* transfer  */}
+
                     <IonItemOption onClick={() => { handleDeleteStudent(student.student_id) }} color="danger">
                         <IonIcon slot="icon-only" icon={trash} >  </IonIcon>
-                    </IonItemOption>
-                </IonItemOptions>
 
+                        {/* delete  */}
+
+                    </IonItemOption>
+
+
+
+                </IonItemOptions>
             </IonItemSliding>
         )
 
@@ -259,7 +277,15 @@ export default function Group({ group_id, setSelectedGroup, isOpen, close }: Pro
 
     const [selectedClassGroupToTransfer, setSelectedClassGroupToTransfer] = useState<ClassGroup | null>(null)
 
+
+
+
+
+
     const [selectedStudentIdToTransfer, setSelectedStudentIdToTransfer] = useState<number | undefined>()
+
+
+
 
     const [openedClassGroupToTransfer, setOpenedClassGroupToTransfer] = useState(false)
 
@@ -285,9 +311,14 @@ export default function Group({ group_id, setSelectedGroup, isOpen, close }: Pro
     const handleTransferStudent = () => {
 
         setOpenedClassGroupToTransfer(false)
+
+
+
         if (selectedClassGroupToTransfer?.group.group_id && selectedStudentIdToTransfer) {
 
             transferStudent(selectedClassGroupToTransfer?.group.group_id, selectedStudentIdToTransfer)
+
+
         }
 
 
@@ -297,13 +328,21 @@ export default function Group({ group_id, setSelectedGroup, isOpen, close }: Pro
     const transferStudent = async (group__id: number, student_id: number) => {
         try {
             await performSQLAction(async (db: SQLiteDBConnection | undefined) => {
+
                 await db?.query(`
                 UPDATE group_student SET  group_id = ?  WHERE  student_id = ? `,
                     [group__id, student_id]);
 
+
+
+
+
+
             }, async () => {
-                setRevalidate(Math.random());
+
+                setRevalidate(Math.random()); // refresh UI page 
                 setRevalidateGroup(Math.random())
+
             });
 
         } catch (error) {
@@ -317,9 +356,9 @@ export default function Group({ group_id, setSelectedGroup, isOpen, close }: Pro
 
 
     return (
-        <IonModal trigger={"open-selected-group-modal" + group_id} isOpen={isOpen} canDismiss={group_id ? false : true} 
+        <IonModal trigger={"open-selected-group-modal" + group_id} isOpen={isOpen} canDismiss={group_id ? false : true}
 
-        onIonModalDidDismiss={() => { close(false); setSelectedGroup(undefined) }} 
+            onIonModalDidDismiss={() => { close(false); setSelectedGroup(undefined) }}
 
         >
             <IonHeader>
@@ -335,7 +374,7 @@ export default function Group({ group_id, setSelectedGroup, isOpen, close }: Pro
 
                             <IonLabel>Group {groupInfo?.group_number} {groupInfo?.group_type}</IonLabel>
 
-                            {!groupInfo ?   <IonSpinner color={"success"} /> : null}
+                            {!groupInfo ? <IonSpinner color={"success"} /> : null}
                         </IonChip>
 
 
@@ -360,7 +399,7 @@ export default function Group({ group_id, setSelectedGroup, isOpen, close }: Pro
                 </IonItem>
                 <IonItemGroup style={{ padding: '10px' }} >
 
-                    {list_student && list_student?.length > 0 ? DisplayListStudent : <IonLoading isOpen={!list_student} duration={200}  />}
+                    {list_student && list_student?.length > 0 ? DisplayListStudent : <IonLoading isOpen={!list_student} duration={200} />}
 
 
                 </IonItemGroup>
@@ -394,8 +433,8 @@ export default function Group({ group_id, setSelectedGroup, isOpen, close }: Pro
 
 
                 {list_student && addStudentModalOpened && list_student.length > 0 ? <CreateStudentModal setRevalidateGroup={setRevalidateGroup} student_code={Number(list_student?.toReversed()[0].student_code) + 1} group_id={group_id} isOpen={addStudentModalOpened} close={setOpenAddStudentModal} /> : null
-            
-            }
+
+                }
 
 
 
@@ -406,7 +445,7 @@ export default function Group({ group_id, setSelectedGroup, isOpen, close }: Pro
 
                 <IonAlert
                     isOpen={!openedClassGroupToTransfer && selectedClassGroupToTransfer != null}
-                    message={'are you sure you want to transfer this student from this group?' }
+                    message={'are you sure you want to transfer this student from this group?'}
                     buttons={[
                         {
                             text: "Cancel",

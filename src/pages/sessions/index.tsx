@@ -9,7 +9,10 @@ import { Suspense, lazy, useEffect, useState } from 'react'
 const CreateSession = lazy(() => import('../../components/createSession'))
 
 
-const Calendar = lazy(() => import('../../components/calendar'))
+// const Calendar = lazy(() => import('../../components/calendar'))
+
+
+
 
 const SessionsList = lazy(() => import('../../components/sessionsList'))
 
@@ -18,6 +21,8 @@ const SessionsList = lazy(() => import('../../components/sessionsList'))
 import { SQLiteDBConnection } from '@capacitor-community/sqlite'
 
 import useSQLiteDB from '../../composables/useSQLiteDB'
+import { exportJsonToXlsx } from '../../composables/exportSessionDataXSLX'
+import Calendar from '../../components/calendar'
 
 
 
@@ -61,7 +66,7 @@ export type SessionData = {
 
 export const Session = () => {
 
-    const { year } = useGlobalContext()
+    const { year, setRevalidate, revalidate } = useGlobalContext()
 
     const { performSQLAction, initialized } = useSQLiteDB()
 
@@ -83,11 +88,9 @@ export const Session = () => {
 
     useEffect(() => {
 
-            fetchSessionsByDate(selectedDate)
+        fetchSessionsByDate(selectedDate)
 
-
-
-    }, [selectedDate, initialized, revalidateSessionsList])
+    }, [selectedDate, initialized, revalidateSessionsList, revalidate])
 
 
 
@@ -153,6 +156,96 @@ export const Session = () => {
 
 
 
+    const export_session = async (session: SessionData) => {
+
+
+        try {
+            await performSQLAction(async (db: SQLiteDBConnection | undefined) => {
+
+                await db?.query(`
+                    SELECT
+                        s.student_code as N  ,
+                        s.first_name,
+                        s.last_name,
+                        a.state
+                    FROM
+                        attendance a
+                    JOIN
+                        student s ON a.student_id = s.student_id
+                    WHERE
+                        a.session_id = ?;
+        ` , [session.session_id]).then(async (res) => {
+
+                    if (res.values) {
+
+                        console.log('export to xlsx called')
+                        await exportJsonToXlsx(res.values, [{
+                            scholar_year: year,
+                            class_name: session.module_name,
+                            specialty: session.specialty_name,
+                            specialty_level: session.specialty_level,
+                            specialty_level_year: session.level_year,
+                            group_type: session.group_type,
+                            group_number: session.group_number,
+                        }]).catch(() => {
+
+
+                        }
+
+                        ).then(() => {
+
+
+
+                        })
+
+
+                    }
+
+
+
+                }).catch(err => {
+                    alert(err);
+                    console.log('export to xlsx error')
+
+                });
+
+
+
+
+            }).catch(
+                () => {
+                    console.log('error preform SQL action')
+                }
+            )
+
+                ;
+        } catch (error) {
+            console.log('export to xlsx error 2 ');
+            alert((error as Error).message);
+        }
+    };
+
+
+
+    const delete_session = async (sessionId: number) => {
+        try {
+            await performSQLAction(async (db: SQLiteDBConnection | undefined) => {
+                await db?.query(
+                    'DELETE FROM session_presence WHERE session_id = ?',
+                    [sessionId]
+                ).catch((err) => {
+
+                });
+
+
+            }, async () => {
+                setRevalidate(Math.random())
+                setRevalidateSessionsList(Math.random())
+            });
+        } catch (error) {
+            alert((error as Error).message);
+        }
+    };
 
 
 
@@ -183,14 +276,14 @@ export const Session = () => {
 
 
 
-                <Suspense >
+                {/* <Suspense > */}
                     <Calendar setSelectedDate={setSelectedDate} />
-                </Suspense>
+                {/* </Suspense> */}
 
 
                 <Suspense >
-                    {selectedDate !== "" && sessionsData.length > 0 ? <SessionsList setRevalidateSessionsList={setRevalidateSessionsList}  sessionData={sessionsData} /> 
-                    :  null
+                    {selectedDate !== "" && sessionsData.length > 0 ? <SessionsList delete_session={delete_session} export_session={export_session} setRevalidateSessionsList={setRevalidateSessionsList} sessionData={sessionsData} />
+                        : null
                     }
                 </Suspense>
 

@@ -1,12 +1,3 @@
-
-  /* .page {
-    display: flex;
-    min-height: 100vh;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-  } */
-  
   #form-file-upload {
     padding: 10px;
     height: 20vh;
@@ -50,6 +41,7 @@
   }
   
   #drag-file-element {
+
     position: absolute;
     width: 100%;
     height: 100%;

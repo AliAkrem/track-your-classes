@@ -11,6 +11,7 @@ import {
     IonButtons,
     IonMenuButton,
     isPlatform,
+    useIonRouter
 } from '@ionic/react';
 import { Browser } from '@capacitor/browser';
 
@@ -23,6 +24,7 @@ import { setAccessToken, setRefreshToken, setUserData } from '.';
 import { Session } from '@supabase/supabase-js';
 import { Capacitor } from '@capacitor/core';
 import { GoogleIcon } from '../../theme/googleIcon';
+import { useGlobalContext } from '../../context/globalContext';
 
 
 type Props = {
@@ -33,6 +35,7 @@ type Props = {
 export function LoginPage({ setSession }: Props) {
 
 
+    const {setRevalidate} = useGlobalContext()
 
 
 
@@ -74,7 +77,6 @@ export function LoginPage({ setSession }: Props) {
 
                 const { data, error } = await supabase.auth.setSession({ access_token, refresh_token });
 
-                console.log(JSON.stringify(data))
 
 
 
@@ -112,7 +114,7 @@ export function LoginPage({ setSession }: Props) {
     };
 
 
-
+    const router  = useIonRouter() ; 
 
     const handleLogin = async () => {
 
@@ -123,13 +125,28 @@ export function LoginPage({ setSession }: Props) {
         try {
             if (isPlatform('android')) {
                 await handleGoogleAuth()
-                location.reload()
+                // location.reload()
+
+                
+                setRevalidate(Math.random())
+
+                router.push('/', 'forward', 'replace');
+
+
             } else if (platform === 'web') {
 
                 await signInWithProvider()
 
+                setRevalidate(Math.random())
+                
+                router.push('/', 'forward', 'replace');
+
+
             } else {
                 await signInWithProvider()
+                setRevalidate(Math.random())
+                
+                router.push('/', 'forward', 'replace');
                 
             }
 

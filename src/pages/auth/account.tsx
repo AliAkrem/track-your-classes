@@ -26,11 +26,24 @@ import { getAccessToken, getRefreshToken, getUserData, setAccessToken, setRefres
 import { Capacitor } from '@capacitor/core';
 import ListOfCommitsModal from '../../components/listOfCommits';
 import useSQLiteDB from '../../composables/useSQLiteDB'
+import { capSQLiteJson } from '@capacitor-community/sqlite';
+import { useGlobalContext } from '../../context/globalContext';
 
-export function AccountPage() {
 
 
-    const { exportDB } = useSQLiteDB()
+type props = {
+
+    exportDB: () => Promise<void | capSQLiteJson | undefined>
+}
+
+
+
+export function AccountPage({ exportDB }: props) {
+
+
+    // const { exportDB } = useSQLiteDB()
+
+    const {setRevalidate}  = useGlobalContext()
 
     const [showLoading, hideLoading] = useIonLoading();
     const [showToast] = useIonToast();
@@ -72,6 +85,9 @@ export function AccountPage() {
         }
 
     }, []);
+
+
+
     const getProfile = async () => {
         console.log('get');
         // await showLoading();
@@ -171,9 +187,23 @@ export function AccountPage() {
             await hideLoading();
         }
     };
+
+
+
+
     const signOut = async () => {
+
         await supabase.auth.signOut();
-        location.reload();
+
+
+
+
+        // location.reload();
+
+        setRevalidate(Math.random())
+                
+        router.push('/', 'forward', 'replace');
+
     }
 
 
@@ -183,20 +213,19 @@ export function AccountPage() {
 
     const [openCommitsListModal, setOpenCommitsListModal] = useState(false)
 
+
+
+
     const handleUserOption = async (e: any) => {
-
-
         e.preventDefault()
+
+
 
         if (e.detail.value === "commit") {
 
-
             const res = await exportDB()
 
-
-            console.log(res?.export)
-
-
+            console.log(JSON.stringify(res?.export))
 
 
 
@@ -207,12 +236,8 @@ export function AccountPage() {
             if (platform === 'android') {
 
 
-
-
                 await exportDB().then(async (res) => {
-
                     await getUserData().then(async (user_data) => {
-
                         await getAccessToken().then(async (access_token) => {
 
 
@@ -228,7 +253,7 @@ export function AccountPage() {
                                     if (error.code === "23505") {
                                         alert('you have been already committed changes');
                                     } else {
-                                        alert('operation failed try again 1');
+
                                     }
                                 } else {
                                     alert('operation succeed');
@@ -244,9 +269,16 @@ export function AccountPage() {
                         })
 
                     })
+
+                }).catch(err => {
+                    console.log(JSON.parse(err))
                 })
 
 
+                if (selectUserOptionRef.current) {
+                    selectUserOptionRef.current.value = "OPTIONS";
+                }
+                return;
 
 
             } else if (platform === 'web') {
@@ -262,7 +294,7 @@ export function AccountPage() {
 
 
                 if (error) {
-                    if (error.code === "23505") {
+                    if (error?.code === "23505") {
                         alert('you have been already committed changes');
                     } else {
                         alert('operation failed try again');
@@ -288,11 +320,12 @@ export function AccountPage() {
 
             setOpenCommitsListModal(true)
 
-            console.log('pull Action')
+            
 
 
 
         }
+
 
         if (selectUserOptionRef.current) {
             selectUserOptionRef.current.value = "OPTIONS";
@@ -323,6 +356,8 @@ export function AccountPage() {
                         <img alt="avatar" src={profile.avatar_url} />
                     </IonAvatar>
 
+
+
                     <IonButton slot='end' fill='clear'  >
                         <IonSelect aria-label="user-option"
                             toggleIcon={ellipsisVertical}
@@ -334,6 +369,9 @@ export function AccountPage() {
                             <IonSelectOption value="pull">fetch</IonSelectOption>
                         </IonSelect>
                     </IonButton>
+
+
+
 
                 </IonItem>
                 <IonItem>

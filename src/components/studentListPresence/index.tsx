@@ -1,11 +1,13 @@
 import { SQLiteDBConnection } from '@capacitor-community/sqlite'
-import { IonItem, IonLabel, IonRadio, IonRadioGroup } from '@ionic/react'
-import React, {  useEffect, useState } from 'react'
+import { IonContent, IonIcon, IonInput, IonItem, IonItemOption, IonItemOptions, IonItemSliding, IonLabel, IonList, IonModal, IonRadio, IonRadioGroup, IonText, IonTextarea } from '@ionic/react'
+import React, { useEffect, useRef, useState } from 'react'
 import useSQLiteDB from '../../composables/useSQLiteDB'
 import { Students } from '../../context/globalContext'
 
 
 import './studentListPresence.css'
+import { archive, pencil } from 'ionicons/icons'
+import { nanoid } from 'nanoid'
 
 
 
@@ -21,14 +23,16 @@ type Props = {
 export type AttendanceResult = {
 
     student: Students,
-    state: 'P' | 'AB' | undefined
+    state: 'P' | 'AB' | undefined,
+    comment?: string,
 
 
 }
 
 
 
-export default function StudentListPresence({ group_id , attendanceResult, setAttendanceResult}: Props) {
+export default function StudentListPresence({ group_id, attendanceResult, setAttendanceResult }: Props) {
+
 
 
 
@@ -45,7 +49,6 @@ export default function StudentListPresence({ group_id , attendanceResult, setAt
 
         if (list_student?.length == 0) {
             setRevalidateGroup(Math.random())
-            console.log('called')
         }
         if (group_id != undefined)
             SELECT_STUDENTS_IN_GROUP(group_id);
@@ -113,7 +116,9 @@ export default function StudentListPresence({ group_id , attendanceResult, setAt
     useEffect(() => {
         const initialAttendance: AttendanceResult[] = list_student.map((student) => ({
             student: student,
-            state: undefined, // You can set a default state here
+            state: undefined,
+            comment: ''
+
         }));
         setAttendanceResult(initialAttendance);
     }, [list_student]);
@@ -129,29 +134,76 @@ export default function StudentListPresence({ group_id , attendanceResult, setAt
         );
     };
 
+    const handleStudentCommentChange = (e: CustomEvent, studentId: number, newComment: string) => {
+        // Update the state in the attendanceResult array
+        e.preventDefault();
+        setAttendanceResult((prevAttendance) =>
+            prevAttendance.map((ar) =>
+                ar.student.student_id === studentId ? { ...ar, comment: newComment } : ar
+            )
+        );
+
+
+    };
+
+
+    console.log(attendanceResult);
+
+
+
+    const commentInputRef = useRef<HTMLIonTextareaElement | null>(null)
+
+
+
+    const [commentModalIsOpened, setCommentModalIsOpened] = useState(false);
+    const [selectedStudent, setSelectedStudent] = useState<Students | undefined>()
+
+    const commentModal = useRef<HTMLIonModalElement | null>(null)
+
+
 
 
 
     const StudentList = attendanceResult ? attendanceResult?.map((({ student, state }, idx) => {
 
 
+
+
         return (
-            <IonItem key={student.student_id}>
-                <IonLabel class="ion-text-wrap" >
-                    <h2 >{idx + 1} - {(student.first_name).toLowerCase()} {" "} {(student.last_name).toLowerCase()}</h2>
-                </IonLabel>
-                <IonRadioGroup
 
-                    style={{ display: 'flex', gap: '20px', marginLeft: '8px', padding: '10px' }}
-                    onIonChange={(e) => handleAttendanceChange(e, student.student_id, e.detail.value)}
 
-                    value={state}
+            <div key={`${student.student_id + student.student_code + student.last_name}`}  >
+                <IonItemSliding   >
+                    <IonItemOptions side="start">
+                        <IonItemOption color="success" id={`open-modal+${student.student_id}`} onClick={() => {
 
-                >
-                    <IonRadio color={'success'} labelPlacement='start' value="P">P</IonRadio>
-                    <IonRadio color={'danger'} labelPlacement='start' value="AB">Ab</IonRadio>
-                </IonRadioGroup>
-            </IonItem>
+                            setCommentModalIsOpened(true);
+                            setSelectedStudent(student);
+
+                        }}  >
+
+                            <IonIcon slot="icon-only" icon={pencil}></IonIcon>
+
+                        </IonItemOption>
+                    </IonItemOptions>
+                    <IonItem key={student.student_id}>
+                        <IonLabel class="ion-text-wrap" >
+                            <h2 >{idx + 1} - {(student.first_name).toLowerCase()} {" "} {(student.last_name).toLowerCase()}</h2>
+                        </IonLabel>
+                        <IonRadioGroup
+                            style={{ display: 'flex', gap: '20px', marginLeft: '8px', padding: '10px' }}
+                            onIonChange={(e) => handleAttendanceChange(e, student.student_id, e.detail.value)}
+                            value={state}
+                        >
+                            <IonRadio color={'success'} labelPlacement='start' value="P">P</IonRadio>
+                            <IonRadio color={'danger'} labelPlacement='start' value="AB">Ab</IonRadio>
+                        </IonRadioGroup>
+                    </IonItem>
+                </IonItemSliding>
+
+
+
+            </div>
         )
 
 
@@ -159,9 +211,57 @@ export default function StudentListPresence({ group_id , attendanceResult, setAt
 
 
 
+
+
+
     return (
         <div>
             <div>{StudentList}</div>
+
+            {selectedStudent != undefined ?
+                <IonModal
+                    ref={commentModal}
+                    onIonModalDidDismiss={() => {
+
+                        setSelectedStudent(undefined);
+                        setCommentModalIsOpened(false);
+
+                        if (commentInputRef.current) {
+                            commentInputRef.current.value = ''
+                        }
+
+
+                    }}
+                    onIonModalWillDismiss={
+                        (e) => {
+                            handleStudentCommentChange(e, selectedStudent.student_id, (commentInputRef.current?.value || '').toString())
+                        }
+                    }
+
+                    isOpen={commentModalIsOpened && selectedStudent != undefined}
+                    initialBreakpoint={0.25}
+                    breakpoints={[0.0, 0.25, 0.5, 0.75]}>
+                    <IonContent className="ion-padding">
+
+                        <IonList inset>
+
+                            <IonLabel className='ion-padding' >
+                                <IonText>
+                                    {selectedStudent.first_name.toLowerCase()} {selectedStudent.last_name.toLowerCase()}
+                                </IonText>
+                            </IonLabel>
+                            <IonTextarea
+                                ref={commentInputRef}
+                                className='ion-padding'
+                                label="comment"
+                                labelPlacement="start"
+                                errorText="Invalid name"
+                            />
+
+                        </IonList>
+                    </IonContent>
+                </IonModal> : null
+            }
         </div>
     )
 }

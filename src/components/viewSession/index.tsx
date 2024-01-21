@@ -1,9 +1,9 @@
-import { IonButton, IonChip, IonContent, IonHeader, IonIcon, IonItem, IonLabel, IonList, IonLoading, IonModal, IonRadio, IonRadioGroup, IonSpinner, IonTitle, IonToolbar, useIonViewDidEnter } from '@ionic/react'
-import { arrowBack } from 'ionicons/icons'
+import { IonButton, IonChip, IonContent, IonHeader, IonIcon, IonItem, IonItemOption, IonItemOptions, IonItemSliding, IonLabel, IonList, IonLoading, IonModal, IonRadio, IonRadioGroup, IonSpinner, IonText, IonTextarea, IonTitle, IonToolbar, useIonViewDidEnter } from '@ionic/react'
+import { arrowBack, pencil } from 'ionicons/icons'
 import { GroupSQL, SQLClass, Students } from '../../context/globalContext'
 import useSQLiteDB from '../../composables/useSQLiteDB'
 import { SQLiteDBConnection } from '@capacitor-community/sqlite'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { formatDateTime } from '../sessionsList'
 
 
@@ -23,8 +23,12 @@ type AttendanceResult = {
 
     state: 'P' | 'AB' | 'ABJ'
 
+    comment: string;
+
     student_code: string
-}[]
+
+
+}
 
 
 
@@ -64,7 +68,7 @@ export const ViewSession = ({ isOpen, close, session_id }: Props) => {
 
     const { performSQLAction, initialized } = useSQLiteDB()
 
-    const [attendanceResult, setAttendanceResult] = useState<AttendanceResult | []>([])
+    const [attendanceResult, setAttendanceResult] = useState<AttendanceResult[] | []>([])
 
     const [revalidateEffect, setRevalidateEffect] = useState(0)
 
@@ -100,7 +104,8 @@ export const ViewSession = ({ isOpen, close, session_id }: Props) => {
                         s.first_name,
                         s.last_name,
                         s.student_code,
-                        a.state
+                        a.state,
+                        a.comment
                     FROM
                         attendance a
                     JOIN
@@ -112,7 +117,7 @@ export const ViewSession = ({ isOpen, close, session_id }: Props) => {
                     .then(res => {
 
 
-                        setAttendanceResult(res.values as AttendanceResult)
+                        setAttendanceResult(res.values as AttendanceResult[])
 
 
                     })
@@ -173,25 +178,63 @@ export const ViewSession = ({ isOpen, close, session_id }: Props) => {
 
 
         return (
-            <IonItem key={student.student_code}>
-                <IonLabel class="ion-text-wrap" >
-                    <h2 >{idx + 1} - {(student.first_name).toLowerCase()} {" "} {(student.last_name).toLowerCase()}</h2>
-                </IonLabel>
-                <IonRadioGroup
 
-                    style={{ display: 'flex', gap: '20px', marginLeft: '8px', padding: '10px' }}
+            <IonItemSliding key={student.student_code} >
+                <IonItemOptions side="start">
+                    <IonItemOption color="success" onClick={() => {
 
-                    value={student.state}
-                >
-                    <IonRadio disabled color={'success'} labelPlacement='stacked' value="P">P</IonRadio>
-                    <IonRadio disabled color={'danger'} labelPlacement='stacked' value="AB">Ab</IonRadio>
-                    <IonRadio disabled color={'success'} labelPlacement='stacked' value="ABJ">Ab J</IonRadio>
-                </IonRadioGroup>
-            </IonItem>
+                        setCommentModalIsOpened(true);
+                        setSelectedStudent({
+                            first_name: student.first_name,
+                            last_name: student.last_name,
+                            student_code: student.student_code,
+                            comment: student.comment,
+                            state: student.state,
+                        });
+
+
+                    }}  >
+
+                        <IonIcon slot="icon-only" icon={pencil}></IonIcon>
+
+                    </IonItemOption>
+                </IonItemOptions>
+                <IonItem >
+                    <IonLabel class="ion-text-wrap" >
+                        <h2 >{idx + 1} - {(student.first_name).toLowerCase()} {" "} {(student.last_name).toLowerCase()}</h2>
+                    </IonLabel>
+
+                    <IonRadioGroup
+
+                        style={{ display: 'flex', gap: '20px', marginLeft: '8px', padding: '10px' }}
+
+                        value={student.state}
+                    >
+                        <IonRadio disabled color={'success'} labelPlacement='stacked' value="P">P</IonRadio>
+                        <IonRadio disabled color={'danger'} labelPlacement='stacked' value="AB">Ab</IonRadio>
+                        <IonRadio disabled color={'success'} labelPlacement='stacked' value="ABJ">Ab J</IonRadio>
+                    </IonRadioGroup>
+                </IonItem>
+            </IonItemSliding>
+
         )
 
 
     })) : <IonLoading className="custom-loading" isOpen={true} spinner={'bubbles'} message="Loading" duration={2000} />
+
+
+
+    const commentInputRef = useRef<HTMLIonTextareaElement | null>(null)
+
+
+
+    const [commentModalIsOpened, setCommentModalIsOpened] = useState(false);
+    const [selectedStudent, setSelectedStudent] = useState<AttendanceResult | undefined>()
+
+    const commentModal = useRef<HTMLIonModalElement | null>(null)
+
+
+
 
 
 
@@ -235,6 +278,52 @@ export const ViewSession = ({ isOpen, close, session_id }: Props) => {
                 {StudentList}
 
 
+                {selectedStudent != undefined ?
+                    <IonModal
+                        ref={commentModal}
+                        onIonModalDidDismiss={() => {
+
+                            setSelectedStudent(undefined);
+                            setCommentModalIsOpened(false);
+
+                            if (commentInputRef.current) {
+                                commentInputRef.current.value = ''
+                            }
+
+
+                        }}
+                        onIonModalWillDismiss={
+                            (e) => {
+                            }
+                        }
+
+                        isOpen={commentModalIsOpened && selectedStudent != undefined}
+                        initialBreakpoint={0.5}
+                        breakpoints={[0, 0.25, 0.5, 0.75]}>
+                        <IonContent className="ion-padding">
+
+                            <IonList inset>
+                                <IonItem>
+                                    <IonLabel className='ion-padding' >
+                                        <IonText>
+                                            {selectedStudent.first_name.toLowerCase()} {selectedStudent.last_name.toLowerCase()}
+                                        </IonText>
+                                    </IonLabel>
+                                </IonItem>
+                                <IonItem>
+                                    <IonLabel className='ion-padding' >
+                                        <IonText
+                                            className='ion-padding'
+
+                                        >
+                                            {selectedStudent.comment}
+                                        </IonText>
+                                    </IonLabel>
+                                </IonItem>
+                            </IonList>
+                        </IonContent>
+                    </IonModal> : null
+                }
 
 
 

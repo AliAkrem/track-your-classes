@@ -9,6 +9,7 @@ import { LoginPage } from './loginPage';
 
 import { Preferences } from '@capacitor/preferences';
 import { Capacitor } from '@capacitor/core';
+import useSQLiteDB from '../../composables/useSQLiteDB';
 
 export const setUserData = async (UserData: User) => {
     if (UserData) {
@@ -102,6 +103,8 @@ export default function Auth() {
 
 
 
+
+
     const getProfile = async () => {
 
 
@@ -131,16 +134,9 @@ export default function Auth() {
 
 
 
-            console.log(JSON.stringify(userData))
-            console.log(refreshToken)
-
-
 
             if (userData != null && refreshToken != null) {
 
-
-                console.log(JSON.stringify(userData))
-                console.log(refreshToken)
 
 
 
@@ -181,8 +177,11 @@ export default function Auth() {
     };
 
 
+    const { exportDB } = useSQLiteDB()
 
-    if (session?.user || (isOffline && userDataExist)) return <AccountPage />
+
+
+    if (session?.user || (isOffline && userDataExist)) return <AccountPage exportDB={exportDB} />
     else {
         return <LoginPage setSession={setSession} />
     }

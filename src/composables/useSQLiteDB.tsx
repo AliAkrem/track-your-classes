@@ -61,14 +61,20 @@ const useSQLiteDB = () => {
 
 
 
-
+    
     return await db.current?.open().then(async () => {
-
+      
       return await db.current?.exportToJson('full', false).then((res) => {
+        
+        console.log('exportDB data called') ;
 
-
+        console.log(JSON.stringify({res})) ; 
         return res
 
+
+      }).catch((err) => {
+
+        console.log(JSON.stringify(err));
 
       })
 
@@ -118,10 +124,19 @@ const useSQLiteDB = () => {
 
 
             await initializeDB().then(async () => {
-              await initializeTables();
-              setInitialized(true);
+              await initializeTables().then(()=>{
 
-              location.reload();
+                setInitialized(true);
+                // location.reload();
+
+              });
+
+
+
+
+
+
+
 
             })
 
@@ -211,7 +226,11 @@ const useSQLiteDB = () => {
     const createClassTable = ` CREATE TABLE IF NOT EXISTS class( class_id INTEGER PRIMARY KEY NOT NULL,  module_name varchar(30) NOT NULL, specialty_name VARCHAR(30) NOT NULL , specialty_level VARCHAR(1) CHECK (specialty_level IN ('L', 'M', 'E')), level_year INTEGER, collage_year VARCHAR(9) NOT NULL CHECK(collage_year LIKE '____/____') );`
 
 
+
+
     const createStudentGroupTable = `CREATE TABLE IF NOT EXISTS  group_student (group_id INTEGER,student_id  INTEGER,FOREIGN KEY (group_id) REFERENCES Groupp(group_id) ON DELETE  CASCADE ,FOREIGN KEY (student_id) REFERENCES student(student_id) ON DELETE  CASCADE ); `;
+
+
 
 
     const createStudentTable = `CREATE TABLE IF NOT EXISTS student( student_id INTEGER PRIMARY KEY NOT NULL, student_code varchar(30) NOT NULL, first_name varchar(30) NOT NULL , last_name varchar(30) NOT NULL );
@@ -229,7 +248,7 @@ const useSQLiteDB = () => {
     `
 
     const createStudentSessionTable = ` 
-    CREATE TABLE IF NOT EXISTS  attendance( session_id INTEGER, student_id INTEGER, state varchar(3) CHECK (state IN ('P', 'AB', 'ABJ')), FOREIGN KEY (session_id) REFERENCES session_presence(session_id) ON DELETE CASCADE FOREIGN KEY (student_id) REFERENCES student(student_id) ON DELETE NO ACTION );
+    CREATE TABLE IF NOT EXISTS  attendance( session_id INTEGER, student_id INTEGER, state varchar(3) CHECK (state IN ('P', 'AB', 'ABJ')),comment VARCHAR(200) , FOREIGN KEY (session_id) REFERENCES session_presence(session_id) ON DELETE CASCADE FOREIGN KEY (student_id) REFERENCES student(student_id) ON DELETE NO ACTION );
     `
 
 

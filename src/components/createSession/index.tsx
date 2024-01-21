@@ -100,10 +100,9 @@ export default function CreateSession({ isOpen, close, setRevalidateSessionsList
 
                     await Promise.all(attendance.map(async (student) => {
 
-                        console.log('celled v')
                         await db?.query(
-                            'INSERT INTO attendance (session_id, student_id, state) VALUES (?, ?, ?);',
-                            [session_id, student.student.student_id, student.state]
+                            'INSERT INTO attendance (session_id, student_id, state, comment) VALUES (?, ?, ?, ?);',
+                            [session_id, student.student.student_id, student.state, student.comment]
                         );
 
                     }))
@@ -117,8 +116,6 @@ export default function CreateSession({ isOpen, close, setRevalidateSessionsList
                 close(false)
                 setRevalidate(Math.random())
                 setRevalidateSessionsList(Math.random())
-
-                
             })
 
 
@@ -165,7 +162,7 @@ export default function CreateSession({ isOpen, close, setRevalidateSessionsList
 
     return (
 
-        <IonModal isOpen={isOpen}  
+        <IonModal isOpen={isOpen}
             onIonModalDidDismiss={() => close(false)}
         >
             <IonHeader>

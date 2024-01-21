@@ -124,15 +124,15 @@ function DragDropFile({ setStudent_list }: Props) {
         <form id="form-file-upload" onDragEnter={handleDrag} onSubmit={(e) => e.preventDefault()}>
             <input ref={inputRef} type="file" accept=".xlsx, .xls" id="input-file-upload" onChange={handleChange} />
             <label  htmlFor="input-file-upload" className={dragActive ? "drag-active" : ""}>
-                <div style={{ display: "flex", flexDirection: "column", gap: "10px", alignItems: "center", padding: '15px' }}>
+                <div style={{ display: "flex", flexDirection: "column",border : '1px dotted', gap: "10px", alignItems: "center", padding: '15px' }}>
 
                     {!fileAttached ?
                         <>
-                            <IonText color={'primary'} >
+                            <IonText   color={'primary'} >
                                 Drag and drop your file here or click
                             </IonText>
 
-                            <IonButton   onClick={onButtonClick}>Upload a file</IonButton>
+                            <IonButton  fill="clear" onClick={onButtonClick}>Upload a file</IonButton>
                         </>
                         : <>
                             <IonText color={'primary'} style={{ display: "flex", flexDirection: "column", gap: "10px", alignItems: "center", padding: '15px' }}  >

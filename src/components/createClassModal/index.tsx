@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { useGlobalContext } from '../../context/globalContext';
-import { IonButton, IonButtons, IonContent, IonHeader, IonInput, IonItem,  IonList, IonModal,  IonSelect, IonSelectOption, IonTitle, IonToolbar } from '@ionic/react';
+import { IonButton, IonButtons, IonContent, IonHeader, IonInput, IonItem, IonList, IonModal, IonSelect, IonSelectOption, IonTitle, IonToolbar } from '@ionic/react';
 
 import useSQLiteDB from '../../composables/useSQLiteDB';
 import { SQLiteDBConnection } from '@capacitor-community/sqlite';
@@ -9,8 +9,10 @@ import { SQLiteDBConnection } from '@capacitor-community/sqlite';
 
 
 type CreateClassModalProps = {
+
     isOpen: boolean;
     close: React.Dispatch<React.SetStateAction<boolean>>;
+
 };
 
 
@@ -32,15 +34,20 @@ const levels = [
 export default function CreateClassModal({ isOpen, close }: CreateClassModalProps) {
 
 
-    const { performSQLAction  } = useSQLiteDB()
+    const { performSQLAction } = useSQLiteDB()
 
     const { setRevalidate, year, setYear } = useGlobalContext()
 
     // credentials of class 
 
     const [module_name, set_module_name] = useState<string>('')
+
     const [specialty_name, set_specialty_name] = useState('')
+
     const [specialty_level_year, set_specialty_level_year] = useState('')
+
+
+
     // const [collage_year, set_collage_year] = useState()
 
     const [selectedLevel, setSelectedLevel] = useState<string>('');
@@ -59,7 +66,7 @@ export default function CreateClassModal({ isOpen, close }: CreateClassModalProp
 
 
 
-
+// 
     const insert_new_class = async (module_name: string, specialty_name: string, specialty_level: string, level_year: number, collage_year: string) => {
 
         try {
@@ -67,14 +74,22 @@ export default function CreateClassModal({ isOpen, close }: CreateClassModalProp
 
 
                 await db?.query(`INSERT INTO class(module_name, specialty_name, specialty_level, level_year, collage_year) VALUES (?, ?, ?, ?, ?);`,
-                    [module_name, specialty_name, specialty_level, level_year, collage_year], true
+                    [module_name, specialty_name, specialty_level, level_year, collage_year]
                 ).then(async () => {
+
+
                     await db?.query(`
                     UPDATE Keys SET selected_year = ? WHERE selected_year = ? ;
                     `, [collage_year, year]).then(() => {
-                        setRevalidate(Math.random)
-                        setYear(collage_year)
+
+
+                        setRevalidate(Math.random) // refresh page 
+                        setYear(collage_year)  
                         close(false)
+
+                        
+
+
                     })
 
                 });
@@ -91,10 +106,6 @@ export default function CreateClassModal({ isOpen, close }: CreateClassModalProp
 
 
     const createClass = () => {
-
-
-
-
         if (
             module_name &&
             specialty_name &&
@@ -109,10 +120,7 @@ export default function CreateClassModal({ isOpen, close }: CreateClassModalProp
                 selectedLevel,
                 Number(specialty_level_year),
                 collage_year_input_state
-            ).then(() => {
-                console.log('executed ')
-            })
-
+            )
 
 
         }
@@ -177,10 +185,15 @@ export default function CreateClassModal({ isOpen, close }: CreateClassModalProp
 
 
     return (
-        <IonModal ref={create_class_modal}
+        <IonModal
+
+            ref={create_class_modal}
             isOpen={isOpen}
+
             trigger="create-class-modal"
-            onIonModalDidDismiss={()=>{close(false)}}
+
+            onIonModalDidDismiss={() => { close(false) }}
+
         >
             <IonHeader>
                 <IonToolbar>
@@ -191,6 +204,7 @@ export default function CreateClassModal({ isOpen, close }: CreateClassModalProp
                 </IonToolbar>
             </IonHeader>
             <IonContent>
+
                 <IonList class='ion-padding' >
 
                     <IonInput
@@ -200,7 +214,10 @@ export default function CreateClassModal({ isOpen, close }: CreateClassModalProp
                         placeholder='class name'
 
                         value={module_name}
+
                         onIonChange={(ev: CustomEvent) => { set_module_name(ev.detail.value) }}
+
+
                         type="text"
                         required
                     />
