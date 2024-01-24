@@ -9,7 +9,6 @@ import { exportJsonToXlsx } from '../../composables/exportSessionDataXSLX'
 import { useGlobalContext } from '../../context/globalContext'
 import useSQLiteDB from '../../composables/useSQLiteDB'
 import { SQLiteDBConnection } from '@capacitor-community/sqlite'
-import { session } from 'grammy'
 import { Capacitor } from '@capacitor/core'
 
 type rangeDate = {
