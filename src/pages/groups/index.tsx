@@ -20,6 +20,7 @@ import {
     IonAlert,
     IonLoading,
     IonSpinner,
+    IonToast,
 } from "@ionic/react";
 import React, { useEffect, useRef, useState } from "react";
 import { SQLiteDBConnection } from "@capacitor-community/sqlite";
@@ -38,6 +39,8 @@ import { CreateStudentModal } from "../../components/createStudentModal";
 import ClassesListModal from "../../components/classesListModal";
 import { ClassGroup, SessionData } from "../sessions";
 import ExportSessionGroupModal from "../../components/exportGroupSession";
+import { exportJsonToXlsx } from "../../composables/exportSessionDataXSLX";
+import { Capacitor } from "@capacitor/core";
 
 
 
@@ -64,7 +67,7 @@ export default function Group({ group_id, setSelectedGroup, isOpen, close }: Pro
     const { performSQLAction, initialized } = useSQLiteDB();
 
 
-    const { setRevalidate } = useGlobalContext()
+    const { setRevalidate, year } = useGlobalContext()
 
 
 
@@ -78,7 +81,7 @@ export default function Group({ group_id, setSelectedGroup, isOpen, close }: Pro
     const [list_student, setList_student] = useState<Students[] | []>([])
 
     const [groupInfo, setGroupInfo] = useState<GroupSQL>()
-    // const params = useParams<{id : string } >();
+
 
     const [revalidateGroup, setRevalidateGroup] = useState(0)
 
@@ -87,9 +90,7 @@ export default function Group({ group_id, setSelectedGroup, isOpen, close }: Pro
 
 
         if (list_student?.length == 0) {
-            // if (revalidateGroup == 0) {
             setRevalidateGroup(Math.random())
-            // }
         }
         if (group_id != undefined)
             SELECT_STUDENTS_IN_GROUP(group_id);
@@ -457,6 +458,186 @@ export default function Group({ group_id, setSelectedGroup, isOpen, close }: Pro
 
 
 
+    const [toast, setToast] = useState(false)
+
+    const export_session = async (session: SessionData) => {
+
+
+        try {
+            await performSQLAction(async (db: SQLiteDBConnection | undefined) => {
+
+                await db?.query(`
+                    SELECT
+                        s.student_code as N  ,
+                        s.first_name,
+                        s.last_name,
+                        a.state
+                    FROM
+                        attendance a
+                    JOIN
+                        student s ON a.student_id = s.student_id
+                    WHERE
+                        a.session_id = ?;
+        ` , [session.session_id]).then(async (res) => {
+
+                    if (res.values) {
+
+                        if (res.values?.length > 0) {
+
+
+                            await exportJsonToXlsx(res.values, [{
+                                scholar_year: year,
+                                class_name: session.module_name,
+                                specialty: session.specialty_name,
+                                specialty_level: session.specialty_level,
+                                specialty_level_year: session.level_year,
+                                group_type: session.group_type,
+                                group_number: session.group_number,
+                            }]).catch(() => {
+
+
+                            }
+
+
+                            ).then(() => {
+
+                                setToast(true)
+
+                            })
+
+                        } else {
+                            console.log('res values is empty')
+                        }
+
+                    }
+
+
+
+                }).catch(err => {
+                    alert(err);
+                    console.log('export to xlsx error')
+
+                });
+
+
+
+
+            }).catch(
+                () => {
+                    console.log('error preform SQL action')
+                }
+            )
+
+                ;
+        } catch (error) {
+            console.log('export to xlsx error 2 ');
+            alert((error as Error).message);
+        }
+    };
+
+    const export_session_in_range = async () => {
+        try {
+
+            const selectColumns = sessionsData.map((date, index) => {
+
+                console.log(date.session_date.replaceAll("-", "_").replaceAll(':', "_").slice(0, 16))
+
+                return `MAX(CASE WHEN sp.session_date = '${date.session_date}' THEN a.state ELSE NULL END) AS date_${date.session_date.replaceAll("-", "_").replaceAll(':', "_").slice(0, 16)}`;
+            }).join(', ');
+
+
+            await performSQLAction(async (db: SQLiteDBConnection | undefined) => {
+
+                await db?.query(`
+                SELECT
+                    s.student_code AS N,
+                    s.first_name,
+                    s.last_name,
+                    ${selectColumns}
+                FROM
+                    student s
+                JOIN
+                    group_student gs ON s.student_id = gs.student_id
+                JOIN
+                    Groupp g ON gs.group_id = g.group_id
+                JOIN
+                    session_presence sp ON g.group_id = sp.group_id
+                LEFT JOIN
+                    attendance a ON sp.session_id = a.session_id AND s.student_id = a.student_id
+                WHERE
+                    sp.session_date BETWEEN ? AND ?  
+                AND
+                    sp.group_id = ? 
+                GROUP BY
+                    s.student_id, s.student_code, s.first_name, s.last_name
+                ORDER BY
+                    s.first_name;
+        
+        ` , [range.start, range.end, group_id]).then(async (res) => {
+
+                    if (res.values) {
+
+                        console.log(res.values)
+
+                        if (res.values?.length > 0) {
+
+
+
+
+                            await exportJsonToXlsx(res.values, [{
+                                scholar_year: year,
+                                class_name: sessionsData[0].module_name,
+                                specialty: sessionsData[0].specialty_name,
+                                specialty_level: sessionsData[0].specialty_level,
+                                specialty_level_year: sessionsData[0].level_year,
+                                group_type: sessionsData[0].group_type,
+                                group_number: sessionsData[0].group_number,
+                            }]).catch(() => {
+
+
+                            }
+
+
+                            ).then(() => {
+
+                                setToast(true)
+
+                            })
+
+                        } else {
+                            console.log('res values is empty')
+                        }
+
+                    }
+
+
+
+                }).catch(err => {
+                    alert(err);
+                    console.log('export to xlsx error')
+
+                });
+
+
+
+
+            }).catch(
+                () => {
+                    console.log('error preform SQL action')
+                }
+            )
+
+                ;
+        } catch (error) {
+            console.log('export to xlsx error 2 ');
+            alert((error as Error).message);
+        }
+
+
+    }
+
+
+
 
     return (
         <IonModal trigger={"open-selected-group-modal" + group_id} isOpen={isOpen} canDismiss={group_id ? false : true}
@@ -578,6 +759,8 @@ export default function Group({ group_id, setSelectedGroup, isOpen, close }: Pro
                 />
 
                 <ExportSessionGroupModal
+                    export_session={export_session}
+                    export_session_in_range={export_session_in_range}
                     group_id={group_id!}
                     sessionsData={sessionsData}
                     close={setExportRangeSessionOpened}
@@ -586,7 +769,7 @@ export default function Group({ group_id, setSelectedGroup, isOpen, close }: Pro
                 />
 
 
-
+                <IonToast isOpen={toast} onDidDismiss={() => { setToast(false) }} message={Capacitor.getPlatform() === 'web' ? "Downloading..." : "file saved on Downloads"} duration={5000}></IonToast>
 
             </IonContent>
 
