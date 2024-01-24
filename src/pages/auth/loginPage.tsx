@@ -130,7 +130,6 @@ export function LoginPage({ setSession }: Props) {
                 
                 setRevalidate(Math.random())
 
-                router.push('/', 'forward', 'replace');
 
 
             } else if (platform === 'web') {
@@ -139,14 +138,12 @@ export function LoginPage({ setSession }: Props) {
 
                 setRevalidate(Math.random())
                 
-                router.push('/', 'forward', 'replace');
 
 
             } else {
                 await signInWithProvider()
                 setRevalidate(Math.random())
                 
-                router.push('/', 'forward', 'replace');
                 
             }
 

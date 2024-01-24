@@ -36,7 +36,6 @@ export default function CreateGroupModal({ isOpen, setToClose, selectedClassIDTo
   const CREATE_GROUP = async (group_number: number, group_type: string, student_list: Students[]) => {
 
     try {
-      // tayeb insert  student
       await performSQLAction(async (db: SQLiteDBConnection | undefined) => {
 
 
@@ -78,8 +77,6 @@ export default function CreateGroupModal({ isOpen, setToClose, selectedClassIDTo
 
   const onCreateGroup = async () => {
     if (type_of_group.current?.value !== "" && group_number.current?.value !== "" && student_list.length > 0) {
-      // first we should create the group 
-
       let group_number_formed = Number(group_number.current?.value)
       let type_of_group_formed = String(type_of_group.current?.value)
 

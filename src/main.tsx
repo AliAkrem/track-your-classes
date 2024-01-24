@@ -9,6 +9,7 @@ import {
 } from "@capacitor-community/sqlite";
 import { JeepSqlite } from "jeep-sqlite/dist/components/jeep-sqlite";
 import { GlobalContextProvider, useGlobalContext } from "./context/globalContext";
+import { SplashScreen } from "@capacitor/splash-screen";
 
 
 
@@ -29,12 +30,12 @@ window.addEventListener("DOMContentLoaded", async () => {
       document.body.appendChild(jeepSqliteEl);
 
       await customElements.whenDefined("jeep-sqlite");
-      console.log(`after customElements.whenDefined`);
 
       // Initialize the Web store
       await sqlite.initWebStore();
-      console.log(`after initWebStore`);
     }
+
+ 
 
 
 

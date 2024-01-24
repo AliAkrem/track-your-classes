@@ -1,17 +1,18 @@
-import { Browser } from "@capacitor/browser";
 import { Capacitor } from "@capacitor/core";
 import { Directory, Filesystem } from "@capacitor/filesystem";
 import * as XLSX from "xlsx";
 
+import ExcelJS from "exceljs";
+
 type SessionDataJson = {
-  N : string;
+  N: string;
   first_name: string;
   last_name: string;
   presence: String;
 }[];
 
 type ClassDetails = {
-  scholar_year : string ; 
+  scholar_year: string;
   class_name: string;
   specialty: string;
   specialty_level: string;
@@ -20,19 +21,21 @@ type ClassDetails = {
   group_number: number;
 }[];
 
-
-
 export async function exportJsonToXlsx(
   sessionDataJson: SessionDataJson,
   classDetails: ClassDetails,
 ) {
+  console.log("export xlsx is called");
 
   // Create a new workbook and a worksheet from the JSON data
   const workbook = XLSX.utils.book_new();
+  const worksheet = XLSX.utils.aoa_to_sheet([]);
 
   // Add the first JSON data to the worksheet
-  let worksheet = XLSX.utils.json_to_sheet(classDetails, {
+  // let worksheet =
+  XLSX.utils.sheet_add_json(worksheet, classDetails, {
     header: Object.keys(classDetails[0]),
+
     skipHeader: false,
   });
 
@@ -60,13 +63,13 @@ export async function exportJsonToXlsx(
     return buf.buffer;
   }
 
-
   // Save the file
 
   if (Capacitor.getPlatform() === "web") {
     const blob = new Blob([s2ab(wbout)], {
       type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
     });
+
     const url = window.URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
@@ -83,44 +86,67 @@ export async function exportJsonToXlsx(
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+  } else if (Capacitor.getPlatform() === "android") {
+    console.log("android part is called");
 
-  }
-   else if (Capacitor.getPlatform() === "android") {
-    // Convert to base64 and write to file
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet("Sheet1");
 
+    // Add the first JSON data to the worksheet
+    worksheet.addRow(Object.keys(classDetails[0]));
 
-    function s2ab_android(s: string) {
-      const buf = new ArrayBuffer(s.length);
-      const view = new Uint8Array(buf);
-      for (let i = 0; i < s.length; i++) view[i] = s.charCodeAt(i) & 0xFF;
-      return buf;
-    }
-    const base64 = btoa(String.fromCharCode(...new Uint8Array(s2ab_android(wbout))));
+    console.log(JSON.stringify(Object.keys(classDetails[0])));
 
-   
+    worksheet.addRow(Object.values(classDetails[0]));
+    console.log(JSON.stringify(Object.keys(classDetails[0])));
 
+    // Add a blank row
+    worksheet.addRow([]);
 
-   await Filesystem.writeFile({
-      path: `Download/${
-        classDetails[0].class_name + "_" +
-        classDetails[0].specialty + "_" +
-        classDetails[0].specialty_level +
-        classDetails[0].specialty_level_year + "_group" +
-        classDetails[0].group_number + "_" +
-        classDetails[0].group_type
-      }.xlsx`,
+    // Append the second JSON data starting from the next row
 
-      data: base64,
+    worksheet.addRow(Object.keys(sessionDataJson[0]));
+    console.log(JSON.stringify(Object.keys(sessionDataJson[0])));
+    sessionDataJson.forEach((data) => {
+      worksheet.addRow(Object.values(data));
 
-      directory: Directory.ExternalStorage,
-
-    }).catch((err) => {
-      alert(err);
+      console.log(JSON.stringify(Object.values(data)));
     });
 
+    const date = new Date().toISOString();
+    const fileName = `${
+      classDetails[0].class_name +
+      "_" +
+      classDetails[0].specialty +
+      "_" +
+      classDetails[0].specialty_level +
+      classDetails[0].specialty_level_year +
+      "_group" +
+      classDetails[0].group_number +
+      "_" +
+      classDetails[0].group_type +
+      "_" +
+      date
+    }.xlsx`;
 
+    // Save the file
+    workbook.xlsx.writeBuffer({})
+      .then(async (buffer) => {
+        const reader = new FileReader();
+        reader.onloadend = async () => {
 
+          const base64Data = reader.result?.toString().split(",")[1];
+          
 
-
+          if (base64Data) {
+            await Filesystem.writeFile({
+              path: `Download/${fileName}`,
+              data: base64Data,
+              directory: Directory.ExternalStorage,
+            });
+          }
+        };
+        reader.readAsDataURL(new Blob([buffer]));
+      });
   }
 }

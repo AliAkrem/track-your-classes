@@ -164,7 +164,7 @@ export default function StudentListPresence({ group_id, attendanceResult, setAtt
 
 
 
-    const StudentList = attendanceResult ? attendanceResult?.map((({ student, state }, idx) => {
+    const StudentList = attendanceResult ? attendanceResult?.map((({ student, state, comment }, idx) => {
 
 
 
@@ -186,9 +186,11 @@ export default function StudentListPresence({ group_id, attendanceResult, setAtt
 
                         </IonItemOption>
                     </IonItemOptions>
-                    <IonItem key={student.student_id}>
+                    <IonItem key={student.student_id}  >
                         <IonLabel class="ion-text-wrap" >
-                            <h2 >{idx + 1} - {(student.first_name).toLowerCase()} {" "} {(student.last_name).toLowerCase()}</h2>
+
+
+                            <h2 style={{ display: 'flex', alignItems: 'center' , gap: '4px' } } > {comment && comment?.length > 0 ? <IonIcon icon={pencil} size='small' color='success'  ></IonIcon> : null} {idx + 1} - {(student.first_name).toLowerCase()} {" "} {(student.last_name).toLowerCase()}</h2>
                         </IonLabel>
                         <IonRadioGroup
                             style={{ display: 'flex', gap: '20px', marginLeft: '8px', padding: '10px' }}

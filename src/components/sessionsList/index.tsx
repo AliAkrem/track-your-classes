@@ -117,10 +117,6 @@ export default function SessionsList({ sessionData, setRevalidateSessionsList, e
 
     }
 
-    const { performSQLAction } = useSQLiteDB()
-
-
-
 
     const displaySessions = sessionData ? sessionData.map(session => {
 

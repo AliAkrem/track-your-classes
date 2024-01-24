@@ -15,35 +15,43 @@ import {
     IonMenuButton,
     IonIcon,
     IonSelect,
-    IonSelectOption
+    IonSelectOption,
+    IonImg
 } from '@ionic/react';
 import { useEffect, useRef, useState } from 'react';
 import { supabase, useSupabaseNative } from '../../../supabaseClient';
 import { Session } from '@supabase/supabase-js';
 import { ellipsisVertical, logOut } from 'ionicons/icons';
-import Cookies from 'js-cookie';
 import { getAccessToken, getRefreshToken, getUserData, setAccessToken, setRefreshToken, setUserData } from '.';
 import { Capacitor } from '@capacitor/core';
 import ListOfCommitsModal from '../../components/listOfCommits';
-import useSQLiteDB from '../../composables/useSQLiteDB'
 import { capSQLiteJson } from '@capacitor-community/sqlite';
 import { useGlobalContext } from '../../context/globalContext';
+import { Preferences } from '@capacitor/preferences';
+import { Directory, Filesystem } from '@capacitor/filesystem';
 
 
 
 type props = {
-
+    handleExportDBAndroid: () => Promise<void>
     exportDB: () => Promise<void | capSQLiteJson | undefined>
 }
 
 
 
-export function AccountPage({ exportDB }: props) {
+export function AccountPage({ handleExportDBAndroid, exportDB }: props) {
 
 
     // const { exportDB } = useSQLiteDB()
+    const [profile, setProfile] = useState({
+        username: '',
+        avatar_url: '',
+        email: ''
+    });
 
-    const {setRevalidate}  = useGlobalContext()
+
+
+    const { setRevalidate } = useGlobalContext()
 
     const [showLoading, hideLoading] = useIonLoading();
     const [showToast] = useIonToast();
@@ -53,11 +61,7 @@ export function AccountPage({ exportDB }: props) {
 
     const router = useIonRouter();
 
-    const [profile, setProfile] = useState({
-        username: '',
-        avatar_url: '',
-        email: ''
-    });
+
 
     const [isOffline, setIsOffline] = useState<boolean>(false)
 
@@ -66,9 +70,11 @@ export function AccountPage({ exportDB }: props) {
 
             getProfile();
 
+
+
+
         } else {
             setIsOffline(true)
-
             const loadUserData = async () => {
                 const userData = await getUserData()
 
@@ -79,9 +85,7 @@ export function AccountPage({ exportDB }: props) {
                         email: userData?.user_metadata.email
                     });
             }
-
             loadUserData()
-
         }
 
     }, []);
@@ -89,8 +93,6 @@ export function AccountPage({ exportDB }: props) {
 
 
     const getProfile = async () => {
-        console.log('get');
-        // await showLoading();
 
 
         try {
@@ -105,6 +107,7 @@ export function AccountPage({ exportDB }: props) {
                 if (data.session?.user) {
 
                     setProfile({
+                        ...profile,
                         username: data.session.user.user_metadata.full_name,
                         avatar_url: data.session.user?.user_metadata.picture,
                         email: data.session.user?.user_metadata.email
@@ -125,12 +128,6 @@ export function AccountPage({ exportDB }: props) {
             const refreshToken = await getRefreshToken()
 
 
-
-            console.log(JSON.stringify(userData))
-            console.log(refreshToken)
-
-
-
             if (userData != null && refreshToken != null) {
 
 
@@ -144,9 +141,6 @@ export function AccountPage({ exportDB }: props) {
                     if (error) return
 
 
-
-                    Cookies.set('user_data', JSON.stringify(data.user))
-
                     if (data.user && data.session) {
                         await setUserData(data.user)
                         await setRefreshToken(data.session?.refresh_token)
@@ -157,15 +151,16 @@ export function AccountPage({ exportDB }: props) {
 
                     // Cookies.set('refresh_token', JSON.stringify(data.session?.refresh_token))
 
+               
+
+                        setProfile({
+                            username: userData.user_metadata.full_name,
+                            avatar_url: userData?.user_metadata.picture,
+                            email: userData?.user_metadata.email
+                        });
+           
 
 
-
-
-                    setProfile({
-                        username: userData.user_metadata.full_name,
-                        avatar_url: userData?.user_metadata.picture,
-                        email: userData?.user_metadata.email
-                    });
 
 
                 }
@@ -193,16 +188,26 @@ export function AccountPage({ exportDB }: props) {
 
     const signOut = async () => {
 
-        await supabase.auth.signOut();
+        const access_token = await getAccessToken()
+        const user_data = await getUserData()
+
+        if (Capacitor.getPlatform() === 'web')
+            await supabase.auth.signOut();
+        else if (Capacitor.getPlatform() === 'android') {
+            if (access_token && user_data) {
+                await useSupabaseNative(access_token, user_data.id).auth.signOut();
+            }
+
+            Preferences.clear();
+
+        }
 
 
 
-
-        // location.reload();
+        location.reload();
 
         setRevalidate(Math.random())
-                
-        router.push('/', 'forward', 'replace');
+
 
     }
 
@@ -215,6 +220,49 @@ export function AccountPage({ exportDB }: props) {
 
 
 
+    // const handleExportDBAndroid = async () => {
+
+    //     await exportDB().then(async (res) => {
+    //         await getUserData().then(async (user_data) => {
+    //             await getAccessToken().then(async (access_token) => {
+
+
+    //                 if (access_token && user_data) {
+
+    //                     const { error } = await useSupabaseNative(access_token, user_data.id)
+    //                         .from('users_commits')
+    //                         .insert([
+    //                             { user_id: user_data?.id, db_snapshot: res?.export },
+    //                         ])
+
+    //                     if (error) {
+    //                         if (error.code === "23505") {
+    //                             alert('you have been already committed changes');
+    //                         } else {
+
+    //                             console.log(JSON.stringify(error))
+    //                             alert('operation failed reopen the app and try again ');
+    //                         }
+    //                     } else {
+    //                         alert('operation succeed');
+    //                     }
+
+    //                 } else {
+    //                     alert('operation failed reopen the app and try again ');
+
+    //                 }
+
+    //             })
+
+    //         })
+
+    //     }).catch(err => {
+    //         console.log(JSON.parse(err))
+    //     })
+
+
+    // }
+
 
     const handleUserOption = async (e: any) => {
         e.preventDefault()
@@ -223,12 +271,6 @@ export function AccountPage({ exportDB }: props) {
 
         if (e.detail.value === "commit") {
 
-            const res = await exportDB()
-
-            console.log(JSON.stringify(res?.export))
-
-
-
 
             const platform = Capacitor.getPlatform();
 
@@ -236,43 +278,7 @@ export function AccountPage({ exportDB }: props) {
             if (platform === 'android') {
 
 
-                await exportDB().then(async (res) => {
-                    await getUserData().then(async (user_data) => {
-                        await getAccessToken().then(async (access_token) => {
-
-
-                            if (access_token && user_data) {
-
-                                const { error } = await useSupabaseNative(access_token, user_data.id)
-                                    .from('users_commits')
-                                    .insert([
-                                        { user_id: user_data?.id, db_snapshot: res?.export },
-                                    ])
-
-                                if (error) {
-                                    if (error.code === "23505") {
-                                        alert('you have been already committed changes');
-                                    } else {
-
-                                    }
-                                } else {
-                                    alert('operation succeed');
-                                }
-
-
-
-                            } else {
-                                alert('operation failed try again 2');
-
-                            }
-
-                        })
-
-                    })
-
-                }).catch(err => {
-                    console.log(JSON.parse(err))
-                })
+                await handleExportDBAndroid()
 
 
                 if (selectUserOptionRef.current) {
@@ -282,6 +288,10 @@ export function AccountPage({ exportDB }: props) {
 
 
             } else if (platform === 'web') {
+
+                const res = await exportDB()
+
+
                 const { data: { user } } = await supabase.auth.getUser()
 
 
@@ -320,7 +330,7 @@ export function AccountPage({ exportDB }: props) {
 
             setOpenCommitsListModal(true)
 
-            
+
 
 
 
@@ -353,7 +363,7 @@ export function AccountPage({ exportDB }: props) {
 
                 <IonItem>
                     <IonAvatar>
-                        <img alt="avatar" src={profile.avatar_url} />
+                        <IonImg alt="avatar" src={profile.avatar_url} />
                     </IonAvatar>
 
 

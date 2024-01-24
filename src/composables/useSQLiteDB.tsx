@@ -59,41 +59,18 @@ const useSQLiteDB = () => {
 
   const exportDB = async () => {
 
-
-
-    
-    return await db.current?.open().then(async () => {
+    return await db.current?.open().then( () => {
       
-      return await db.current?.exportToJson('full', false).then((res) => {
+      return  db.current?.exportToJson('full', false).then((res) => {
         
-        console.log('exportDB data called') ;
-
-        console.log(JSON.stringify({res})) ; 
         return res
-
-
-      }).catch((err) => {
-
-        console.log(JSON.stringify(err));
 
       })
 
-      // const res2 = await sqlite.current?.isJsonValid(JSON.stringify(res?.export))
-
-
-      // console.log(res2?.result)
-
-
-
-
-
-
-
     })
 
-
-
   }
+
 
 
   const importDBfromJson = async (jsonString: string) => {
@@ -127,7 +104,8 @@ const useSQLiteDB = () => {
               await initializeTables().then(()=>{
 
                 setInitialized(true);
-                // location.reload();
+
+                location.reload();
 
               });
 

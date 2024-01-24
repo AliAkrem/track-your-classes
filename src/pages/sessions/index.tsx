@@ -1,4 +1,4 @@
-import { IonButtons, IonChip, IonContent, IonFab, IonFabButton, IonHeader, IonIcon, IonLabel, IonLoading, IonMenuButton, IonPage, IonSpinner, IonTitle, IonToolbar } from '@ionic/react'
+import { IonButtons, IonChip, IonContent, IonFab, IonFabButton, IonHeader, IonIcon, IonLabel, IonLoading, IonMenuButton, IonPage, IonSpinner, IonTitle, IonToast, IonToolbar, useIonToast } from '@ionic/react'
 import { add, calendar } from 'ionicons/icons'
 import { GroupSQL, SQLClass, useGlobalContext } from '../../context/globalContext'
 import { Suspense, lazy, useEffect, useState } from 'react'
@@ -23,6 +23,7 @@ import { SQLiteDBConnection } from '@capacitor-community/sqlite'
 import useSQLiteDB from '../../composables/useSQLiteDB'
 import { exportJsonToXlsx } from '../../composables/exportSessionDataXSLX'
 import Calendar from '../../components/calendar'
+import { Capacitor } from '@capacitor/core'
 
 
 
@@ -98,8 +99,7 @@ export const Session = () => {
 
 
     const fetchSessionsByDate = async (inputDate: string) => {
-        // 2023-12-20T14:13:00
-
+      
         const new_date = new Date(inputDate)
 
         const day = new_date.getDate().toString().padStart(2, '0');
@@ -155,6 +155,12 @@ export const Session = () => {
     };
 
 
+    const [showToast, setShowToast] = useState(false)
+
+
+
+
+
 
     const export_session = async (session: SessionData) => {
 
@@ -178,26 +184,33 @@ export const Session = () => {
 
                     if (res.values) {
 
-                        console.log('export to xlsx called')
-                        await exportJsonToXlsx(res.values, [{
-                            scholar_year: year,
-                            class_name: session.module_name,
-                            specialty: session.specialty_name,
-                            specialty_level: session.specialty_level,
-                            specialty_level_year: session.level_year,
-                            group_type: session.group_type,
-                            group_number: session.group_number,
-                        }]).catch(() => {
+                        if (res.values?.length > 0) {
 
 
+                            await exportJsonToXlsx(res.values, [{
+                                scholar_year: year,
+                                class_name: session.module_name,
+                                specialty: session.specialty_name,
+                                specialty_level: session.specialty_level,
+                                specialty_level_year: session.level_year,
+                                group_type: session.group_type,
+                                group_number: session.group_number,
+                            }]).catch(() => {
+
+
+                            }
+
+
+                            ).then(() => {
+
+
+                                setShowToast(true)
+
+                            })
+
+                        } else {
+                            console.log('res values is empty')
                         }
-
-                        ).then(() => {
-
-
-
-                        })
-
 
                     }
 
@@ -252,7 +265,6 @@ export const Session = () => {
 
 
 
-
     return (
 
         <IonPage>
@@ -277,7 +289,7 @@ export const Session = () => {
 
 
                 {/* <Suspense > */}
-                    <Calendar setSelectedDate={setSelectedDate} />
+                <Calendar setSelectedDate={setSelectedDate} />
                 {/* </Suspense> */}
 
 
@@ -299,6 +311,8 @@ export const Session = () => {
                     <IonIcon icon={add}></IonIcon>
                 </IonFabButton>
             </IonFab>
+
+            <IonToast isOpen={showToast} onDidDismiss={() => { setShowToast(false) }} message={Capacitor.getPlatform() === 'web' ? "Downloading..." : "file saved on Downloads"} duration={5000}></IonToast>
 
         </IonPage>
 

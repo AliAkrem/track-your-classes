@@ -2,7 +2,7 @@ import {
     useIonLoading,
 } from '@ionic/react';
 import { useEffect, useState } from 'react';
-import { supabase } from '../../../supabaseClient';
+import { supabase, useSupabaseNative } from '../../../supabaseClient';
 import { Session, User } from '@supabase/supabase-js';
 import { AccountPage } from './account';
 import { LoginPage } from './loginPage';
@@ -40,6 +40,7 @@ export const setAccessToken = async (access_token: string) => {
         value: access_token,
     })
 
+
 }
 
 export const getAccessToken = async () => {
@@ -68,13 +69,18 @@ export const getRefreshToken = async () => {
 
 
 export default function Auth() {
+
+
     const [showLoading, hideLoading] = useIonLoading();
+
+    const [isLoading, setIsLoading] = useState(true)
 
     const [session, setSession] = useState<Session | null>(null);
 
     const [isOffline, setIsOffline] = useState<boolean>(false)
 
     const [userDataExist, setUserDataExist] = useState<boolean>(false)
+
 
     useEffect(() => {
 
@@ -102,11 +108,51 @@ export default function Auth() {
     }, []);
 
 
+    const handleExportDBAndroid = async () => {
+
+        await exportDB().then((res) => {
+            getUserData().then((user_data) => {
+                getAccessToken().then(async (access_token) => {
+
+                    if (access_token && user_data) {
+
+                        const { error } = await useSupabaseNative(access_token, user_data.id)
+                            .from('users_commits')
+                            .insert([
+                                { user_id: user_data?.id, db_snapshot: res?.export },
+                            ])
+
+                        if (error) {
+                            if (error.code === "23505") {
+                                alert('you have been already committed changes');
+                            } else {
+
+                                console.log(JSON.stringify(error))
+                                alert('operation failed reopen the app and try again ');
+                            }
+                        } else {
+                            alert('operation succeed');
+                        }
+
+                    } else {
+                        alert('operation failed reopen the app and try again ');
+
+                    }
+
+                })
+
+            })
+
+        }).catch(err => {
+        })
+
+
+    }
+
 
 
 
     const getProfile = async () => {
-
 
 
         try {
@@ -118,35 +164,29 @@ export default function Auth() {
                 setSession(data.session)
 
 
-                if (error) {
-                    console.error(error.message)
-                }
+
+
+                setIsLoading(false)
+
 
                 return;
             }
-
-
-
-
 
             const userData = await getUserData()
             const refreshToken = await getRefreshToken()
 
 
-
-
             if (userData != null && refreshToken != null) {
-
-
-
-
 
                 let { data, error } = (await supabase.auth.refreshSession({ refresh_token: refreshToken }))
 
-
-                if (error) return
+                if (error) {
+                    setIsLoading(false)
+                    return
+                }
 
                 setSession(data.session)
+
 
 
                 if (data.user && data.session?.refresh_token && data.session.access_token) {
@@ -159,6 +199,8 @@ export default function Auth() {
                 }
 
 
+                setIsLoading(false)
+
 
             }
 
@@ -167,21 +209,25 @@ export default function Auth() {
 
 
 
-            await hideLoading();
 
         } catch (error: any) {
+            await hideLoading();
+            setIsLoading(false)
+
             // showToast({ message: error.message, duration: 5000 });
         } finally {
             await hideLoading();
+            setIsLoading(false)
+
         }
     };
 
 
     const { exportDB } = useSQLiteDB()
 
+    if (isLoading) return <div>loading...</div>
 
-
-    if (session?.user || (isOffline && userDataExist)) return <AccountPage exportDB={exportDB} />
+    if (session?.user || (isOffline && userDataExist)) return <AccountPage handleExportDBAndroid={handleExportDBAndroid} exportDB={exportDB} />
     else {
         return <LoginPage setSession={setSession} />
     }

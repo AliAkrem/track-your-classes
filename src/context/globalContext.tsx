@@ -29,9 +29,11 @@ export type SQLClass = {
 
 }
 
+
 export type Scholar_years = {
     collage_year: string
 }
+
 
 export type Session_date = {
 

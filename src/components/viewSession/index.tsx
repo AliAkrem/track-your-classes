@@ -201,7 +201,7 @@ export const ViewSession = ({ isOpen, close, session_id }: Props) => {
                 </IonItemOptions>
                 <IonItem >
                     <IonLabel class="ion-text-wrap" >
-                        <h2 >{idx + 1} - {(student.first_name).toLowerCase()} {" "} {(student.last_name).toLowerCase()}</h2>
+                    <h2 style={{ display: 'flex', alignItems: 'center' , gap: '4px' } } > {student.comment && student.comment?.length > 0 ? <IonIcon icon={pencil} size='small' color='success'  ></IonIcon> : null}{idx + 1} - {(student.first_name).toLowerCase()} {" "} {(student.last_name).toLowerCase()}</h2>
                     </IonLabel>
 
                     <IonRadioGroup

@@ -68,12 +68,12 @@ export default function ListOfCommitsModal({ isOpen, close }: Props) {
                             return {
                                 created_at: commit.created_at, readable_format: dateObj.toLocaleString('en-US', {
                                     year: 'numeric',
-                                    month: '2-digit',
-                                    day: '2-digit',
-                                    hour: '2-digit',
-                                    // minute: 'numeric',
+                                    month: 'numeric',
+                                    day: 'numeric',
+                                    hour: 'numeric',
+                                    minute: 'numeric',
                                     // second: '2-digit',
-                                    fractionalSecondDigits: 3,
+                                    // fractionalSecondDigits: 3,
                                     // timeZoneName: 'short'
                                 }),
                                 commit_id: commit.commit_id
@@ -89,7 +89,7 @@ export default function ListOfCommitsModal({ isOpen, close }: Props) {
 
                     else if (error) {
                         console.log(error)
-                        alert(error)
+                        // alert(error)
 
                     }
 
@@ -115,13 +115,11 @@ export default function ListOfCommitsModal({ isOpen, close }: Props) {
                         return {
                             created_at: commit.created_at, readable_format: dateObj.toLocaleString('fr-AL', {
                                 year: 'numeric',
-                                month: '2-digit',
-                                day: '2-digit',
-                                hour: '2-digit',
-                                minute: 'numeric',
-                                // second: '2-digit',
-                                // fractionalSecondDigits: 3,
-                                // timeZoneName: 'short'
+                                month: 'numeric',
+                                day: 'numeric',
+                                hour: 'numeric',
+                                minute : 'numeric'
+                      
                             }),
                             commit_id: commit.commit_id
                         }
@@ -194,13 +192,8 @@ export default function ListOfCommitsModal({ isOpen, close }: Props) {
 
 
                     importDBfromJson(jsonDB)
-                    
+
                     setRevalidate(Math.random());
-
-                    
-
-
-                    router.push('/', 'root', 'replace');
 
 
 
@@ -236,8 +229,6 @@ export default function ListOfCommitsModal({ isOpen, close }: Props) {
 
                 setRevalidate(Math.random());
 
-                router.push('/', 'forward', 'replace');
-
             }
 
 
@@ -249,6 +240,9 @@ export default function ListOfCommitsModal({ isOpen, close }: Props) {
 
 
     }
+
+    
+  
 
 
     const commitList = commitsList ? commitsList?.map((commit =>

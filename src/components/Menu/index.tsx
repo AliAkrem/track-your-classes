@@ -1,23 +1,32 @@
 import {
+  IonButton,
   IonContent,
   IonIcon,
   IonItem,
   IonLabel,
   IonList,
   IonMenu,
+  IonMenuButton,
   IonMenuToggle,
   IonSelect,
   IonSelectOption,
+  IonToggle,
+  ToggleCustomEvent,
 
 } from '@ionic/react';
 
-import {  calendar,  person, schoolOutline } from 'ionicons/icons';
+import { calendar, moon, moonOutline, moonSharp, person, schoolOutline, sunny, sunnyOutline, sunnySharp } from 'ionicons/icons';
 import './Menu.css';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import useSQLiteDB from '../../composables/useSQLiteDB';
 import { SQLiteDBConnection } from '@capacitor-community/sqlite';
 import { useGlobalContext } from '../../context/globalContext';
 import { useLocation } from 'react-router';
+import { Icon } from 'ionicons/dist/types/components/icon/icon';
+import { Preferences } from '@capacitor/preferences';
+
+
+
 
 interface AppPage {
   url: string;
@@ -50,6 +59,23 @@ const appPages: AppPage[] = [
 ];
 
 
+export const setTheme = async (theme: string) => {
+  if (theme) {
+    await Preferences.set({
+      key: 'theme',
+      value: theme,
+    });
+  }
+};
+
+export const getTheme = async () => {
+
+  const { value } = await Preferences.get({ key: 'theme' });
+
+  return value
+
+};
+
 
 
 
@@ -59,13 +85,77 @@ export const Menu: React.FC = () => {
 
 
 
-  const {  year, years, setYear, setRevalidate, isLoading } = useGlobalContext()
+  const { year, years, setYear, setRevalidate, isLoading } = useGlobalContext()
 
 
 
   const { performSQLAction } = useSQLiteDB()
 
 
+  const [themeToggle, setThemeToggle] = useState(false);
+
+  // Listen for the toggle check/uncheck to toggle the dark theme
+  const toggleChange = () => {
+
+    toggleDarkTheme(!themeToggle);
+
+    setThemeToggle(!themeToggle)
+
+    if (!themeToggle)
+      setTheme('dark')
+    else
+      setTheme('light')
+
+
+  };
+
+  // Add or remove the "dark" class on the document body
+  const toggleDarkTheme = (shouldAdd: boolean) => {
+    document.body.classList.toggle('dark', shouldAdd);
+  };
+
+  // Check/uncheck the toggle and update the theme based on isDark
+  const initializeDarkTheme = (isDark: boolean) => {
+    setThemeToggle(isDark);
+    toggleDarkTheme(isDark);
+  };
+
+  useEffect(() => {
+
+    // Use matchMedia to check the user preference
+    // const prefersDark = window.matchMedia('(prefers-color-scheme: dark)');
+
+    getTheme().then(res => {
+
+      if (res) {
+        if (res === 'dark')
+          initializeDarkTheme(true);
+        else {
+          initializeDarkTheme(false);
+        }
+      } else {
+
+        setTheme('light').then(() => {
+          initializeDarkTheme(false);
+        })
+
+      }
+
+
+    })
+
+
+
+
+
+    // Initialize the dark theme based on the initial
+    // value of the prefers-color-scheme media query
+
+
+
+    // Listen for changes to the prefers-color-scheme media query
+    // prefersDark.addEventListener('change', (mediaQuery) => initializeDarkTheme(mediaQuery.matches));
+  }, []);
 
 
 
@@ -74,8 +164,7 @@ export const Menu: React.FC = () => {
 
 
 
-
-  const CHANGE_SELECTED_YEARS = async (new_year: string ) => {
+  const CHANGE_SELECTED_YEARS = async (new_year: string) => {
     try {
       await performSQLAction(async (db: SQLiteDBConnection | undefined) => {
 
@@ -94,13 +183,16 @@ export const Menu: React.FC = () => {
   };
 
 
-  
 
-  // ? fixme select year group by classes 
+
+
   const YearsOptions = years?.map((year) => {
+
     return (<IonSelectOption key={year.collage_year} value={String(year.collage_year)}>{year.collage_year}</IonSelectOption>
     )
   })
+
+
 
   const selectOptionYear = useRef<HTMLIonSelectElement | null>(null)
   const handleYearChange = async (ev: any) => {
@@ -113,7 +205,7 @@ export const Menu: React.FC = () => {
   }
 
 
-  const location  = useLocation()
+  const location = useLocation()
 
 
 
@@ -138,7 +230,14 @@ export const Menu: React.FC = () => {
         <IonList id="inbox-list">
           {/* <IonListHeader>{page}</IonListHeader> */}
 
+          <IonItem>
+            {/* checked={themeToggle} */}
+            <IonButton fill='default' size='default' onClick={toggleChange}  >
+              <IonIcon icon={!themeToggle ? moonSharp : sunnySharp} color='white'  ></IonIcon>
+            </IonButton>
 
+
+          </IonItem>
           {years.length > 0 ?
             <IonItem style={{ padding: "10px 0 " }} >
               <IonIcon slot="start" icon={calendar} size='small' aria-hidden="true"></IonIcon>
@@ -156,10 +255,15 @@ export const Menu: React.FC = () => {
                   <IonIcon aria-hidden="true" slot="start" ios={appPage.iosIcon} md={appPage.mdIcon} />
                   <IonLabel>{appPage.title}</IonLabel>
                 </IonItem>
+
               </IonMenuToggle>
+
             );
           })}
         </IonList>
+
+
+
 
       </IonContent>
     </IonMenu>

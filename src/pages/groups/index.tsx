@@ -36,8 +36,17 @@ import { CreateStudentModal } from "../../components/createStudentModal";
 
 
 import ClassesListModal from "../../components/classesListModal";
-import { ClassGroup } from "../sessions";
+import { ClassGroup, SessionData } from "../sessions";
+import ExportSessionGroupModal from "../../components/exportGroupSession";
 
+
+
+
+
+type rangeDate = {
+    start: string,
+    end: string
+}
 
 
 type Props = {
@@ -167,6 +176,12 @@ export default function Group({ group_id, setSelectedGroup, isOpen, close }: Pro
         }
 
 
+        if (result.data.action === "export_attendance") {
+            setExportRangeSessionOpened(true)
+        }
+
+
+
 
 
 
@@ -247,7 +262,7 @@ export default function Group({ group_id, setSelectedGroup, isOpen, close }: Pro
                 <IonItemOptions side="start" >
 
                     <IonItemOption onClick={() => {
-                        
+
                         setSelectedStudentIdToTransfer(student.student_id);
 
                         setOpenedClassGroupToTransfer(true);
@@ -353,6 +368,94 @@ export default function Group({ group_id, setSelectedGroup, isOpen, close }: Pro
 
 
 
+    const [exportRangeSessionOpened, setExportRangeSessionOpened] = useState(false)
+
+    const [range, setRange] = useState<rangeDate>({
+        start: new Date().toISOString().slice(0, 19)
+        , end: new Date().toISOString().slice(0, 19)
+    })
+    const [sessionsData, setSessionsData] = useState<SessionData[] | []>([])
+
+
+
+
+    const fetchSessionsByRange = async (startDate: string, endDate: string) => {
+
+        if (startDate > endDate) {
+            let temp = startDate;
+            startDate = endDate;
+            endDate = temp;
+        }
+
+        try {
+            await performSQLAction(async (db: SQLiteDBConnection | undefined) => {
+
+
+                await db?.query(`
+                        SELECT 
+                        sp.session_id,
+                        sp.session_date,
+                            c.module_name,  
+                            g.group_number,
+                            g.group_type,
+                            g.group_id,
+                            c.specialty_name,
+                            c.specialty_level,
+                            c.level_year
+                        FROM 
+                            session_presence sp
+                        JOIN 
+                            Groupp g ON sp.group_id = g.group_id
+                        JOIN 
+                            class  c ON g.class_id = c.class_id 
+                        WHERE   
+                            sp.group_id = ? 
+                            AND 
+                            sp.session_date BETWEEN ? AND ? ;
+
+                            
+
+                    `,
+                    [group_id, startDate, endDate]
+                ).then((res) => {
+
+
+                    if (res) {
+                        setSessionsData(res.values as SessionData[])
+                        console.log(res.values)
+
+                    } else {
+                        setSessionsData([])
+                    }
+
+
+                }).catch((err) => {
+
+                    console.log(err)
+
+                })
+
+
+                // Process the result (assuming 'result' is an array of rows)
+            });
+        } catch (error) {
+            alert((error as Error).message);
+        }
+    };
+
+
+
+
+    // fetchSessionsByRange(range.start, range.end)
+
+
+    useEffect(() => {
+
+        fetchSessionsByRange(range.start, range.end)
+
+    }, [range.start, range.end, exportRangeSessionOpened])
+
+
 
 
     return (
@@ -427,6 +530,15 @@ export default function Group({ group_id, setSelectedGroup, isOpen, close }: Pro
                                 action: 'create-student',
                             },
                         },
+                        {
+                            icon: share,
+                            text: 'export attendance to xlsx',
+                            role: 'export_attendance',
+                            data: {
+                                action: 'export_attendance',
+                            },
+                        },
+
                     ]}
                     onDidDismiss={({ detail }) => ActionResult(detail)}
                 ></IonActionSheet>
@@ -463,6 +575,14 @@ export default function Group({ group_id, setSelectedGroup, isOpen, close }: Pro
                             }
                         },
                     ]}
+                />
+
+                <ExportSessionGroupModal
+                    group_id={group_id!}
+                    sessionsData={sessionsData}
+                    close={setExportRangeSessionOpened}
+                    isOpen={exportRangeSessionOpened}
+                    range={range} setRange={setRange}
                 />
 
 
