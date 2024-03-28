@@ -99,5 +99,4 @@ For detailed instructions on integrating Supabase into your app, refer to the [S
 This app was developed by AliAkrem7 for educational purposes.
 
 ## License
-
-This project is licensed under the [Apache License](apache.org/licenses/LICENSE-2.0) - see the [LICENSE.md](LICENSE.md) file for details.
+MIT
