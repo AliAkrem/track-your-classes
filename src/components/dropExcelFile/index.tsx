@@ -75,12 +75,10 @@ function DragDropFile({ setStudent_list }: Props) {
                         // Convert the worksheet to JSON
                         const jsonData = XLSX.utils.sheet_to_json(worksheet, 
                         {   header: 1, 
-                            range: { s: { c: 0, r: 8 }, e: { c: 2, r: 100 } }
+                            range: { s: { c: 0, r: 0 }, e: { c: 2, r: 100 } }
                         }
                         );
 
-                        // Now jsonData contains the data from the worksheet
-                        console.log(jsonData);
 
 
                         let array_students : any = [];
@@ -101,7 +99,6 @@ function DragDropFile({ setStudent_list }: Props) {
                            
                         })
 
-                        console.log(array_students)
 
                         setStudent_list(array_students)
 

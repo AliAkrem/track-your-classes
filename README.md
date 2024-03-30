@@ -1,4 +1,4 @@
-# Attendance Tracking App
+# Students Attendance Tracking App
 
 ## Overview
 
@@ -8,11 +8,14 @@ This Attendance Tracking App is designed to help teacher easily manage student a
 
 - **Create a New Class**: Teacher can create a new class by providing details such as name, specialty, level, and college year.
 - **Create Groups**: Teacher can create groups for existing classes and specify the type (TD/TP) for each group.
-- **Import Students List**: Teacher can load the students list as an Excel file and associate it with the created group.
-- **View Classes Organized by Year**: Teacher can view classes organized by year for easy access.
-- **Edit Class Information**: Teacher can edit all the information of a class.
 - **Delete Class**: Teacher can delete a class if needed.
 - **Delete Group**: Teacher can delete a group associated with a class.
+- **Import Students List**: Teacher can load the students list as an Excel file and associate it with the created group.
+**Excel file Example**: max rows is 100
+![excel file example](excel_file_example.png)
+- **View Classes Organized by Year**: Teacher can view classes organized by year for easy access.
+- **Edit Class Information**: Teacher can edit all the information of a class.
+
 - **Add Students to Group**: Teacher can add students to a group, including transferred or late registered students not included in the Excel file.
 - **Transfer Students**: Teacher can transfer a student from one group to another within the same class.
 - **Create Session**: Teacher can create a session for a group by providing the date and time.
@@ -23,6 +26,7 @@ This Attendance Tracking App is designed to help teacher easily manage student a
 - **View Total Number of Students Present**: Teacher can see the total number of students present in a session.
 - **Change Absence State**: Teacher can change the state of a student from 'absent' to 'justified absence'.
 - **Export Absence State**: Teacher can export the absence state of a group as an Excel file for a specified duration.
+
 
 ## Getting Started
 

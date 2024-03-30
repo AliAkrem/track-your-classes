@@ -28,9 +28,6 @@ import { useGlobalContext } from "./context/globalContext";
 import { Menu } from "./components/Menu";
 import { Session } from "./pages/sessions";
 import Auth from "./pages/auth";
-import { SplashScreen } from "@capacitor/splash-screen";
-import { useEffect } from "react";
-import { Capacitor } from "@capacitor/core";
 
 
 
@@ -45,13 +42,13 @@ const App: React.FC = () => {
 
 
 
-  const { isLoading: isloadingContext } = useGlobalContext()
+  const { isLoading: isLoadingContext } = useGlobalContext()
 
 
 
 
 
-  if (isloadingContext) return <>
+  if (isLoadingContext) return <>
     <IonLoading className="custom-loading" isOpen={true}  message="Loading" duration={2000} />
   </>
 
