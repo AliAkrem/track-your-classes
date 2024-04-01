@@ -12,9 +12,10 @@ import { Students } from "../../context/globalContext";
 
 type Props = {
     setStudent_list: React.Dispatch<React.SetStateAction<Students[] | []>>
+    student_list: [] | Students[]
 }
 
-function DragDropFile({ setStudent_list }: Props) {
+function DragDropFile({ setStudent_list, student_list }: Props) {
     const [dragActive, setDragActive] = React.useState(false);
     const inputRef = useRef<HTMLInputElement>(null);
     const [fileAttached, setFileAttached] = useState(false)
@@ -92,7 +93,7 @@ function DragDropFile({ setStudent_list }: Props) {
                                 ...payload,
                                 first_name: student[1],
                                 last_name: student[2],
-                                student_code: student[0]
+                                student_code:  array_students.length +  student_list.length + 1
                             }
                             array_students = [... array_students , payload]}
 
@@ -100,7 +101,7 @@ function DragDropFile({ setStudent_list }: Props) {
                         })
 
 
-                        setStudent_list(array_students)
+                        setStudent_list([...student_list, ...array_students])
 
                         setFileAttached(true)
                     };

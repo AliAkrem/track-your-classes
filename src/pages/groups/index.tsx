@@ -27,7 +27,7 @@ import { SQLiteDBConnection } from "@capacitor-community/sqlite";
 import useSQLiteDB from "../../composables/useSQLiteDB";
 import useConfirmationAlert from "../../composables/useConfirmationAlert";
 import { nanoid } from "nanoid";
-import { add, chevronBack, ellipsisVertical, people, person, share, trash } from "ionicons/icons";
+import { add,  chevronBack, chevronForward, ellipsisVertical, people, person, share, trash } from "ionicons/icons";
 import { OverlayEventDetail } from "@ionic/core";
 
 import { RefresherEventDetail } from "@ionic/react";
@@ -244,7 +244,7 @@ export default function Group({ group_id, setSelectedGroup, isOpen, close }: Pro
 
 
 
-    const DisplayListStudent = list_student?.map((student) => {
+    const DisplayListStudent = list_student?.map((student, idx) => {
 
         return (
 
@@ -252,12 +252,12 @@ export default function Group({ group_id, setSelectedGroup, isOpen, close }: Pro
 
                 <IonItem >
                     <IonAvatar slot="start">
-                        <IonIcon size="large" icon={person} ></IonIcon>  {/*  icon  */}
+                        <IonIcon size="large" icon={person} ></IonIcon>  
                     </IonAvatar>
                     <IonLabel class="ion-text-wrap" >
-                        <h2 > {(student.first_name).toLowerCase()} {" "} {(student.last_name).toLowerCase()}</h2>
+                        <h2 >{idx +1} - {(student.first_name).toLowerCase()} {" "} {(student.last_name).toLowerCase()}</h2>
                     </IonLabel>
-
+                    <IonLabel slot="end" ><IonIcon icon={chevronForward} ></IonIcon></IonLabel>
                 </IonItem>
 
                 <IonItemOptions side="start" >
