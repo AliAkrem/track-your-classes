@@ -1,4 +1,4 @@
-package io.aliakram7.trackyourclasses;
+package io.ionic.starter;
 
 import com.getcapacitor.BridgeActivity;
 

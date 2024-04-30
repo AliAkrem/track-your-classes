@@ -1,10 +1,10 @@
 apply plugin: 'com.android.application'
 
 android {
-    namespace "io.aliakram7.trackyourclasses"
+    namespace "io.ionic.starter"
     compileSdk rootProject.ext.compileSdkVersion
     defaultConfig {
-        applicationId "io.aliakram7.trackyourclasses"
+        applicationId "io.ionic.starter"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1

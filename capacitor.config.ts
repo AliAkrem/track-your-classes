@@ -1,7 +1,7 @@
 import { CapacitorConfig } from "@capacitor/cli";
 
 const config: CapacitorConfig = {
-  appId: "io.aliakram7.trackyourclasses",
+  appId: "io.ionic.starter",
   appName: "Track Your Classes",
   webDir: "dist",
   server: {
